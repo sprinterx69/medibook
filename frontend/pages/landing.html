@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediBook — The All-in-One Platform for Modern Clinics</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #0d1b2a;
+  --navy2: #122236;
+  --navy3: #1a2f47;
+  --gold: #c9a96e;
+  --gold-light: #e8c99a;
+  --gold-pale: #f5ead8;
+  --cream: #faf7f2;
+  --text: #1a1a2e;
+  --muted: #6b7a8d;
+  --white: #ffffff;
+  --border: rgba(201,169,110,0.2);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--cream);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* CUSTOM CURSOR */
+.cursor {
+  width: 8px; height: 8px;
+  background: var(--gold);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 99999;
+  transition: transform 0.15s ease;
+  transform: translate(-50%, -50%);
+}
+.cursor-ring {
+  width: 36px; height: 36px;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 99998;
+  transition: transform 0.35s ease, width 0.3s, height 0.3s, opacity 0.3s;
+  transform: translate(-50%, -50%);
+  opacity: 0.5;
+}
+body:has(a:hover) .cursor-ring,
+body:has(button:hover) .cursor-ring { width: 56px; height: 56px; opacity: 0.3; }
+
+/* NOISE */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  padding: 20px 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  transition: background 0.4s, padding 0.3s, backdrop-filter 0.4s;
+}
+nav.scrolled {
+  background: rgba(13,27,42,0.92);
+  backdrop-filter: blur(16px);
+  padding: 14px 60px;
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+.nav-logo span { color: var(--gold); }
+.nav-links { display: flex; gap: 36px; }
+.nav-links a {
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  font-weight: 400;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--gold); }
+.nav-cta {
+  background: var(--gold);
+  color: var(--navy);
+  padding: 10px 24px;
+  border-radius: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s;
+  text-transform: uppercase;
+}
+.nav-cta:hover { background: var(--gold-light); transform: translateY(-1px); }
+
+/* HERO */
+.hero {
+  min-height: 100vh;
+  background: var(--navy);
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.hero-bg-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(201,169,110,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,169,110,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+.hero-orb1 {
+  position: absolute;
+  width: 700px; height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,169,110,0.12) 0%, transparent 65%);
+  top: -200px; right: -100px;
+  pointer-events: none;
+}
+.hero-orb2 {
+  position: absolute;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(26,95,180,0.15) 0%, transparent 65%);
+  bottom: -100px; left: 100px;
+  pointer-events: none;
+}
+.hero-content {
+  position: relative; z-index: 2;
+  max-width: 1200px; margin: 0 auto;
+  padding: 160px 60px 100px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+}
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--border);
+  padding: 6px 16px;
+  border-radius: 100px;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 28px;
+  animation: fadeUp 0.8s ease both;
+}
+.hero-tag-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.hero h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(44px, 5.5vw, 80px);
+  font-weight: 300;
+  line-height: 1.1;
+  color: var(--white);
+  letter-spacing: -0.01em;
+  margin-bottom: 24px;
+  animation: fadeUp 0.8s 0.1s ease both;
+}
+.hero h1 em { font-style: italic; color: var(--gold); font-weight: 300; }
+.hero h1 strong { font-weight: 600; }
+.hero-sub {
+  color: rgba(255,255,255,0.55);
+  font-size: 16px;
+  line-height: 1.75;
+  max-width: 480px;
+  margin-bottom: 40px;
+  animation: fadeUp 0.8s 0.2s ease both;
+}
+.hero-actions {
+  display: flex; align-items: center; gap: 20px;
+  animation: fadeUp 0.8s 0.3s ease both;
+}
+.btn-primary {
+  background: var(--gold);
+  color: var(--navy);
+  padding: 16px 36px;
+  border-radius: 2px;
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  text-decoration: none;
+  transition: all 0.25s;
+  border: none; cursor: none;
+}
+.btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 12px 32px rgba(201,169,110,0.25); }
+.btn-ghost {
+  color: rgba(255,255,255,0.6);
+  font-size: 13px; letter-spacing: 0.06em;
+  text-decoration: none; display: flex; align-items: center; gap: 8px;
+  transition: color 0.2s;
+}
+.btn-ghost:hover { color: var(--gold); }
+.btn-ghost svg { transition: transform 0.2s; }
+.btn-ghost:hover svg { transform: translateX(4px); }
+.hero-stats {
+  display: flex; gap: 40px; margin-top: 56px;
+  padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.08);
+  animation: fadeUp 0.8s 0.4s ease both;
+}
+.hero-stat-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 40px; font-weight: 600;
+  color: var(--gold); line-height: 1;
+}
+.hero-stat-label { color: rgba(255,255,255,0.4); font-size: 12px; letter-spacing: 0.08em; margin-top: 4px; }
+
+/* DASHBOARD MOCKUP */
+.hero-visual { position: relative; animation: fadeUp 0.8s 0.2s ease both; }
+.dashboard-mock {
+  background: var(--navy2);
+  border: 1px solid rgba(201,169,110,0.15);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+}
+.mock-topbar {
+  background: var(--navy3);
+  padding: 12px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.mock-dots { display: flex; gap: 6px; }
+.mock-dot { width: 10px; height: 10px; border-radius: 50%; }
+.mock-body { padding: 20px; }
+.mock-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.mock-title { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.8); }
+.mock-badge { background: rgba(201,169,110,0.15); color: var(--gold); font-size: 9px; padding: 3px 8px; border-radius: 10px; letter-spacing: 0.05em; }
+.mock-stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+.mock-stat-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 12px; }
+.mock-stat-num { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--white); }
+.mock-stat-label { font-size: 9px; color: rgba(255,255,255,0.35); letter-spacing: 0.06em; margin-top: 2px; }
+.mock-cal-row { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; margin-bottom: 4px; }
+.mock-cal-day { background: rgba(255,255,255,0.03); border-radius: 4px; padding: 6px 4px; font-size: 8px; color: rgba(255,255,255,0.25); text-align: center; }
+.mock-cal-appt { background: rgba(201,169,110,0.15); border-left: 2px solid var(--gold); border-radius: 3px; padding: 4px 6px; font-size: 8px; color: var(--gold-light); margin-bottom: 3px; white-space: nowrap; overflow: hidden; }
+.mock-cal-appt.blue { background: rgba(59,130,246,0.12); border-color: #60a5fa; color: #93c5fd; }
+.mock-cal-appt.green { background: rgba(16,185,129,0.12); border-color: #34d399; color: #6ee7b7; }
+.mock-client-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.mock-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+.mock-client-info { flex:1; }
+.mock-client-name { font-size: 10px; color: rgba(255,255,255,0.75); font-weight: 500; }
+.mock-client-next { font-size: 9px; color: rgba(255,255,255,0.3); }
+.mock-client-status { font-size: 9px; padding: 2px 7px; border-radius: 10px; }
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+
+/* LOGOS */
+.logos-bar {
+  background: var(--navy);
+  padding: 28px 60px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  display: flex; align-items: center; justify-content: center; gap: 60px;
+  flex-wrap: wrap;
+}
+.logos-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.25); }
+.logo-item { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: rgba(255,255,255,0.2); letter-spacing: 0.04em; font-weight: 600; transition: color 0.2s; }
+.logo-item:hover { color: rgba(255,255,255,0.45); }
+
+/* SECTIONS SHARED */
+section { padding: 120px 60px; max-width: 1200px; margin: 0 auto; }
+.section-full { max-width: none; }
+.label {
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--gold); font-weight: 500; margin-bottom: 16px; display: block;
+}
+h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(36px, 4vw, 58px);
+  font-weight: 300; line-height: 1.15; letter-spacing: -0.01em;
+  color: var(--text);
+}
+h2 em { font-style: italic; font-weight: 300; color: var(--navy3); }
+.section-intro { color: var(--muted); font-size: 16px; line-height: 1.8; max-width: 560px; margin-top: 16px; }
+
+/* FEATURES */
+.features-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
+  background: rgba(201,169,110,0.1);
+  border: 1px solid rgba(201,169,110,0.1);
+  border-radius: 12px; overflow: hidden;
+  margin-top: 60px;
+}
+.feature-card {
+  background: var(--white);
+  padding: 48px 44px;
+  transition: background 0.3s;
+  position: relative; overflow: hidden;
+}
+.feature-card:hover { background: var(--gold-pale); }
+.feature-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0; transition: opacity 0.3s;
+}
+.feature-card:hover::before { opacity: 1; }
+.feature-icon {
+  width: 48px; height: 48px;
+  background: var(--navy);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 24px; font-size: 20px;
+}
+.feature-card h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px; font-weight: 600;
+  color: var(--navy); margin-bottom: 12px;
+}
+.feature-card p { color: var(--muted); line-height: 1.8; font-size: 14px; }
+.feature-list { margin-top: 20px; list-style: none; }
+.feature-list li {
+  font-size: 13px; color: var(--text);
+  padding: 6px 0;
+  display: flex; align-items: flex-start; gap: 10px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.feature-list li:last-child { border-bottom: none; }
+.feature-list li::before { content: '✦'; color: var(--gold); font-size: 8px; margin-top: 5px; flex-shrink: 0; }
+
+/* AI SECTION */
+.ai-section {
+  background: var(--navy);
+  padding: 120px 0;
+  position: relative; overflow: hidden;
+}
+.ai-section-inner { max-width: 1200px; margin: 0 auto; padding: 0 60px; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+.ai-section h2 { color: var(--white); }
+.ai-section .section-intro { color: rgba(255,255,255,0.5); }
+.ai-section .label { color: var(--gold); }
+.call-flow {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(201,169,110,0.15);
+  border-radius: 12px; padding: 32px;
+}
+.call-step {
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  opacity: 0;
+  animation: stepIn 0.5s ease forwards;
+}
+.call-step:last-child { border-bottom: none; }
+.call-step:nth-child(1){animation-delay:0.1s}
+.call-step:nth-child(2){animation-delay:0.25s}
+.call-step:nth-child(3){animation-delay:0.4s}
+.call-step:nth-child(4){animation-delay:0.55s}
+.call-step:nth-child(5){animation-delay:0.7s}
+.call-step:nth-child(6){animation-delay:0.85s}
+@keyframes stepIn { to { opacity:1; transform: translateX(0); } from { opacity:0; transform: translateX(-10px); } }
+.step-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.step-text strong { display: block; font-size: 13px; font-weight: 500; color: var(--white); }
+.step-text span { font-size: 11px; color: rgba(255,255,255,0.35); }
+.step-status { margin-left: auto; font-size: 10px; padding: 3px 10px; border-radius: 10px; letter-spacing: 0.06em; }
+
+/* PRICING */
+.pricing-bg { background: var(--navy); }
+.pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 60px; }
+.price-card {
+  background: var(--navy2);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; padding: 40px 36px;
+  position: relative; transition: transform 0.3s, border-color 0.3s;
+}
+.price-card:hover { transform: translateY(-4px); border-color: rgba(201,169,110,0.3); }
+.price-card.featured {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.price-card.featured * { color: var(--navy) !important; }
+.price-card.featured .price-line { border-color: rgba(0,0,0,0.1) !important; }
+.price-card.featured .price-feature::before { content: '✦'; }
+.featured-badge {
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: var(--navy); color: var(--gold);
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 14px; border-radius: 10px; font-weight: 600;
+  white-space: nowrap;
+}
+.price-tier { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 20px; font-weight: 500; }
+.price-card.featured .price-tier { color: rgba(13,27,42,0.7); }
+.price-amount {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 56px; font-weight: 300; color: var(--white); line-height: 1;
+}
+.price-per { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 28px; margin-top: 4px; }
+.price-line { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 24px 0; }
+.price-features { list-style: none; margin-bottom: 32px; }
+.price-feature { font-size: 13px; color: rgba(255,255,255,0.65); padding: 7px 0; display: flex; gap: 10px; align-items: flex-start; }
+.price-feature::before { content: '→'; color: var(--gold); flex-shrink: 0; font-size: 12px; margin-top: 1px; }
+.price-btn {
+  display: block; text-align: center;
+  padding: 14px; border-radius: 4px; text-decoration: none;
+  font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+  transition: all 0.2s;
+}
+.price-btn-outline { border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); }
+.price-btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+.price-btn-solid { background: var(--navy); color: var(--gold); }
+.price-btn-solid:hover { background: var(--navy3); }
+
+/* TESTIMONIALS */
+.testimonials-bg { background: var(--cream); }
+.testimonials-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 60px; }
+.testimonial-card {
+  background: var(--white);
+  border: 1px solid rgba(201,169,110,0.15);
+  border-radius: 12px; padding: 36px 32px;
+  transition: border-color 0.3s, transform 0.3s;
+}
+.testimonial-card:hover { border-color: var(--gold); transform: translateY(-3px); }
+.stars { color: var(--gold); font-size: 14px; letter-spacing: 2px; margin-bottom: 16px; }
+.testimonial-quote {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px; font-weight: 400; font-style: italic;
+  line-height: 1.6; color: var(--navy); margin-bottom: 24px;
+}
+.testimonial-author { display: flex; align-items: center; gap: 12px; }
+.t-avatar { width: 40px; height: 40px; border-radius: 50%; font-weight: 600; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.t-name { font-weight: 600; font-size: 13px; color: var(--navy); }
+.t-role { font-size: 12px; color: var(--muted); }
+
+/* CTA */
+.cta-section {
+  background: var(--navy);
+  padding: 120px 60px;
+  text-align: center;
+  position: relative; overflow: hidden;
+}
+.cta-section h2 { color: var(--white); max-width: 700px; margin: 0 auto 24px; }
+.cta-section p { color: rgba(255,255,255,0.45); max-width: 500px; margin: 0 auto 48px; font-size: 16px; }
+.cta-actions { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+.cta-orb {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,169,110,0.1) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* FOOTER */
+footer {
+  background: #080f18;
+  padding: 60px 60px 40px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.footer-top {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 60px; margin-bottom: 48px;
+}
+.footer-brand-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px; font-weight: 600;
+  color: var(--white); letter-spacing: 0.02em; margin-bottom: 12px;
+}
+.footer-brand-name span { color: var(--gold); }
+.footer-tagline { color: rgba(255,255,255,0.3); font-size: 13px; line-height: 1.7; max-width: 260px; }
+.footer-col-title { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; font-weight: 500; }
+.footer-col a { display: block; color: rgba(255,255,255,0.35); font-size: 13px; padding: 5px 0; text-decoration: none; transition: color 0.2s; }
+.footer-col a:hover { color: rgba(255,255,255,0.75); }
+.footer-bottom { border-top: 1px solid rgba(255,255,255,0.06); padding-top: 28px; display: flex; justify-content: space-between; align-items: center; }
+.footer-copy { font-size: 12px; color: rgba(255,255,255,0.2); }
+
+/* SCROLL REVEAL */
+.reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.8s ease, transform 0.8s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal.delay-1 { transition-delay: 0.1s; }
+.reveal.delay-2 { transition-delay: 0.2s; }
+.reveal.delay-3 { transition-delay: 0.3s; }
+
+@media (max-width: 960px) {
+  nav { padding: 18px 24px; }
+  nav.scrolled { padding: 14px 24px; }
+  .nav-links { display: none; }
+  .hero-content { grid-template-columns: 1fr; padding: 130px 24px 60px; gap: 48px; }
+  .hero-visual { display: none; }
+  section { padding: 80px 24px; }
+  .features-grid { grid-template-columns: 1fr; }
+  .ai-section-inner { grid-template-columns: 1fr; padding: 0 24px; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .testimonials-grid { grid-template-columns: 1fr; }
+  .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .logos-bar { padding: 24px; gap: 24px; }
+  .cta-section { padding: 80px 24px; }
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-logo">Medi<span>Book</span></a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#ai">AI Voice</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#testimonials">Reviews</a>
+  </div>
+  <a href="#pricing" class="nav-cta">Start Free Trial</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-orb1"></div>
+  <div class="hero-orb2"></div>
+  <div class="hero-content">
+    <div>
+      <div class="hero-tag"><span class="hero-tag-dot"></span> Now with AI Voice Agent</div>
+      <h1>Run your clinic <em>beautifully</em><br>from one <strong>dashboard</strong></h1>
+      <p class="hero-sub">MediBook is the all-in-one booking, scheduling, and client management platform built for modern clinics, medical spas, and wellness businesses.</p>
+      <div class="hero-actions">
+        <a href="#pricing" class="btn-primary">Start Free — 14 Days</a>
+        <a href="#features" class="btn-ghost">See how it works <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="hero-stat-num">3.2k+</div>
+          <div class="hero-stat-label">Active Clinics</div>
+        </div>
+        <div>
+          <div class="hero-stat-num">98%</div>
+          <div class="hero-stat-label">Uptime SLA</div>
+        </div>
+        <div>
+          <div class="hero-stat-num">40%</div>
+          <div class="hero-stat-label">Fewer No-Shows</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD MOCKUP -->
+    <div class="hero-visual">
+      <div class="dashboard-mock">
+        <div class="mock-topbar">
+          <div class="mock-dots">
+            <div class="mock-dot" style="background:#ef4444"></div>
+            <div class="mock-dot" style="background:#f59e0b"></div>
+            <div class="mock-dot" style="background:#10b981"></div>
+          </div>
+          <span style="font-size:11px;color:rgba(255,255,255,0.3)">MediBook Dashboard</span>
+          <span style="font-size:10px;color:rgba(255,255,255,0.2)">Thu 20 Feb</span>
+        </div>
+        <div class="mock-body">
+          <div class="mock-header-row">
+            <span class="mock-title">Today's Overview</span>
+            <span class="mock-badge">LIVE</span>
+          </div>
+          <div class="mock-stats-row">
+            <div class="mock-stat-card">
+              <div class="mock-stat-num">18</div>
+              <div class="mock-stat-label">APPOINTMENTS</div>
+            </div>
+            <div class="mock-stat-card">
+              <div class="mock-stat-num" style="color:var(--gold)">£2,840</div>
+              <div class="mock-stat-label">REVENUE</div>
+            </div>
+            <div class="mock-stat-card">
+              <div class="mock-stat-num" style="color:#10b981">94%</div>
+              <div class="mock-stat-label">FILL RATE</div>
+            </div>
+          </div>
+          <!-- Mini calendar -->
+          <div class="mock-header-row" style="margin-bottom:8px">
+            <span style="font-size:10px;color:rgba(255,255,255,0.4)">Week View</span>
+          </div>
+          <div class="mock-cal-row" style="margin-bottom:6px">
+            <div class="mock-cal-day">MON</div><div class="mock-cal-day">TUE</div><div class="mock-cal-day">WED</div>
+            <div class="mock-cal-day" style="color:var(--gold)">THU</div><div class="mock-cal-day">FRI</div>
+            <div class="mock-cal-day">SAT</div><div class="mock-cal-day">SUN</div>
+          </div>
+          <div class="mock-cal-row">
+            <div><div class="mock-cal-appt blue">Facial 10:00</div></div>
+            <div><div class="mock-cal-appt green">Consult</div><div class="mock-cal-appt">Botox</div></div>
+            <div><div class="mock-cal-appt blue">Filler 2pm</div></div>
+            <div style="border-left:1px solid rgba(201,169,110,0.2);padding-left:4px">
+              <div class="mock-cal-appt">Laser 9am</div>
+              <div class="mock-cal-appt green">Hydra</div>
+            </div>
+            <div><div class="mock-cal-appt blue">Peel</div></div>
+            <div></div><div></div>
+          </div>
+          <!-- Clients -->
+          <div class="mock-header-row" style="margin-top:14px;margin-bottom:6px">
+            <span style="font-size:10px;color:rgba(255,255,255,0.4)">Upcoming Clients</span>
+          </div>
+          <div class="mock-client-row">
+            <div class="mock-avatar" style="background:rgba(201,169,110,0.15);color:var(--gold)">SL</div>
+            <div class="mock-client-info">
+              <div class="mock-client-name">Sophie Laurent</div>
+              <div class="mock-client-next">Hydrafacial · 11:30am · Dr. Chen</div>
+            </div>
+            <span class="mock-client-status" style="background:rgba(16,185,129,0.12);color:#6ee7b7">Confirmed</span>
+          </div>
+          <div class="mock-client-row">
+            <div class="mock-avatar" style="background:rgba(59,130,246,0.15);color:#93c5fd">JM</div>
+            <div class="mock-client-info">
+              <div class="mock-client-name">James Mitchell</div>
+              <div class="mock-client-next">Botox Consult · 1:00pm · Dr. Patel</div>
+            </div>
+            <span class="mock-client-status" style="background:rgba(245,158,11,0.12);color:#fcd34d">Deposit</span>
+          </div>
+          <div class="mock-client-row" style="border:none">
+            <div class="mock-avatar" style="background:rgba(236,72,153,0.15);color:#f9a8d4">AK</div>
+            <div class="mock-client-info">
+              <div class="mock-client-name">Amara Kim</div>
+              <div class="mock-client-next">Laser Skin · 3:30pm · Dr. Chen</div>
+            </div>
+            <span class="mock-client-status" style="background:rgba(16,185,129,0.12);color:#6ee7b7">Confirmed</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGOS -->
+<div class="logos-bar">
+  <span class="logos-label">Trusted by</span>
+  <span class="logo-item">Lumière Clinic</span>
+  <span class="logo-item">Aura Medical Spa</span>
+  <span class="logo-item">Revive Aesthetics</span>
+  <span class="logo-item">Nova Skin Studio</span>
+  <span class="logo-item">Soleil Wellness</span>
+</div>
+
+<!-- FEATURES -->
+<div id="features" style="background: var(--cream)">
+  <section>
+    <div class="reveal">
+      <span class="label">Core Features</span>
+      <h2>Everything your clinic needs,<br><em>nothing it doesn't</em></h2>
+      <p class="section-intro">Four powerful modules work together seamlessly so you can focus on what you do best — delivering exceptional client experiences.</p>
+    </div>
+    <div class="features-grid reveal delay-1">
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>Calendar & Booking</h3>
+        <p>A beautifully functional calendar with day, week, and month views. Clients book 24/7, staff see their schedules in real-time.</p>
+        <ul class="feature-list">
+          <li>Drag-and-drop rescheduling</li>
+          <li>Real-time availability engine</li>
+          <li>Multi-staff, multi-location view</li>
+          <li>Embeddable booking widget</li>
+          <li>Deposit collection at booking</li>
+          <li>Automated SMS/email reminders</li>
+        </ul>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👤</div>
+        <h3>Client Management</h3>
+        <p>A full CRM built for service businesses. Every client has a profile, history, and communication log — all in one place.</p>
+        <ul class="feature-list">
+          <li>360° client profiles</li>
+          <li>Complete appointment history</li>
+          <li>Medical notes (HIPAA-encrypted)</li>
+          <li>Smart tags & segmentation</li>
+          <li>No-show tracking & scoring</li>
+          <li>Automated re-booking campaigns</li>
+        </ul>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💳</div>
+        <h3>Payments & Billing</h3>
+        <p>Stripe-powered payments built right into the booking flow. Collect deposits, process payments, and track revenue effortlessly.</p>
+        <ul class="feature-list">
+          <li>Online deposit collection</li>
+          <li>Invoicing & receipts</li>
+          <li>Revenue analytics dashboard</li>
+          <li>Subscription management (Stripe)</li>
+          <li>Automatic refund processing</li>
+          <li>Multi-currency support</li>
+        </ul>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <h3>Staff Management</h3>
+        <p>Manage your whole team from one place. Set schedules, track performance, and let staff focus on clients instead of admin.</p>
+        <ul class="feature-list">
+          <li>Individual staff calendars</li>
+          <li>Availability & leave management</li>
+          <li>Role-based access control</li>
+          <li>Performance & utilisation metrics</li>
+          <li>Staff-client assignment rules</li>
+          <li>Commission tracking</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- AI VOICE -->
+<div id="ai" class="ai-section">
+  <div class="hero-orb1" style="top:-300px;right:-200px;opacity:0.5"></div>
+  <div class="ai-section-inner">
+    <div class="reveal">
+      <span class="label">AI Voice Agent</span>
+      <h2 style="color:var(--white)">Your clinic answers<br>every call, <em style="color:var(--gold)">instantly</em></h2>
+      <p class="section-intro" style="color:rgba(255,255,255,0.45)">MediBook's AI Voice Agent answers calls 24/7, books appointments by voice, checks live availability, and syncs to your calendar in real time — no staff required.</p>
+      <div style="margin-top:36px;display:flex;flex-wrap:wrap;gap:12px">
+        <span style="background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.2);color:var(--gold);font-size:11px;padding:6px 14px;border-radius:4px;letter-spacing:0.06em">Twilio Voice</span>
+        <span style="background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.2);color:var(--gold);font-size:11px;padding:6px 14px;border-radius:4px;letter-spacing:0.06em">Deepgram STT</span>
+        <span style="background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.2);color:var(--gold);font-size:11px;padding:6px 14px;border-radius:4px;letter-spacing:0.06em">GPT-4o LLM</span>
+        <span style="background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.2);color:var(--gold);font-size:11px;padding:6px 14px;border-radius:4px;letter-spacing:0.06em">ElevenLabs TTS</span>
+      </div>
+    </div>
+    <div class="reveal delay-2">
+      <div class="call-flow">
+        <div style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:16px">Live Call Flow</div>
+        <div class="call-step">
+          <div class="step-icon" style="background:rgba(239,68,68,0.15)">📞</div>
+          <div class="step-text"><strong>Inbound Call Received</strong><span>Client calls your clinic number</span></div>
+          <span class="step-status" style="background:rgba(16,185,129,0.12);color:#6ee7b7">Active</span>
+        </div>
+        <div class="call-step">
+          <div class="step-icon" style="background:rgba(201,169,110,0.15)">🎙️</div>
+          <div class="step-text"><strong>Speech → Text</strong><span>Deepgram transcribes in real-time</span></div>
+          <span class="step-status" style="background:rgba(59,130,246,0.12);color:#93c5fd">Stream</span>
+        </div>
+        <div class="call-step">
+          <div class="step-icon" style="background:rgba(139,92,246,0.15)">🧠</div>
+          <div class="step-text"><strong>GPT-4o Processes Intent</strong><span>"Book a facial for Saturday"</span></div>
+          <span class="step-status" style="background:rgba(139,92,246,0.12);color:#c4b5fd">LLM</span>
+        </div>
+        <div class="call-step">
+          <div class="step-icon" style="background:rgba(201,169,110,0.15)">📅</div>
+          <div class="step-text"><strong>Live Calendar Check</strong><span>Queries real-time availability</span></div>
+          <span class="step-status" style="background:rgba(16,185,129,0.12);color:#6ee7b7">Instant</span>
+        </div>
+        <div class="call-step">
+          <div class="step-icon" style="background:rgba(16,185,129,0.15)">✅</div>
+          <div class="step-text"><strong>Appointment Booked</strong><span>Confirmation SMS sent to client</span></div>
+          <span class="step-status" style="background:rgba(201,169,110,0.12);color:var(--gold)">Done</span>
+        </div>
+        <div class="call-step">
+          <div class="step-icon" style="background:rgba(245,158,11,0.15)">🔊</div>
+          <div class="step-text"><strong>Voice Confirmation Played</strong><span>ElevenLabs natural TTS response</span></div>
+          <span class="step-status" style="background:rgba(245,158,11,0.12);color:#fcd34d">TTS</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<div id="pricing" class="pricing-bg" style="padding: 120px 0">
+  <section style="padding:0 60px">
+    <div class="reveal" style="text-align:center;margin-bottom:0">
+      <span class="label" style="display:block;text-align:center">Pricing</span>
+      <h2 style="color:var(--white);text-align:center">Simple pricing,<br><em style="color:var(--gold)">extraordinary value</em></h2>
+      <p style="color:rgba(255,255,255,0.4);font-size:15px;max-width:480px;margin:12px auto 0">All plans include a 14-day free trial. No credit card required to start.</p>
+    </div>
+    <div class="pricing-grid reveal delay-1">
+      <div class="price-card">
+        <div class="price-tier">Starter</div>
+        <div class="price-amount" style="color:var(--white)">£49</div>
+        <div class="price-per">per month · 1 location</div>
+        <hr class="price-line">
+        <ul class="price-features">
+          <li class="price-feature">Up to 2 staff members</li>
+          <li class="price-feature">Unlimited bookings</li>
+          <li class="price-feature">Client CRM (up to 500)</li>
+          <li class="price-feature">Email & SMS reminders</li>
+          <li class="price-feature">Stripe payment collection</li>
+          <li class="price-feature" style="color:rgba(255,255,255,0.25)">AI Voice Agent</li>
+          <li class="price-feature" style="color:rgba(255,255,255,0.25)">Multi-location</li>
+        </ul>
+        <a href="#" class="price-btn price-btn-outline">Start Free Trial</a>
+      </div>
+
+      <div class="price-card featured">
+        <div class="featured-badge">Most Popular</div>
+        <div class="price-tier">Pro</div>
+        <div class="price-amount">£129</div>
+        <div class="price-per">per month · up to 3 locations</div>
+        <hr class="price-line">
+        <ul class="price-features">
+          <li class="price-feature">Unlimited staff members</li>
+          <li class="price-feature">Unlimited bookings & clients</li>
+          <li class="price-feature">Full CRM + medical notes</li>
+          <li class="price-feature">WhatsApp + SMS + email</li>
+          <li class="price-feature">Stripe deposits & invoicing</li>
+          <li class="price-feature">AI Voice Agent included</li>
+          <li class="price-feature">No-show prediction AI</li>
+        </ul>
+        <a href="#" class="price-btn price-btn-solid">Start Free Trial</a>
+      </div>
+
+      <div class="price-card">
+        <div class="price-tier">Enterprise</div>
+        <div class="price-amount" style="color:var(--white);font-size:42px;line-height:1.2">Custom</div>
+        <div class="price-per">unlimited locations · white-label</div>
+        <hr class="price-line">
+        <ul class="price-features">
+          <li class="price-feature">Everything in Pro</li>
+          <li class="price-feature">Unlimited locations & staff</li>
+          <li class="price-feature">White-label & custom domain</li>
+          <li class="price-feature">SSO & SAML integration</li>
+          <li class="price-feature">Dedicated account manager</li>
+          <li class="price-feature">HIPAA BAA + custom DPA</li>
+          <li class="price-feature">Priority SLA (99.9% uptime)</li>
+        </ul>
+        <a href="#" class="price-btn price-btn-outline">Contact Sales</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- TESTIMONIALS -->
+<div id="testimonials" class="testimonials-bg">
+  <section>
+    <div class="reveal" style="text-align:center">
+      <span class="label" style="display:block">Testimonials</span>
+      <h2 style="text-align:center">Loved by clinic owners<br><em>across the country</em></h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card reveal delay-1">
+        <div class="stars">★★★★★</div>
+        <div class="testimonial-quote">"MediBook cut our no-show rate by 42% in the first month. The automated reminders and deposit system have been transformative."</div>
+        <div class="testimonial-author">
+          <div class="t-avatar" style="background:#fef3c7;color:#92400e">DR</div>
+          <div><div class="t-name">Dr. Rachel Osei</div><div class="t-role">Aura Medical Spa, London</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal delay-2">
+        <div class="stars">★★★★★</div>
+        <div class="testimonial-quote">"The AI voice agent is genuinely impressive. Our receptionist now focuses on in-clinic clients — the phone literally answers itself."</div>
+        <div class="testimonial-author">
+          <div class="t-avatar" style="background:#dbeafe;color:#1e40af">JT</div>
+          <div><div class="t-name">James Thornton</div><div class="t-role">Revive Aesthetics, Manchester</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal delay-3">
+        <div class="stars">★★★★★</div>
+        <div class="testimonial-quote">"Switching from our old system was seamless. Having bookings, CRM, payments and staff schedules in one place is exactly what we needed."</div>
+        <div class="testimonial-author">
+          <div class="t-avatar" style="background:#fce7f3;color:#9d174d">SL</div>
+          <div><div class="t-name">Sofia Larsson</div><div class="t-role">Nova Skin Studio, Edinburgh</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="cta-orb" style="width:600px;height:600px;top:-200px;left:-100px"></div>
+  <div class="cta-orb" style="width:400px;height:400px;bottom:-100px;right:0"></div>
+  <div style="position:relative;z-index:2" class="reveal">
+    <span class="label" style="display:block;text-align:center">Get Started Today</span>
+    <h2>Ready to transform<br><em style="color:var(--gold)">how your clinic runs?</em></h2>
+    <p>Join 3,200+ clinics and spas that use MediBook to automate admin, delight clients, and grow revenue.</p>
+    <div class="cta-actions">
+      <a href="#" class="btn-primary" style="font-size:14px;padding:18px 44px">Start Your Free Trial</a>
+      <a href="#" class="btn-ghost" style="color:rgba(255,255,255,0.5);font-size:14px">Book a Demo →</a>
+    </div>
+    <p style="font-size:12px;color:rgba(255,255,255,0.25);margin-top:20px">14 days free · No credit card · Cancel anytime</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div>
+      <div class="footer-brand-name">Medi<span>Book</span></div>
+      <p class="footer-tagline">The all-in-one booking, scheduling, and AI management platform for modern clinics and spas.</p>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Product</div>
+      <a href="#">Booking Calendar</a>
+      <a href="#">Client CRM</a>
+      <a href="#">Payments</a>
+      <a href="#">AI Voice Agent</a>
+      <a href="#">Staff Management</a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Company</div>
+      <a href="#">About</a>
+      <a href="#">Blog</a>
+      <a href="#">Careers</a>
+      <a href="#">Press</a>
+      <a href="#">Contact</a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Legal</div>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">HIPAA Compliance</a>
+      <a href="#">GDPR</a>
+      <a href="#">Security</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2026 MediBook Ltd. All rights reserved.</span>
+    <span class="footer-copy">Made with care for healthcare.</span>
+  </div>
+</footer>
+
+<script>
+// Custom cursor
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+function animateCursor() {
+  cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+  rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+  ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+// Nav scroll
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// Scroll reveal
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

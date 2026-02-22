@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediBook — Full Platform Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#090c12;--surface:#111520;--surface2:#161c2a;
+  --border:#1e2840;--border2:#243050;
+  --gold:#d4a84b;--gold2:#e8c99a;
+  --text:#d0d8f0;--muted:#6b7a96;--muted2:#4a5878;
+  --green:#4ade80;--teal:#2dd4bf;--cyan:#00d4ff;
+  --purple:#a78bfa;--rose:#f472b6;--blue:#60a5fa;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:'Geist',sans-serif;display:flex;flex-direction:column;color:var(--text)}
+
+/* ── CHROME ── */
+.chrome{
+  height:52px;background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 16px;gap:10px;flex-shrink:0;z-index:100;
+}
+.logo{font-family:'Instrument Serif',serif;font-size:18px;color:#fff;letter-spacing:0.01em;flex-shrink:0}
+.logo span{color:var(--gold)}
+.admin-badge{background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.2);color:var(--cyan);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:2px 8px;border-radius:3px;font-weight:600;font-family:'DM Mono',monospace;flex-shrink:0}
+.url-bar{background:rgba(255,255,255,0.03);border:1px solid var(--border2);border-radius:6px;height:28px;display:flex;align-items:center;padding:0 10px;gap:6px;font-size:11px;color:rgba(255,255,255,0.3);overflow:hidden;width:300px;flex-shrink:0}
+.url-lock{color:var(--teal);font-size:10px}
+.url-txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'DM Mono',monospace}
+
+/* TABS */
+.tabs{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none;padding:0 4px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;color:var(--muted);border:1px solid transparent;transition:all 0.15s;white-space:nowrap;flex-shrink:0;position:relative}
+.tab:hover{background:rgba(255,255,255,0.03);color:var(--text)}
+.tab.active{background:rgba(212,168,75,0.1);border-color:rgba(212,168,75,0.2);color:var(--gold)}
+.tab-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.tab-badge{background:var(--gold);color:#000;font-size:8px;font-weight:700;padding:1px 5px;border-radius:4px;letter-spacing:0.04em}
+.tab-badge.new{background:var(--cyan);color:#000}
+
+/* STATUS */
+.chrome-right{margin-left:auto;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.status-live{display:flex;align-items:center;gap:5px;font-size:10px;padding:4px 10px;border-radius:10px;border:1px solid rgba(74,222,128,0.25);color:var(--green);background:rgba(74,222,128,0.07);white-space:nowrap}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 1.8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+
+/* STAGE */
+.stage{flex:1;position:relative;overflow:hidden}
+.slide{position:absolute;inset:0;transition:transform 0.42s cubic-bezier(0.4,0,0.2,1),opacity 0.32s ease;will-change:transform,opacity}
+.slide.active{transform:translateX(0);opacity:1;pointer-events:all}
+.slide.go-right{transform:translateX(100%);opacity:0;pointer-events:none}
+.slide.go-left{transform:translateX(-100%);opacity:0;pointer-events:none}
+.slide iframe{width:100%;height:100%;border:none;display:block;background:var(--bg)}
+
+/* PLACEHOLDER for slides without separate files */
+.placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(212,168,75,0.04) 0%,transparent 70%)}
+.ph-icon{font-size:56px;opacity:0.35}
+.ph-title{font-family:'Instrument Serif',serif;font-size:30px;color:rgba(255,255,255,0.35);font-weight:400}
+.ph-sub{font-size:13px;color:var(--muted2);text-align:center;line-height:1.7;max-width:380px}
+.ph-stack{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.ph-tag{font-size:10px;padding:4px 10px;border-radius:4px;border:1px solid var(--border2);color:var(--muted2);font-family:'DM Mono',monospace}
+
+/* BOTTOM BAR */
+.bottom-bar{height:44px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0}
+.nav-arrow{width:30px;height:30px;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid var(--border2);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all 0.15s;user-select:none;flex-shrink:0}
+.nav-arrow:hover{background:rgba(255,255,255,0.07);color:var(--text)}
+.nav-arrow.off{opacity:0.2;pointer-events:none}
+.slide-label{font-size:11px;color:var(--muted);white-space:nowrap;min-width:120px}
+.dots-row{display:flex;gap:5px;margin:0 auto}
+.dot{width:28px;height:3px;border-radius:2px;background:rgba(255,255,255,0.08);cursor:pointer;transition:all 0.3s}
+.dot.active{background:var(--gold);width:42px}
+.dot.done{background:var(--teal)}
+.slide-count{font-size:11px;color:var(--muted2);white-space:nowrap;font-family:'DM Mono',monospace}
+.key-hint{font-size:10px;color:var(--muted2);opacity:0.45;white-space:nowrap;flex-shrink:0}
+
+/* BUILD LOG */
+.build-log{position:fixed;bottom:60px;right:20px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);max-width:280px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none}
+.build-log.show{opacity:1}
+.bl-row{padding:2px 0;display:flex;gap:8px}
+.bl-check{color:var(--green)}
+.bl-new{color:var(--cyan)}
+</style>
+</head>
+<body>
+
+<!-- CHROME -->
+<div class="chrome">
+  <div class="logo">Medi<span>Book</span></div>
+  <div class="admin-badge">Platform Preview</div>
+  <div class="url-bar">
+    <span class="url-lock">🔒</span>
+    <span class="url-txt" id="urlTxt">medibook.io</span>
+  </div>
+  <div class="tabs" id="tabsEl"></div>
+  <div class="chrome-right">
+    <div class="status-live"><div class="live-dot"></div>All systems live</div>
+  </div>
+</div>
+
+<!-- STAGE -->
+<div class="stage" id="stageEl"></div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <button class="nav-arrow off" id="prevBtn" onclick="prev()">‹</button>
+  <span class="slide-label" id="slideLabel">Landing Page</span>
+  <div class="dots-row" id="dotsEl"></div>
+  <span class="slide-count" id="slideCount">01 / 07</span>
+  <button class="nav-arrow" id="nextBtn" onclick="next()">›</button>
+  <span class="key-hint">← → navigate</span>
+</div>
+
+<!-- BUILD LOG (hover corner) -->
+<div class="build-log" id="buildLog">
+  <div style="color:var(--gold);font-weight:500;margin-bottom:8px;font-size:12px">MediBook Build Log</div>
+  <div class="bl-row"><span class="bl-check">✓</span><span>Landing Page</span></div>
+  <div class="bl-row"><span class="bl-check">✓</span><span>Onboarding Wizard</span></div>
+  <div class="bl-row"><span class="bl-check">✓</span><span>Clinic Dashboard</span></div>
+  <div class="bl-row"><span class="bl-check">✓</span><span>AI Voice Agent</span></div>
+  <div class="bl-row"><span class="bl-check">✓</span><span>Stripe Billing</span></div>
+  <div class="bl-row"><span class="bl-new">★</span><span style="color:var(--cyan)">Agent Settings Page</span></div>
+  <div class="bl-row"><span class="bl-new">★</span><span style="color:var(--cyan)">Super Admin Panel</span></div>
+  <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px;color:var(--muted2)">Next: Public Booking Widget</div>
+</div>
+
+<script>
+const SLIDES = [
+  {label:'Landing Page',   dot:'#d4a84b', url:'medibook.io',                       file:'medibook-landing.html',       badge:null,    isNew:false},
+  {label:'Onboarding',     dot:'#c9a96e', url:'medibook.io/onboarding',             file:'medibook-onboarding.html',    badge:null,    isNew:false},
+  {label:'Dashboard',      dot:'#d4a84b', url:'app.medibook.io/dashboard',          file:'medibook-dashboard.html',     badge:'LIVE',  isNew:false},
+  {label:'AI Voice Agent', dot:'#2dd4bf', url:'app.medibook.io/voice-agent',        file:null,                          badge:null,    isNew:false,
+    ph:{icon:'🎙️',title:'AI Voice Agent',sub:'Full backend built with Twilio, Deepgram, GPT-4o and ElevenLabs. Answers calls 24/7, books appointments by voice in real time.',tags:['Twilio Media Streams','Deepgram nova-2-medical','GPT-4o Tool Calls','ElevenLabs turbo_v2','Node.js / Fastify']}},
+  {label:'Agent Settings', dot:'#a78bfa', url:'app.medibook.io/settings/agent',    file:'medibook-agent-settings.html',badge:'NEW',   isNew:true},
+  {label:'Super Admin',    dot:'#00d4ff', url:'admin.medibook.io',                  file:'medibook-admin.html',         badge:'NEW',   isNew:true},
+  {label:'Billing',        dot:'#60a5fa', url:'app.medibook.io/billing',            file:null,                          badge:null,    isNew:false,
+    ph:{icon:'💳',title:'Stripe Billing',sub:'Subscriptions, trials, webhooks and plan enforcement all built and ready. Each clinic manages their own billing self-serve.',tags:['Stripe Checkout','Webhook Handler','14-day Trial','Plan Enforcement','Billing Portal']}},
+];
+
+let cur = 0;
+
+// Build tabs
+const tabsEl = document.getElementById('tabsEl');
+SLIDES.forEach((s,i) => {
+  const t = document.createElement('div');
+  t.className = `tab${i===0?' active':''}`;
+  t.onclick = () => goTo(i);
+  t.innerHTML = `<div class="tab-dot" style="background:${s.dot}"></div>${s.label}${s.badge?`<span class="tab-badge${s.isNew?' new':''}">${s.badge}</span>`:''}`;
+  tabsEl.appendChild(t);
+});
+
+// Build dots
+const dotsEl = document.getElementById('dotsEl');
+SLIDES.forEach((_,i) => {
+  const d = document.createElement('div');
+  d.className = `dot${i===0?' active':''}`;
+  d.onclick = () => goTo(i);
+  dotsEl.appendChild(d);
+});
+
+// Build slides
+const stageEl = document.getElementById('stageEl');
+SLIDES.forEach((s,i) => {
+  const div = document.createElement('div');
+  div.className = `slide${i===0?' active':' go-right'}`;
+  div.id = `sl${i}`;
+  if(s.file) {
+    div.innerHTML = `<iframe src="${s.file}" title="${s.label}" loading="${i<=1?'eager':'lazy'}"></iframe>`;
+  } else {
+    const ph = s.ph;
+    div.innerHTML = `<div class="placeholder">
+      <div class="ph-icon">${ph.icon}</div>
+      <div class="ph-title">${ph.title}</div>
+      <div class="ph-sub">${ph.sub}</div>
+      <div class="ph-stack">${ph.tags.map(t=>`<div class="ph-tag">${t}</div>`).join('')}</div>
+    </div>`;
+  }
+  stageEl.appendChild(div);
+});
+
+function goTo(n) {
+  if(n === cur) return;
+  const dir = n > cur;
+  document.getElementById(`sl${cur}`).className = `slide ${dir?'go-left':'go-right'}`;
+  document.getElementById(`sl${n}`).className = `slide active`;
+  cur = n;
+  updateUI();
+}
+function next(){ if(cur < SLIDES.length-1) goTo(cur+1); }
+function prev(){ if(cur > 0) goTo(cur-1); }
+
+function updateUI() {
+  const s = SLIDES[cur];
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===cur));
+  document.querySelectorAll('.dot').forEach((d,i) => { d.className=`dot${i<cur?' done':i===cur?' active':''}`; });
+  document.getElementById('urlTxt').textContent = s.url;
+  document.getElementById('slideLabel').textContent = s.label;
+  document.getElementById('slideCount').textContent = `0${cur+1} / 0${SLIDES.length}`;
+  document.getElementById('prevBtn').classList.toggle('off', cur===0);
+  document.getElementById('nextBtn').classList.toggle('off', cur===SLIDES.length-1);
+
+  // Show build log on new slides
+  if(s.isNew) {
+    const bl = document.getElementById('buildLog');
+    bl.classList.add('show');
+    setTimeout(() => bl.classList.remove('show'), 4000);
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if(e.key==='ArrowRight') next();
+  if(e.key==='ArrowLeft') prev();
+});
+</script>
+</body>
+</html>

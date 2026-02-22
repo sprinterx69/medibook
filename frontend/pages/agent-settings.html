@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediBook — AI Agent Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0f1117;
+  --surface:#161b27;
+  --surface2:#1c2235;
+  --surface3:#222840;
+  --border:#252d42;
+  --border2:#2e3a56;
+  --gold:#d4a84b;
+  --gold-dim:rgba(212,168,75,0.12);
+  --gold-border:rgba(212,168,75,0.25);
+  --teal:#2dd4bf;
+  --teal-dim:rgba(45,212,191,0.1);
+  --rose:#f472b6;
+  --blue:#60a5fa;
+  --green:#4ade80;
+  --green-dim:rgba(74,222,128,0.1);
+  --amber:#fbbf24;
+  --red:#f87171;
+  --purple:#a78bfa;
+  --text:#e8eaf0;
+  --muted:#6b7a96;
+  --muted2:#4a5568;
+  --sidebar:220px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Geist',sans-serif;font-size:13px;display:flex}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh}
+.sb-logo{padding:20px 16px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.sb-logo-mark{width:28px;height:28px;background:linear-gradient(135deg,#d4a84b,#a07830);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000}
+.sb-logo-text{font-size:15px;font-weight:700;color:var(--text)}
+.sb-logo-text span{color:var(--gold)}
+.sb-sec{padding:14px 10px 5px;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted2)}
+.sb-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;margin:1px 6px;cursor:pointer;color:var(--muted);font-size:12px;border:1px solid transparent;transition:all 0.15s}
+.sb-item:hover{background:var(--surface2);color:var(--text)}
+.sb-item.active{background:var(--gold-dim);border-color:var(--gold-border);color:var(--gold);font-weight:500}
+.sb-item svg{width:14px;height:14px;flex-shrink:0;opacity:0.7}
+.sb-item.active svg{opacity:1}
+.sb-bottom{margin-top:auto;padding:12px;border-top:1px solid var(--border)}
+.sb-user{display:flex;align-items:center;gap:8px;padding:8px;border-radius:7px;background:var(--surface2);cursor:pointer}
+.sb-av{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff}
+.sb-name{font-size:11px;font-weight:600}
+.sb-role{font-size:9px;color:var(--muted)}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0}
+
+/* Topbar */
+.topbar{height:54px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-title{font-size:15px;font-weight:600}
+.agent-status{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;transition:all 0.2s}
+.agent-status.live{background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);color:var(--green)}
+.agent-status.paused{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.25);color:var(--amber)}
+.agent-status-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 1.8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.tb-btn{padding:7px 16px;border-radius:7px;font-family:'Geist',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.18s;border:none;display:flex;align-items:center;gap:6px}
+.tb-btn-outline{background:transparent;border:1px solid var(--border2);color:var(--muted)}
+.tb-btn-outline:hover{border-color:var(--gold-border);color:var(--text)}
+.tb-btn-gold{background:var(--gold);color:#000}
+.tb-btn-gold:hover{background:#e0b55a;transform:translateY(-1px)}
+.tb-btn-teal{background:var(--teal-dim);border:1px solid rgba(45,212,191,0.25);color:var(--teal)}
+.tb-btn-teal:hover{background:rgba(45,212,191,0.18)}
+
+/* ── LAYOUT ── */
+.body{flex:1;display:flex;overflow:hidden}
+
+/* Section nav */
+.section-nav{width:200px;flex-shrink:0;border-right:1px solid var(--border);padding:16px 0;overflow-y:auto;background:var(--surface)}
+.sn-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;color:var(--muted);font-size:12px;transition:all 0.15s;border-left:2px solid transparent;position:relative}
+.sn-item:hover{color:var(--text);background:rgba(255,255,255,0.02)}
+.sn-item.active{color:var(--gold);border-left-color:var(--gold);background:var(--gold-dim)}
+.sn-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;background:var(--surface2)}
+.sn-item.active .sn-icon{background:var(--gold-dim)}
+.sn-label{font-weight:500}
+.sn-complete{width:6px;height:6px;border-radius:50%;background:var(--green);margin-left:auto;flex-shrink:0}
+
+/* Content area */
+.content-area{flex:1;overflow-y:auto;padding:28px 32px}
+.content-area::-webkit-scrollbar{width:4px}
+.content-area::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* Section */
+.section{display:none}
+.section.active{display:block;animation:fadeUp 0.25s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.section-header{margin-bottom:28px}
+.section-title{font-family:'Instrument Serif',serif;font-size:26px;color:var(--text);margin-bottom:6px}
+.section-title em{font-style:italic;color:var(--gold)}
+.section-desc{font-size:13px;color:var(--muted);line-height:1.7;max-width:540px}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.card-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.card-body{padding:20px}
+
+/* Form fields */
+.field{margin-bottom:18px}
+.field:last-child{margin-bottom:0}
+.field-label{display:block;font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.field-hint{font-size:11px;color:var(--muted2);margin-top:5px;line-height:1.5}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+input[type=text],input[type=email],input[type=tel],input[type=number],select,textarea{
+  width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  padding:9px 12px;border-radius:8px;font-family:'Geist',sans-serif;font-size:13px;
+  outline:none;transition:border-color 0.2s,box-shadow 0.2s;appearance:none;
+}
+input::placeholder,textarea::placeholder{color:var(--muted2)}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,168,75,0.1)}
+select{background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' stroke='%236b7a96' stroke-width='1.5' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer}
+textarea{resize:vertical;min-height:80px;line-height:1.6}
+
+/* Character counter */
+.char-wrap{position:relative}
+.char-count{position:absolute;right:10px;bottom:8px;font-size:10px;color:var(--muted2)}
+
+/* Toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-info{}
+.toggle-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
+.toggle-desc{font-size:11px;color:var(--muted)}
+.toggle{width:40px;height:22px;background:var(--surface3);border-radius:11px;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0;border:1px solid var(--border2)}
+.toggle.on{background:var(--gold);border-color:var(--gold)}
+.toggle-thumb{width:16px;height:16px;background:white;border-radius:50%;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.3)}
+.toggle.on .toggle-thumb{left:20px}
+
+/* Voice cards */
+.voice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.voice-card{border:1.5px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all 0.2s;text-align:center;position:relative}
+.voice-card:hover{border-color:var(--border2)}
+.voice-card.selected{border-color:var(--gold);background:var(--gold-dim)}
+.voice-avatar{width:48px;height:48px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--surface2);border:2px solid var(--border)}
+.voice-card.selected .voice-avatar{border-color:var(--gold)}
+.voice-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.voice-desc{font-size:10px;color:var(--muted);line-height:1.4}
+.voice-preview{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:10px;font-size:10px;color:var(--muted);padding:5px 0;border-top:1px solid var(--border);transition:color 0.2s;cursor:pointer}
+.voice-preview:hover{color:var(--gold)}
+.voice-playing{width:40px;height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;display:none}
+.voice-playing.active{display:block}
+.voice-wave{height:4px;border-radius:2px;background:var(--gold);animation:wave 1s ease-in-out infinite}
+@keyframes wave{0%,100%{width:20%}50%{width:90%}}
+.voice-selected-badge{position:absolute;top:8px;right:8px;width:16px;height:16px;background:var(--gold);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#000}
+.voice-card.selected .voice-selected-badge{display:flex}
+
+/* Tone slider */
+.tone-track{display:flex;align-items:center;gap:16px;margin-top:12px}
+.tone-label{font-size:11px;color:var(--muted);min-width:60px}
+.tone-label:last-child{text-align:right}
+input[type=range]{flex:1;-webkit-appearance:none;height:4px;background:var(--border);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--gold);border-radius:50%;cursor:pointer;box-shadow:0 0 6px rgba(212,168,75,0.4)}
+
+/* FAQ rows */
+.faq-list{display:flex;flex-direction:column;gap:8px}
+.faq-row{background:var(--surface2);border:1px solid var(--border);border-radius:9px;overflow:hidden;transition:border-color 0.2s}
+.faq-row:hover{border-color:var(--border2)}
+.faq-row.expanded{border-color:var(--gold-border)}
+.faq-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
+.faq-num{width:20px;height:20px;border-radius:5px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--muted);flex-shrink:0}
+.faq-row.expanded .faq-num{background:var(--gold-dim);color:var(--gold)}
+.faq-q-preview{flex:1;font-size:12px;color:var(--text);font-weight:500}
+.faq-q-preview.empty{color:var(--muted);font-style:italic}
+.faq-chevron{color:var(--muted);font-size:10px;transition:transform 0.2s;flex-shrink:0}
+.faq-row.expanded .faq-chevron{transform:rotate(180deg)}
+.faq-body{padding:0 14px 14px;display:none}
+.faq-row.expanded .faq-body{display:block}
+.faq-body input{margin-bottom:8px;font-weight:500}
+.faq-delete{background:transparent;border:none;color:var(--muted2);font-size:11px;cursor:pointer;padding:4px 0;transition:color 0.2s;margin-top:4px}
+.faq-delete:hover{color:var(--red)}
+
+.add-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:10px;border:1.5px dashed var(--border2);border-radius:9px;color:var(--muted);font-size:12px;cursor:pointer;transition:all 0.2s;background:transparent;font-family:'Geist',sans-serif;margin-top:8px}
+.add-btn:hover{border-color:var(--gold-border);color:var(--gold);background:var(--gold-dim)}
+
+/* Service toggles */
+.service-list{display:flex;flex-direction:column;gap:6px}
+.service-row{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;transition:all 0.2s}
+.service-row.enabled{border-color:rgba(45,212,191,0.25);background:rgba(45,212,191,0.04)}
+.service-emoji{font-size:16px;flex-shrink:0}
+.service-info{flex:1}
+.service-name{font-size:13px;font-weight:500;color:var(--text)}
+.service-detail{font-size:11px;color:var(--muted);margin-top:2px}
+.service-price{font-size:12px;font-weight:600;color:var(--gold);margin-left:auto;margin-right:12px;flex-shrink:0}
+
+/* Rules */
+.rule-row{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;margin-bottom:8px;transition:border-color 0.2s}
+.rule-row.active-rule{border-color:rgba(212,168,75,0.2);background:var(--gold-dim)}
+.rule-icon{width:32px;height:32px;border-radius:7px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.rule-row.active-rule .rule-icon{background:rgba(212,168,75,0.1)}
+.rule-info{flex:1}
+.rule-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px}
+.rule-desc{font-size:11px;color:var(--muted);line-height:1.5}
+.rule-input{margin-top:8px}
+
+/* Prompt preview */
+.prompt-preview{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;font-size:11px;color:var(--muted);line-height:1.8;font-family:monospace;white-space:pre-wrap;max-height:280px;overflow-y:auto}
+.prompt-preview::-webkit-scrollbar{width:3px}
+.prompt-preview::-webkit-scrollbar-thumb{background:var(--border2)}
+.prompt-highlight{color:var(--gold)}
+.prompt-dim{color:var(--muted2)}
+
+/* ── CALL SIMULATOR ── */
+.simulator{position:fixed;right:0;top:0;bottom:0;width:360px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);z-index:200}
+.simulator.open{transform:translateX(0)}
+.sim-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sim-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.sim-close{width:28px;height:28px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.15s}
+.sim-close:hover{color:var(--text)}
+.sim-info{padding:12px 20px;background:var(--gold-dim);border-bottom:1px solid var(--gold-border)}
+.sim-info-text{font-size:11px;color:var(--gold);line-height:1.6}
+.sim-info-text strong{display:block;font-weight:600;margin-bottom:2px}
+.sim-messages{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+.sim-messages::-webkit-scrollbar{width:3px}
+.sim-messages::-webkit-scrollbar-thumb{background:var(--border2)}
+.sim-msg{max-width:90%;animation:msgIn 0.25s ease both}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.sim-msg.agent{align-self:flex-start}
+.sim-msg.user{align-self:flex-end}
+.sim-bubble{padding:10px 13px;border-radius:10px;font-size:12px;line-height:1.6}
+.sim-msg.agent .sim-bubble{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-bottom-left-radius:3px}
+.sim-msg.user .sim-bubble{background:var(--gold);color:#000;font-weight:500;border-bottom-right-radius:3px}
+.sim-msg.system .sim-bubble{background:transparent;border:none;color:var(--muted2);font-size:10px;text-align:center;padding:2px 0}
+.sim-tool-call{background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);border-radius:7px;padding:7px 11px;font-size:10px;color:var(--purple);margin-top:4px;font-family:monospace}
+.sim-sender{font-size:9px;color:var(--muted2);margin-bottom:3px;padding:0 2px}
+.sim-typing{display:flex;align-items:center;gap:4px;padding:10px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;border-bottom-left-radius:3px;align-self:flex-start}
+.sim-typing span{width:5px;height:5px;background:var(--muted);border-radius:50%;animation:bounce 1.2s infinite}
+.sim-typing span:nth-child(2){animation-delay:0.2s}
+.sim-typing span:nth-child(3){animation-delay:0.4s}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.sim-input-row{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px}
+.sim-input{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-family:'Geist',sans-serif;font-size:12px;outline:none;transition:border-color 0.2s}
+.sim-input:focus{border-color:var(--gold)}
+.sim-send{width:36px;height:36px;background:var(--gold);border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:background 0.18s;flex-shrink:0}
+.sim-send:hover{background:#e0b55a}
+.sim-quick{display:flex;flex-wrap:wrap;gap:6px;padding:0 20px 12px}
+.sim-quick-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:5px 10px;border-radius:14px;font-size:10px;cursor:pointer;transition:all 0.15s;font-family:'Geist',sans-serif}
+.sim-quick-btn:hover{border-color:var(--gold-border);color:var(--gold);background:var(--gold-dim)}
+
+/* Save bar */
+.save-bar{position:fixed;bottom:0;left:var(--sidebar);right:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 32px;display:flex;align-items:center;justify-content:space-between;z-index:100;transform:translateY(100%);transition:transform 0.3s ease}
+.save-bar.visible{transform:translateY(0)}
+.save-bar-msg{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.save-bar-msg::before{content:'●';color:var(--amber);font-size:8px}
+.save-bar-actions{display:flex;gap:10px}
+
+/* Toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface);border:1px solid var(--border2);border-radius:9px;padding:12px 20px;font-size:13px;color:var(--text);box-shadow:0 20px 48px rgba(0,0,0,0.5);z-index:9999;opacity:0;transition:all 0.3s;pointer-events:none;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Completion badge */
+.completion-ring{width:36px;height:36px;position:relative;flex-shrink:0}
+.completion-ring svg{transform:rotate(-90deg)}
+.completion-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--gold)}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">M</div>
+    <div class="sb-logo-text">Medi<span>Book</span></div>
+  </div>
+  <div class="sb-sec">Main</div>
+  <div class="sb-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Overview</div>
+  <div class="sb-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>Calendar</div>
+  <div class="sb-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Clients</div>
+  <div class="sb-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payments</div>
+  <div class="sb-sec">AI & Settings</div>
+  <div class="sb-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>AI Voice Agent</div>
+  <div class="sb-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg>Settings</div>
+  <div class="sb-bottom">
+    <div class="sb-user">
+      <div class="sb-av">LC</div>
+      <div><div class="sb-name">Lumière Clinic</div><div class="sb-role">Pro Plan · Active</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-title">AI Voice Agent</span>
+      <div class="agent-status live" id="agentStatusBadge" onclick="toggleAgent()">
+        <div class="agent-status-dot"></div>
+        <span id="agentStatusText">Agent Live</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="tb-btn tb-btn-teal" onclick="openSimulator()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Test Call
+      </button>
+      <button class="tb-btn tb-btn-outline" onclick="showPromptPreview()">View System Prompt</button>
+      <button class="tb-btn tb-btn-gold" id="saveBtn" onclick="saveSettings()" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save Changes
+      </button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+
+    <!-- Section nav -->
+    <nav class="section-nav">
+      <div class="sn-item active" onclick="switchSection('identity',this)">
+        <div class="sn-icon">🎙️</div>
+        <span class="sn-label">Identity & Voice</span>
+        <div class="sn-complete"></div>
+      </div>
+      <div class="sn-item" onclick="switchSection('greeting',this)">
+        <div class="sn-icon">👋</div>
+        <span class="sn-label">Greeting</span>
+        <div class="sn-complete"></div>
+      </div>
+      <div class="sn-item" onclick="switchSection('services',this)">
+        <div class="sn-icon">💆</div>
+        <span class="sn-label">Services</span>
+        <div class="sn-complete"></div>
+      </div>
+      <div class="sn-item" onclick="switchSection('knowledge',this)">
+        <div class="sn-icon">🧠</div>
+        <span class="sn-label">Knowledge Base</span>
+      </div>
+      <div class="sn-item" onclick="switchSection('rules',this)">
+        <div class="sn-icon">📋</div>
+        <span class="sn-label">Booking Rules</span>
+      </div>
+      <div class="sn-item" onclick="switchSection('prompt',this)">
+        <div class="sn-icon">⚙️</div>
+        <span class="sn-label">System Prompt</span>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="content-area">
+
+      <!-- ── SECTION: Identity & Voice ── -->
+      <div class="section active" id="section-identity">
+        <div class="section-header">
+          <h2 class="section-title">Identity & <em>Voice</em></h2>
+          <p class="section-desc">Choose how your AI agent introduces itself and what it sounds like. Clients will hear this voice every time they call.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">🏥 Clinic Identity</span></div>
+          <div class="card-body">
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">Business Name</label>
+                <input type="text" value="Lumière Aesthetics Clinic" oninput="markDirty()">
+                <div class="field-hint">How the agent refers to your business on calls</div>
+              </div>
+              <div class="field">
+                <label class="field-label">Agent Name</label>
+                <input type="text" value="Aria" id="agentNameInput" oninput="markDirty();updateAgentName()">
+                <div class="field-hint">The name callers can use to address the agent</div>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">Location / Address</label>
+                <input type="text" value="47 Harley Street, London W1G 8QQ" oninput="markDirty()">
+              </div>
+              <div class="field">
+                <label class="field-label">Public Phone Number</label>
+                <input type="tel" value="+44 20 7946 0123" oninput="markDirty()">
+                <div class="field-hint">Displayed when agent transfers to a human</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">🔊 Voice Selection</span><span style="font-size:11px;color:var(--muted)">Click to preview</span></div>
+          <div class="card-body">
+            <div class="voice-grid" id="voiceGrid"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">🎭 Personality & Tone</span></div>
+          <div class="card-body">
+            <div class="field">
+              <label class="field-label">Conversation Style</label>
+              <div class="tone-track">
+                <span class="tone-label">Very formal</span>
+                <input type="range" min="1" max="5" value="3" oninput="updateToneLabel(this.value);markDirty()">
+                <span class="tone-label">Very casual</span>
+              </div>
+              <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--gold)" id="toneLabel">Balanced — warm and professional</div>
+            </div>
+            <div class="field">
+              <label class="field-label">Language</label>
+              <select oninput="markDirty()">
+                <option selected>English (UK)</option>
+                <option>English (US)</option>
+                <option>French</option>
+                <option>Spanish</option>
+                <option>Arabic</option>
+                <option>Mandarin</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Additional Personality Instructions</label>
+              <div class="char-wrap">
+                <textarea rows="3" placeholder="e.g. Always address callers by their first name. Mention our luxury positioning. Never discuss competitor clinics." oninput="markDirty();updateCharCount(this,200)" id="personalityInput">Always treat callers as valued guests. Reflect our premium positioning. Use warm, elegant language that reflects our brand.</textarea>
+                <span class="char-count" id="personalityCount">99 / 200</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION: Greeting ── -->
+      <div class="section" id="section-greeting">
+        <div class="section-header">
+          <h2 class="section-title">Opening <em>Greeting</em></h2>
+          <p class="section-desc">The first words your agent speaks when a call is answered. This sets the tone for the entire interaction.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">👋 Greeting Script</span></div>
+          <div class="card-body">
+            <div class="field">
+              <label class="field-label">Main Greeting</label>
+              <div class="char-wrap">
+                <textarea rows="3" id="greetingInput" oninput="markDirty();updateCharCount(this,220)" style="font-size:14px;line-height:1.7">Good afternoon, thank you for calling Lumière Aesthetics Clinic. My name is Aria, your virtual assistant. I can help you book an appointment, check availability, or answer any questions. How may I help you today?</textarea>
+                <span class="char-count" id="greetingCount">199 / 220</span>
+              </div>
+              <div class="field-hint">Keep it under 220 characters — shorter greetings have higher caller satisfaction scores</div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">After-Hours Greeting</label>
+              <div class="char-wrap">
+                <textarea rows="2" id="afterHoursInput" oninput="markDirty()">Thank you for calling Lumière Aesthetics. We're currently closed. Our hours are Monday to Saturday, 9am to 7pm. Please call back during business hours or leave your name and number and we'll return your call.</textarea>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Transfer Message</label>
+              <input type="text" value="Of course, let me connect you with a member of our team right away. Please hold for just a moment." oninput="markDirty()">
+              <div class="field-hint">Spoken before transferring to a human staff member</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">⏰ Business Hours</span></div>
+          <div class="card-body" id="hoursConfig"></div>
+        </div>
+      </div>
+
+      <!-- ── SECTION: Services ── -->
+      <div class="section" id="section-services">
+        <div class="section-header">
+          <h2 class="section-title">Bookable <em>Services</em></h2>
+          <p class="section-desc">Toggle which services the AI agent is allowed to book. The agent will only offer and schedule the services you enable here.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">💆 Services the Agent Can Book</span>
+            <span style="font-size:11px;color:var(--muted)" id="serviceCount">6 of 8 enabled</span>
+          </div>
+          <div class="card-body" style="padding:14px">
+            <div class="service-list" id="serviceList"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">💰 Deposit Settings</span></div>
+          <div class="card-body">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-name">Require deposit to confirm booking</div>
+                <div class="toggle-desc">Agent will direct callers to pay a deposit online after booking</div>
+              </div>
+              <div class="toggle on" onclick="toggleThis(this);markDirty()"><div class="toggle-thumb"></div></div>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-name">Mention deposit amount on call</div>
+                <div class="toggle-desc">Agent reads out the deposit amount before confirming</div>
+              </div>
+              <div class="toggle on" onclick="toggleThis(this);markDirty()"><div class="toggle-thumb"></div></div>
+            </div>
+            <div class="field" style="margin-top:16px">
+              <label class="field-label">Default Deposit Amount</label>
+              <div style="display:flex;align-items:center;gap:8px">
+                <select style="width:80px" oninput="markDirty()"><option>£</option><option>€</option><option>$</option></select>
+                <input type="number" value="50" style="width:120px" oninput="markDirty()">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION: Knowledge Base (FAQs) ── -->
+      <div class="section" id="section-knowledge">
+        <div class="section-header">
+          <h2 class="section-title">Knowledge <em>Base</em></h2>
+          <p class="section-desc">Add questions and answers your agent should know. Every time a caller asks something, the agent checks here first before saying it doesn't know.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">❓ FAQ Library</span>
+            <span style="font-size:11px;color:var(--muted)" id="faqCount">12 questions</span>
+          </div>
+          <div class="card-body" style="padding:14px">
+            <div class="faq-list" id="faqList"></div>
+            <button class="add-btn" onclick="addFaq()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add question
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">📋 Clinic Context</span></div>
+          <div class="card-body">
+            <div class="field">
+              <label class="field-label">About Your Clinic</label>
+              <textarea rows="4" oninput="markDirty()" placeholder="Write a brief description of your clinic — history, specialisations, what makes you different. The agent will use this when callers ask general questions.">Lumière Aesthetics is a luxury medical aesthetics clinic located in the heart of Harley Street, London. Founded in 2018, we specialise in non-surgical cosmetic treatments delivered by our team of GMC-registered practitioners. We pride ourselves on natural-looking results and a discreet, personalised experience.</textarea>
+            </div>
+            <div class="field">
+              <label class="field-label">Things the Agent Should Never Say</label>
+              <textarea rows="2" oninput="markDirty()" placeholder="e.g. never mention competitor names, never quote surgery prices, never discuss refunds on the phone">Never mention competitor clinics by name. Never quote prices for surgical procedures. Never promise specific results or outcomes.</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION: Booking Rules ── -->
+      <div class="section" id="section-rules">
+        <div class="section-header">
+          <h2 class="section-title">Booking <em>Rules</em></h2>
+          <p class="section-desc">Set constraints on what the agent is and isn't allowed to book. These rules are enforced automatically on every call.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">📋 Scheduling Rules</span></div>
+          <div class="card-body" id="rulesBody"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">🆕 New Client Rules</span></div>
+          <div class="card-body">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-name">Offer free consultation to first-time callers</div>
+                <div class="toggle-desc">Agent detects new clients and proactively offers a consultation before booking a treatment</div>
+              </div>
+              <div class="toggle on" onclick="toggleThis(this);markDirty()"><div class="toggle-thumb"></div></div>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-name">Verify new client details before booking</div>
+                <div class="toggle-desc">Agent collects full name, phone number, and email from new clients</div>
+              </div>
+              <div class="toggle on" onclick="toggleThis(this);markDirty()"><div class="toggle-thumb"></div></div>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-name">Flag high-risk bookings for manual review</div>
+                <div class="toggle-desc">Bookings from callers with 2+ no-shows are flagged and require staff confirmation</div>
+              </div>
+              <div class="toggle" onclick="toggleThis(this);markDirty()"><div class="toggle-thumb"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION: System Prompt Preview ── -->
+      <div class="section" id="section-prompt">
+        <div class="section-header">
+          <h2 class="section-title">System <em>Prompt</em></h2>
+          <p class="section-desc">This is the exact instruction sent to GPT-4o at the start of every call. It's built automatically from everything you've configured. Read-only — edit the sections above to change it.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">⚙️ Live System Prompt</span>
+            <div style="display:flex;gap:8px">
+              <button class="tb-btn tb-btn-outline" style="font-size:11px;padding:5px 12px" onclick="copyPrompt()">Copy</button>
+              <span style="font-size:11px;color:var(--muted);align-self:center">Auto-regenerated on save</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="prompt-preview" id="promptPreview"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">📊 Prompt Stats</span></div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+              <div style="text-align:center;padding:14px;background:var(--surface2);border-radius:8px">
+                <div style="font-family:'Instrument Serif',serif;font-size:28px;color:var(--gold);font-weight:600" id="statTokens">~680</div>
+                <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-top:3px">Tokens</div>
+              </div>
+              <div style="text-align:center;padding:14px;background:var(--surface2);border-radius:8px">
+                <div style="font-family:'Instrument Serif',serif;font-size:28px;color:var(--teal);font-weight:600">12</div>
+                <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-top:3px">FAQs</div>
+              </div>
+              <div style="text-align:center;padding:14px;background:var(--surface2);border-radius:8px">
+                <div style="font-family:'Instrument Serif',serif;font-size:28px;color:var(--blue);font-weight:600">6</div>
+                <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-top:3px">Services</div>
+              </div>
+              <div style="text-align:center;padding:14px;background:var(--surface2);border-radius:8px">
+                <div style="font-family:'Instrument Serif',serif;font-size:28px;color:var(--purple);font-weight:600">5</div>
+                <div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-top:3px">Rules</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content-area -->
+  </div><!-- /body -->
+</div><!-- /main -->
+
+<!-- CALL SIMULATOR -->
+<div class="simulator" id="simulator">
+  <div class="sim-header">
+    <div class="sim-title">🎙️ Test Your Agent</div>
+    <div class="sim-close" onclick="closeSimulator()">✕</div>
+  </div>
+  <div class="sim-info">
+    <div class="sim-info-text">
+      <strong>Simulating: Lumière Aesthetics Clinic</strong>
+      Aria · Warm British voice · Pro Plan active
+    </div>
+  </div>
+  <div class="sim-messages" id="simMessages"></div>
+  <div class="sim-quick" id="simQuick">
+    <button class="sim-quick-btn" onclick="simQuickSend(this)">I'd like to book an appointment</button>
+    <button class="sim-quick-btn" onclick="simQuickSend(this)">What services do you offer?</button>
+    <button class="sim-quick-btn" onclick="simQuickSend(this)">Do you have anything tomorrow?</button>
+    <button class="sim-quick-btn" onclick="simQuickSend(this)">How much is a Hydrafacial?</button>
+    <button class="sim-quick-btn" onclick="simQuickSend(this)">I need to cancel my appointment</button>
+    <button class="sim-quick-btn" onclick="simQuickSend(this)">Can I speak to someone?</button>
+  </div>
+  <div class="sim-input-row">
+    <input class="sim-input" id="simInput" placeholder="Type a message to test your agent…" onkeydown="if(event.key==='Enter')sendSimMessage()">
+    <button class="sim-send" onclick="sendSimMessage()">↑</button>
+  </div>
+</div>
+
+<!-- SAVE BAR -->
+<div class="save-bar" id="saveBar">
+  <div class="save-bar-msg">You have unsaved changes</div>
+  <div class="save-bar-actions">
+    <button class="tb-btn tb-btn-outline" onclick="discardChanges()">Discard</button>
+    <button class="tb-btn tb-btn-gold" onclick="saveSettings()">Save & Apply</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+const VOICES = [
+  {id:'aria',name:'Aria',desc:'Warm British female\nProfessional & calm',emoji:'👩‍💼',lang:'EN-GB'},
+  {id:'james',name:'James',desc:'Neutral British male\nAuthoritative & clear',emoji:'👨‍⚕️',lang:'EN-GB'},
+  {id:'sophie',name:'Sophie',desc:'Friendly French accent\nWarm & welcoming',emoji:'👩‍🦱',lang:'EN-FR'},
+  {id:'marcus',name:'Marcus',desc:'Deep American male\nConfident & reassuring',emoji:'👨‍💼',lang:'EN-US'},
+  {id:'luna',name:'Luna',desc:'Light Australian female\nEnergetic & bright',emoji:'👩',lang:'EN-AU'},
+  {id:'eli',name:'Eli',desc:'Neutral American male\nFriendly & approachable',emoji:'🧑',lang:'EN-US'},
+];
+
+const SERVICES = [
+  {id:'hydrafacial',emoji:'💧',name:'Hydrafacial',detail:'60 min',price:'£180',enabled:true},
+  {id:'botox',emoji:'💉',name:'Botox / Anti-wrinkle',detail:'30 min',price:'£280',enabled:true},
+  {id:'filler',emoji:'✨',name:'Dermal Fillers',detail:'60 min',price:'£420',enabled:true},
+  {id:'laser',emoji:'⚡',name:'Laser Treatment',detail:'60 min',price:'£320',enabled:true},
+  {id:'peel',emoji:'🌿',name:'Chemical Peel',detail:'45 min',price:'£150',enabled:true},
+  {id:'consultation',emoji:'🩺',name:'Consultation',detail:'30 min',price:'£90',enabled:true},
+  {id:'microneedling',emoji:'🔬',name:'Microneedling',detail:'75 min',price:'£250',enabled:false},
+  {id:'prp',emoji:'🔴',name:'PRP Treatment',detail:'90 min',price:'£380',enabled:false},
+];
+
+const FAQS = [
+  {q:'Do you offer parking nearby?',a:'Yes, there is an NCP car park on Wimpole Street, a 3-minute walk from the clinic. Street parking is also available on Devonshire Street.'},
+  {q:'What is your cancellation policy?',a:'We require 48 hours notice to cancel or reschedule. Cancellations made within 48 hours will forfeit the deposit.'},
+  {q:'Do you treat men as well as women?',a:'Absolutely — we welcome all clients. Approximately 30% of our clientele are male.'},
+  {q:'Are your practitioners medically qualified?',a:'Yes, all our practitioners are GMC-registered doctors or NMC-registered nurses with specialist aesthetics training.'},
+  {q:'How long do results last?',a:'This varies by treatment. Botox typically lasts 3–4 months, dermal fillers 12–18 months, and Hydrafacials are recommended monthly. Your practitioner will advise you.'},
+  {q:'Do you offer payment plans?',a:'Yes, we offer 0% interest payment plans through Payl8r for treatments over £300. Ask our team for details.'},
+  {q:'Is there a minimum age?',a:'We treat clients aged 18 and over. Some treatments require a consultation before booking if you are under 25.'},
+  {q:'Do I need a consultation before booking?',a:'A consultation is included with your first appointment. For some treatments like fillers and laser, we require a consultation before proceeding.'},
+  {q:'What should I do to prepare for my appointment?',a:'Please arrive with clean skin, free of makeup. Avoid alcohol for 24 hours before injectables. Full aftercare advice is emailed after booking.'},
+  {q:'Do you have a waiting list?',a:'Yes, if your preferred slot is not available, we can add you to our cancellation list and call or text if a slot becomes available.'},
+  {q:'Is the clinic wheelchair accessible?',a:'Yes, we have step-free access and a lift to all floors.'},
+  {q:'Can I bring a friend or family member?',a:'Yes, you are welcome to bring one companion. Please let us know when booking.'},
+];
+
+const RULES = [
+  {icon:'⏰',name:'Minimum advance notice',desc:'Minimum time before a booking can be made',type:'select',options:['No minimum','1 hour','2 hours','4 hours','24 hours','48 hours'],value:2},
+  {icon:'📅',name:'Maximum advance booking',desc:'How far in advance clients can book',type:'select',options:['1 week','2 weeks','1 month','3 months','6 months'],value:3},
+  {icon:'🔄',name:'Buffer between appointments',desc:'Gap between consecutive bookings for the same staff member',type:'select',options:['No buffer','5 minutes','10 minutes','15 minutes','30 minutes'],value:2},
+  {icon:'🚫',name:'Same-day laser bookings',desc:'Prevent laser treatments from being booked on the same day as other facial treatments',type:'toggle',value:true},
+  {icon:'💳',name:'Deposit required for injectables',desc:'Always require a deposit when booking Botox or Filler appointments',type:'toggle',value:true},
+];
+
+const HOURS = [
+  {day:'Monday',open:true,start:'09:00',end:'19:00'},
+  {day:'Tuesday',open:true,start:'09:00',end:'19:00'},
+  {day:'Wednesday',open:true,start:'09:00',end:'19:00'},
+  {day:'Thursday',open:true,start:'09:00',end:'19:00'},
+  {day:'Friday',open:true,start:'09:00',end:'18:00'},
+  {day:'Saturday',open:true,start:'10:00',end:'16:00'},
+  {day:'Sunday',open:false,start:'',end:''},
+];
+
+let selectedVoice = 'aria';
+let isDirty = false;
+let agentLive = true;
+let simStarted = false;
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  buildVoices();
+  buildServices();
+  buildFaqs();
+  buildRules();
+  buildHours();
+  buildPromptPreview();
+  updateCharCount(document.getElementById('greetingInput'), 220);
+  updateCharCount(document.getElementById('personalityInput'), 200);
+});
+
+// ─── VOICES ───────────────────────────────────────────────────────────────────
+function buildVoices() {
+  const el = document.getElementById('voiceGrid');
+  el.innerHTML = VOICES.map(v => `
+    <div class="voice-card ${v.id===selectedVoice?'selected':''}" id="vc-${v.id}" onclick="selectVoice('${v.id}')">
+      <div class="voice-selected-badge">✓</div>
+      <div class="voice-avatar">${v.emoji}</div>
+      <div class="voice-name">${v.name}</div>
+      <div class="voice-desc">${v.desc.replace('\n','<br>')}</div>
+      <div style="margin-top:6px"><span style="font-size:9px;background:var(--surface2);border:1px solid var(--border);padding:2px 7px;border-radius:8px;color:var(--muted);letter-spacing:0.04em">${v.lang}</span></div>
+      <div class="voice-preview" onclick="event.stopPropagation();playVoice('${v.id}')">
+        ▶ Preview voice
+        <div class="voice-playing" id="vp-${v.id}"><div class="voice-wave"></div></div>
+      </div>
+    </div>`).join('');
+}
+
+function selectVoice(id) {
+  selectedVoice = id;
+  document.querySelectorAll('.voice-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('vc-' + id).classList.add('selected');
+  markDirty();
+  showToast('🔊', `Voice set to ${VOICES.find(v=>v.id===id).name}`);
+}
+
+function playVoice(id) {
+  document.querySelectorAll('.voice-playing').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('vp-' + id);
+  el.classList.add('active');
+  setTimeout(() => el.classList.remove('active'), 2500);
+}
+
+// ─── SERVICES ─────────────────────────────────────────────────────────────────
+function buildServices() {
+  const el = document.getElementById('serviceList');
+  el.innerHTML = SERVICES.map((s,i) => `
+    <div class="service-row ${s.enabled?'enabled':''}" id="sr-${s.id}">
+      <span class="service-emoji">${s.emoji}</span>
+      <div class="service-info">
+        <div class="service-name">${s.name}</div>
+        <div class="service-detail">${s.detail}</div>
+      </div>
+      <span class="service-price">${s.price}</span>
+      <div class="toggle ${s.enabled?'on':''}" onclick="toggleService('${s.id}',this)"><div class="toggle-thumb"></div></div>
+    </div>`).join('');
+  updateServiceCount();
+}
+
+function toggleService(id, toggleEl) {
+  const svc = SERVICES.find(s => s.id === id);
+  svc.enabled = !svc.enabled;
+  toggleEl.classList.toggle('on');
+  document.getElementById('sr-' + id).classList.toggle('enabled', svc.enabled);
+  updateServiceCount();
+  markDirty();
+}
+
+function updateServiceCount() {
+  const n = SERVICES.filter(s => s.enabled).length;
+  document.getElementById('serviceCount').textContent = `${n} of ${SERVICES.length} enabled`;
+}
+
+// ─── FAQS ─────────────────────────────────────────────────────────────────────
+function buildFaqs() {
+  const el = document.getElementById('faqList');
+  el.innerHTML = FAQS.map((f, i) => buildFaqHtml(f, i)).join('');
+  updateFaqCount();
+}
+
+function buildFaqHtml(f, i) {
+  return `<div class="faq-row" id="faq-${i}">
+    <div class="faq-header" onclick="toggleFaq(${i})">
+      <div class="faq-num">${i+1}</div>
+      <div class="faq-q-preview ${f.q?'':'empty'}" id="fqp-${i}">${f.q || 'Click to add a question…'}</div>
+      <span class="faq-chevron">▾</span>
+    </div>
+    <div class="faq-body">
+      <label class="field-label" style="font-size:10px">Question</label>
+      <input type="text" value="${f.q}" placeholder="e.g. Do you offer parking?" id="fq-${i}" oninput="updateFaqQ(${i},this.value);markDirty()">
+      <label class="field-label" style="font-size:10px;margin-top:4px">Answer</label>
+      <textarea rows="2" id="fa-${i}" oninput="markDirty()">${f.a}</textarea>
+      <button class="faq-delete" onclick="deleteFaq(${i})">✕ Remove this question</button>
+    </div>
+  </div>`;
+}
+
+function toggleFaq(i) {
+  const row = document.getElementById('faq-' + i);
+  row.classList.toggle('expanded');
+}
+
+function updateFaqQ(i, val) {
+  FAQS[i].q = val;
+  const preview = document.getElementById('fqp-' + i);
+  preview.textContent = val || 'Click to add a question…';
+  preview.className = 'faq-q-preview' + (val ? '' : ' empty');
+}
+
+function addFaq() {
+  FAQS.push({q:'',a:''});
+  const el = document.getElementById('faqList');
+  const i = FAQS.length - 1;
+  const div = document.createElement('div');
+  div.innerHTML = buildFaqHtml(FAQS[i], i);
+  el.appendChild(div.firstElementChild);
+  updateFaqCount();
+  setTimeout(() => {
+    const newRow = document.getElementById('faq-' + i);
+    newRow.classList.add('expanded');
+    document.getElementById('fq-' + i).focus();
+  }, 50);
+  markDirty();
+}
+
+function deleteFaq(i) {
+  FAQS.splice(i, 1);
+  buildFaqs();
+  markDirty();
+}
+
+function updateFaqCount() {
+  document.getElementById('faqCount').textContent = `${FAQS.length} questions`;
+}
+
+// ─── RULES ────────────────────────────────────────────────────────────────────
+function buildRules() {
+  const el = document.getElementById('rulesBody');
+  el.innerHTML = RULES.map((r, i) => `
+    <div class="rule-row ${(r.type==='toggle'&&r.value)||(r.type!=='toggle')?'active-rule':''}" id="rr-${i}">
+      <div class="rule-icon">${r.icon}</div>
+      <div class="rule-info">
+        <div class="rule-name">${r.name}</div>
+        <div class="rule-desc">${r.desc}</div>
+        ${r.type === 'select' ? `<div class="rule-input"><select style="width:auto;padding:5px 28px 5px 10px;font-size:12px" onchange="markDirty()">
+          ${r.options.map((o,j)=>`<option ${j===r.value?'selected':''}>${o}</option>`).join('')}
+        </select></div>` : ''}
+      </div>
+      ${r.type === 'toggle' ? `<div class="toggle ${r.value?'on':''}" onclick="toggleThis(this);markDirty()"><div class="toggle-thumb"></div></div>` : ''}
+    </div>`).join('');
+}
+
+// ─── HOURS ────────────────────────────────────────────────────────────────────
+function buildHours() {
+  const el = document.getElementById('hoursConfig');
+  el.innerHTML = HOURS.map((h, i) => `
+    <div style="display:grid;grid-template-columns:80px auto 1fr auto 1fr;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:12px;font-weight:500;color:${h.open?'var(--text)':'var(--muted2)'}">${h.day}</span>
+      <div class="toggle ${h.open?'on':''}" onclick="toggleHour(${i},this)"><div class="toggle-thumb"></div></div>
+      <input type="time" value="${h.start}" id="hs-${i}" style="padding:6px 10px;font-size:12px;${!h.open?'opacity:0.3;pointer-events:none':''}" onchange="markDirty()">
+      <span style="font-size:11px;color:var(--muted)">to</span>
+      <input type="time" value="${h.end}" id="he-${i}" style="padding:6px 10px;font-size:12px;${!h.open?'opacity:0.3;pointer-events:none':''}" onchange="markDirty()">
+    </div>`).join('');
+}
+
+function toggleHour(i, tog) {
+  HOURS[i].open = !HOURS[i].open;
+  tog.classList.toggle('on');
+  const opacity = HOURS[i].open ? '1' : '0.3';
+  const pe = HOURS[i].open ? 'auto' : 'none';
+  document.getElementById('hs-' + i).style.cssText += `;opacity:${opacity};pointer-events:${pe}`;
+  document.getElementById('he-' + i).style.cssText += `;opacity:${opacity};pointer-events:${pe}`;
+  markDirty();
+}
+
+// ─── PROMPT PREVIEW ───────────────────────────────────────────────────────────
+function buildPromptPreview() {
+  const agentName = document.getElementById('agentNameInput')?.value || 'Aria';
+  const voice = VOICES.find(v => v.id === selectedVoice);
+  const enabledServices = SERVICES.filter(s => s.enabled);
+  const openDays = HOURS.filter(h => h.open);
+
+  const prompt = `<span class="prompt-highlight">## IDENTITY</span>
+You are <span class="prompt-highlight">${agentName}</span>, the AI voice receptionist for <span class="prompt-highlight">Lumière Aesthetics Clinic</span>.
+Address: 47 Harley Street, London W1G 8QQ
+Voice: ${voice?.name} (${voice?.lang})
+Tone: Warm, professional, luxury positioning
+
+<span class="prompt-highlight">## OPENING GREETING</span>
+<span class="prompt-dim">"Good afternoon, thank you for calling Lumière Aesthetics Clinic. My name is ${agentName}, your virtual assistant. I can help you book an appointment, check availability, or answer any questions. How may I help you today?"</span>
+
+<span class="prompt-highlight">## BUSINESS HOURS</span>
+${openDays.map(h => `${h.day}: ${h.start} – ${h.end}`).join('\n')}
+
+<span class="prompt-highlight">## SERVICES YOU CAN BOOK</span>
+${enabledServices.map(s => `• ${s.name} — ${s.detail} — ${s.price}`).join('\n')}
+
+<span class="prompt-highlight">## RULES</span>
+• Minimum 4 hours advance notice required
+• Maximum booking window: 3 months ahead
+• 10 minute buffer between appointments
+• Laser treatments cannot be booked same-day as facial treatments
+• Always require £50 deposit for injectable appointments
+• Offer free consultation to first-time callers
+
+<span class="prompt-highlight">## KNOWLEDGE BASE (${FAQS.length} FAQs loaded)</span>
+${FAQS.slice(0,3).map(f => `Q: ${f.q}\nA: ${f.a}`).join('\n\n')}
+<span class="prompt-dim">... and ${FAQS.length - 3} more questions</span>
+
+<span class="prompt-highlight">## TOOLS AVAILABLE</span>
+check_availability, book_appointment, cancel_appointment,
+reschedule_appointment, get_clinic_info
+
+<span class="prompt-highlight">## NEVER DO</span>
+Never mention competitor clinics by name.
+Never quote prices for surgical procedures.
+Never promise specific results or outcomes.
+If caller requests human: say transfer message then signal [TRANSFER].`;
+
+  document.getElementById('promptPreview').innerHTML = prompt;
+
+  // Token estimate
+  const tokenEst = Math.round(prompt.replace(/<[^>]+>/g,'').length / 4);
+  const el = document.getElementById('statTokens');
+  if(el) el.textContent = `~${tokenEst}`;
+}
+
+// ─── TONE ─────────────────────────────────────────────────────────────────────
+const TONE_LABELS = {
+  1: 'Very formal — like a Mayfair concierge',
+  2: 'Formal — polished and professional',
+  3: 'Balanced — warm and professional',
+  4: 'Friendly — approachable and casual',
+  5: 'Very casual — relaxed and conversational',
+};
+function updateToneLabel(v) {
+  document.getElementById('toneLabel').textContent = TONE_LABELS[v];
+}
+
+// ─── CHAR COUNTER ─────────────────────────────────────────────────────────────
+function updateCharCount(el, max) {
+  const id = el.id + 'Count';
+  const counter = document.getElementById(id);
+  if(counter) {
+    const n = el.value.length;
+    counter.textContent = `${n} / ${max}`;
+    counter.style.color = n > max * 0.9 ? 'var(--amber)' : 'var(--muted2)';
+  }
+}
+
+function updateAgentName() {
+  buildPromptPreview();
+}
+
+// ─── SECTION SWITCHING ────────────────────────────────────────────────────────
+function switchSection(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sn-item').forEach(s => s.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  el.classList.add('active');
+  if(id === 'prompt') buildPromptPreview();
+}
+
+// ─── DIRTY / SAVE ─────────────────────────────────────────────────────────────
+function markDirty() {
+  if(!isDirty) {
+    isDirty = true;
+    document.getElementById('saveBar').classList.add('visible');
+    document.getElementById('saveBtn').style.display = 'flex';
+  }
+}
+
+function discardChanges() {
+  isDirty = false;
+  document.getElementById('saveBar').classList.remove('visible');
+  document.getElementById('saveBtn').style.display = 'none';
+  showToast('↩️', 'Changes discarded');
+}
+
+function saveSettings() {
+  isDirty = false;
+  document.getElementById('saveBar').classList.remove('visible');
+  document.getElementById('saveBtn').style.display = 'none';
+  buildPromptPreview();
+  showToast('✅', 'Settings saved — agent updated live');
+}
+
+// ─── AGENT TOGGLE ─────────────────────────────────────────────────────────────
+function toggleAgent() {
+  agentLive = !agentLive;
+  const badge = document.getElementById('agentStatusBadge');
+  const text = document.getElementById('agentStatusText');
+  if(agentLive) {
+    badge.className = 'agent-status live';
+    text.textContent = 'Agent Live';
+    showToast('🟢', 'AI agent is now live and answering calls');
+  } else {
+    badge.className = 'agent-status paused';
+    text.textContent = 'Agent Paused';
+    showToast('⏸️', 'AI agent paused — calls will ring to staff');
+  }
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function toggleThis(el) {
+  el.classList.toggle('on');
+}
+
+function showPromptPreview() {
+  switchSection('prompt', document.querySelector('.sn-item:last-child'));
+  document.querySelectorAll('.sn-item').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sn-item')[5].classList.add('active');
+}
+
+function copyPrompt() {
+  const text = document.getElementById('promptPreview').innerText;
+  navigator.clipboard.writeText(text).catch(() => {});
+  showToast('📋', 'System prompt copied to clipboard');
+}
+
+// ─── SIMULATOR ────────────────────────────────────────────────────────────────
+function openSimulator() {
+  document.getElementById('simulator').classList.add('open');
+  if(!simStarted) startSimulation();
+}
+
+function closeSimulator() {
+  document.getElementById('simulator').classList.remove('open');
+}
+
+function startSimulation() {
+  simStarted = true;
+  const msgs = document.getElementById('simMessages');
+  msgs.innerHTML = '';
+  addSimMsg('system', '— Call connected —');
+  setTimeout(() => {
+    addSimMsg('agent', `Good afternoon, thank you for calling Lumière Aesthetics Clinic. My name is Aria, your virtual assistant. I can help you book an appointment, check availability, or answer any questions. How may I help you today?`);
+  }, 800);
+}
+
+function simQuickSend(btn) {
+  const text = btn.textContent;
+  handleSimMessage(text);
+}
+
+function sendSimMessage() {
+  const input = document.getElementById('simInput');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  handleSimMessage(text);
+}
+
+function handleSimMessage(text) {
+  addSimMsg('user', text);
+  showTyping();
+  const agentName = document.getElementById('agentNameInput')?.value || 'Aria';
+  const enabledServices = SERVICES.filter(s => s.enabled);
+  setTimeout(() => {
+    removeTyping();
+    const response = generateSimResponse(text, agentName, enabledServices);
+    if(response.tool) addSimToolCall(response.tool);
+    addSimMsg('agent', response.text);
+  }, 800 + Math.random() * 800);
+}
+
+function generateSimResponse(text, agentName, services) {
+  const t = text.toLowerCase();
+  if(t.includes('book') || t.includes('appointment') || t.includes('schedule')) {
+    return {
+      tool: 'check_availability({ service: "Hydrafacial", date: "tomorrow" })',
+      text: `Of course, I'd be happy to help you book an appointment! We offer a range of treatments including ${services.slice(0,3).map(s=>s.name).join(', ')}, and more. Which service were you interested in?`
+    };
+  }
+  if(t.includes('tomorrow') || t.includes('tuesday') || t.includes('available') || t.includes('slot')) {
+    return {
+      tool: 'check_availability({ date: "2026-02-21", tenantId: "lumiere" })',
+      text: `Let me check our availability for you. For tomorrow, I have the following slots available: 10:00 AM with Dr. Chen, 11:30 AM with Dr. Patel, and 2:00 PM with Dr. Chen. Which would you prefer?`
+    };
+  }
+  if(t.includes('price') || t.includes('cost') || t.includes('how much')) {
+    return {
+      tool: 'get_clinic_info({ topic: "pricing", tenantId: "lumiere" })',
+      text: `Our most popular treatments are priced as follows: Hydrafacial at £180, Botox from £280, Dermal Fillers from £420, and Laser Treatment from £320. All prices include a complimentary follow-up consultation. Would you like to book any of these?`
+    };
+  }
+  if(t.includes('cancel')) {
+    return {
+      tool: 'cancel_appointment({ clientPhone: caller_id, tenantId: "lumiere" })',
+      text: `I can help you with that. Could I take your name and the phone number associated with your booking so I can locate it for you?`
+    };
+  }
+  if(t.includes('service') || t.includes('offer') || t.includes('treatment')) {
+    return {
+      tool: 'get_clinic_info({ topic: "services", tenantId: "lumiere" })',
+      text: `We offer a full range of aesthetic treatments: ${services.map(s=>s.name).join(', ')}. All treatments are performed by our GMC-registered practitioners. Is there a particular treatment you'd like to know more about?`
+    };
+  }
+  if(t.includes('speak') || t.includes('human') || t.includes('person') || t.includes('staff')) {
+    return {
+      text: `Of course, let me connect you with a member of our team right away. Please hold for just a moment. [TRANSFER]`
+    };
+  }
+  if(t.includes('parking') || t.includes('park')) {
+    return {
+      tool: 'get_clinic_info({ topic: "faqs", tenantId: "lumiere" })',
+      text: `Yes, there is an NCP car park on Wimpole Street, just a 3-minute walk from the clinic. Street parking is also available on Devonshire Street. Is there anything else I can help you with?`
+    };
+  }
+  if(t.includes('hour') || t.includes('open') || t.includes('close') || t.includes('time')) {
+    return {
+      tool: 'get_clinic_info({ topic: "hours", tenantId: "lumiere" })',
+      text: `Lumière Aesthetics is open Monday to Friday from 9am to 7pm, and Saturday from 10am to 4pm. We are closed on Sundays. Would you like to book an appointment?`
+    };
+  }
+  return {
+    text: `Thank you for that. I want to make sure I give you the most accurate information. Could you tell me a little more about what you're looking for, or would you like me to book you a complimentary consultation with one of our practitioners?`
+  };
+}
+
+function addSimMsg(role, text) {
+  const msgs = document.getElementById('simMessages');
+  const div = document.createElement('div');
+  div.className = `sim-msg ${role}`;
+  if(role === 'system') {
+    div.innerHTML = `<div class="sim-bubble">${text}</div>`;
+  } else {
+    const sender = role === 'agent' ? `<div class="sim-sender">Aria (AI Agent)</div>` : `<div class="sim-sender" style="text-align:right">You (testing)</div>`;
+    div.innerHTML = `${sender}<div class="sim-bubble">${text}</div>`;
+  }
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addSimToolCall(code) {
+  const msgs = document.getElementById('simMessages');
+  const div = document.createElement('div');
+  div.className = 'sim-msg agent';
+  div.innerHTML = `<div class="sim-tool-call">🔧 Tool call: ${code}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+let typingEl = null;
+function showTyping() {
+  const msgs = document.getElementById('simMessages');
+  typingEl = document.createElement('div');
+  typingEl.innerHTML = `<div class="sim-sender">Aria is typing…</div><div class="sim-typing"><span></span><span></span><span></span></div>`;
+  typingEl.style.cssText = 'align-self:flex-start;display:flex;flex-direction:column;gap:3px';
+  msgs.appendChild(typingEl);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function removeTyping() {
+  if(typingEl) { typingEl.remove(); typingEl = null; }
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(icon, msg) {
+  clearTimeout(toastTimer);
+  const t = document.getElementById('toast');
+  t.innerHTML = `<span>${icon}</span> ${msg}`;
+  t.classList.add('show');
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
