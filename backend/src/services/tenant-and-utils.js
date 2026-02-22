@@ -35,14 +35,38 @@ export async function getTenantContext(tenantId) {
   if (!tenant) return null;
 
   const settings = tenant.settings ?? {};
+  const va = settings.voiceAgent ?? {};
+
+  // Format business hours to readable string
+  const hoursStr = va.businessHours
+    ? Object.entries(va.businessHours)
+        .filter(([, h]) => h.open)
+        .map(([day, h]) => `${day.charAt(0).toUpperCase() + day.slice(1)} ${h.from}–${h.to}`)
+        .join(', ')
+    : settings.businessHours ?? 'Monday to Saturday, 9am to 7pm';
+
   return {
     id: tenant.id,
     name: tenant.name,
     services: tenant.services,
-    hours: settings.businessHours ?? 'Monday to Saturday, 9am to 7pm',
+    hours: hoursStr,
     location: settings.address ?? 'Central London',
     phone: settings.publicPhone ?? null,
-    faqs: settings.voiceAgentFAQs ?? [],
+    faqs: va.faqs ?? settings.voiceAgentFAQs ?? [],
+    // Full voice agent config — used by llm.js buildSystemPrompt
+    voiceAgent: {
+      agentName:        va.agentName        ?? 'Aria',
+      voiceId:          va.voiceId          ?? '21m00Tcm4TlvDq8ikWAM',
+      greeting:         va.greeting         ?? null,
+      afterHoursMessage:va.afterHoursMessage ?? null,
+      transferMessage:  va.transferMessage  ?? null,
+      clinicContext:    va.clinicContext    ?? '',
+      neverSay:         va.neverSay         ?? [],
+      faqs:             va.faqs             ?? [],
+      enabledServiceIds:va.enabledServiceIds ?? [],
+      bookingRules:     va.bookingRules     ?? {},
+      isActive:         va.isActive         ?? true,
+    },
   };
 }
 

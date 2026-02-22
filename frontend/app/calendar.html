@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calendar — MediBook</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    /* ── Calendar layout ── */
+    .cal-wrap { display: grid; grid-template-columns: 75% 25%; gap: 0; }
+    .cal-grid-area { overflow-x: auto; }
+    .cal-side { border-left: 1px solid var(--border); display: flex; flex-direction: column; gap: 0; }
+
+    /* Week grid */
+    .week-grid { display: flex; flex-direction: column; min-width: 580px; }
+    .week-header { display: grid; grid-template-columns: 52px repeat(6, 1fr); border-bottom: 1px solid var(--border); background: var(--surface-2); }
+    .week-header-spacer { border-right: 1px solid var(--border); }
+    .day-col-header {
+      text-align: center;
+      padding: 10px 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-right: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .day-col-header:last-child { border-right: none; }
+    .day-col-header.today { background: var(--brand-dim); color: var(--brand-text); }
+    .day-num { font-size: 18px; font-weight: 700; display: block; line-height: 1.2; color: var(--text); }
+    .day-col-header.today .day-num { color: var(--brand); }
+
+    /* Time rows */
+    .week-body { display: flex; position: relative; }
+    .time-col {
+      width: 52px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+    }
+    .time-label {
+      height: 52px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      padding-right: 8px;
+      padding-top: 4px;
+      font-size: 11px;
+      color: var(--text-light);
+      font-variant-numeric: tabular-nums;
+      border-bottom: 1px solid var(--border);
+    }
+    .days-area { flex: 1; display: grid; grid-template-columns: repeat(6, 1fr); position: relative; }
+    .day-column {
+      border-right: 1px solid var(--border);
+      position: relative;
+    }
+    .day-column:last-child { border-right: none; }
+    .day-column.today { background: rgba(13,148,136,0.02); }
+    .hour-cell { height: 52px; border-bottom: 1px solid var(--border); }
+    .hour-cell:last-child { border-bottom: none; }
+
+    /* Appointment blocks */
+    .appt-block {
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      border-radius: 6px;
+      border-left-width: 3px;
+      border-left-style: solid;
+      padding: 5px 7px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: filter 0.15s, transform 0.1s;
+      z-index: 2;
+    }
+    .appt-block:hover { filter: brightness(0.96); transform: scale(1.01); }
+    .appt-name { font-size: 11.5px; font-weight: 700; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .appt-service { font-size: 10.5px; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .appt-time-lbl { font-size: 10px; opacity: 0.7; margin-top: 2px; }
+
+    /* Color themes */
+    .appt-teal   { background: #f0fdfa; border-color: #0d9488; color: #115e59; }
+    .appt-blue   { background: #eff6ff; border-color: #2563eb; color: #1e40af; }
+    .appt-purple { background: #f5f3ff; border-color: #7c3aed; color: #5b21b6; }
+    .appt-pink   { background: #fdf2f8; border-color: #ec4899; color: #9d174d; }
+    .appt-orange { background: #fff7ed; border-color: #ea580c; color: #9a3412; }
+    .appt-green  { background: #f0fdf4; border-color: #16a34a; color: #166534; }
+
+    /* Sidebar panel */
+    .cal-side-section { padding: 16px; border-bottom: 1px solid var(--border); }
+    .cal-side-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+
+    /* Mini calendar */
+    .mini-cal { width: 100%; }
+    .mini-cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .mini-cal-month { font-size: 13px; font-weight: 700; color: var(--text); }
+    .mini-cal-nav { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 2px 5px; border-radius: 4px; font-size: 14px; }
+    .mini-cal-nav:hover { background: var(--surface-2); }
+    .mini-cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 1px; }
+    .mini-cal-day-name { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-light); padding: 3px 0; }
+    .mini-cal-day {
+      text-align: center;
+      font-size: 11.5px;
+      padding: 4px 2px;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--text-2);
+      transition: background 0.1s;
+    }
+    .mini-cal-day:hover { background: var(--surface-2); }
+    .mini-cal-day.in-week { background: var(--brand-dim); color: var(--brand-text); font-weight: 600; }
+    .mini-cal-day.today { background: var(--brand); color: #fff; font-weight: 700; }
+    .mini-cal-day.other-month { color: var(--text-light); }
+
+    /* Open slots */
+    .slot-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: background 0.1s, border-color 0.15s;
+      font-size: 12.5px;
+      color: var(--text-2);
+    }
+    .slot-item:hover { background: var(--brand-dim); border-color: var(--brand-border); color: var(--brand-text); }
+    .slot-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+
+    /* Toggle group */
+    .toggle-group { display: flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .toggle-btn {
+      flex: 1; padding: 6px 14px; font-family: inherit; font-size: 12.5px; font-weight: 600;
+      background: var(--surface); border: none; cursor: pointer; color: var(--text-muted);
+      transition: background 0.15s, color 0.15s;
+    }
+    .toggle-btn.active { background: var(--brand); color: #fff; }
+    .toggle-btn:not(:last-child) { border-right: 1px solid var(--border); }
+
+    /* Week nav */
+    .week-nav { display: flex; align-items: center; gap: 8px; }
+    .week-label { font-size: 13px; font-weight: 600; color: var(--text); }
+
+    /* Upcoming table section */
+    .upcoming-section { margin-top: 20px; }
+    .upcoming-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      cursor: pointer;
+    }
+    .upcoming-header.open { border-bottom: 1px solid var(--border); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+    .upcoming-body { border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius-lg) var(--radius-lg); overflow: hidden; }
+
+    /* Current time indicator */
+    .now-line {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: var(--red);
+      z-index: 3;
+      pointer-events: none;
+    }
+    .now-line::before {
+      content: '';
+      position: absolute;
+      left: -4px; top: -4px;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--red);
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">M</div>
+      <span class="logo-text">MediBook</span>
+    </div>
+    <div class="sidebar-scroll">
+      <div class="nav-section">Main</div>
+      <a href="dashboard.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="1" y="1" width="6" height="6" rx="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.2"/>
+          <rect x="1" y="9" width="6" height="6" rx="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.2"/>
+        </svg>
+        Dashboard
+      </a>
+      <a href="calendar.html" class="nav-item active">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/>
+          <path d="M5 1v3M11 1v3M1.5 6.5h13"/>
+        </svg>
+        Calendar
+      </a>
+      <a href="clients.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="6" cy="5" r="2.5"/><path d="M1 13.5c0-2.485 2.239-4.5 5-4.5s5 2.015 5 4.5"/>
+          <circle cx="12" cy="5" r="2"/><path d="M14.5 13c0-1.8-1.12-3.34-2.75-4"/>
+        </svg>
+        Clients
+      </a>
+      <a href="payments.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="1" y="3.5" width="14" height="10" rx="1.5"/>
+          <path d="M1 7h14"/>
+        </svg>
+        Payments
+      </a>
+      <a href="staff.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="8" cy="5.5" r="3"/><path d="M2 13.5c0-2.761 2.686-5 6-5s6 2.239 6 5"/>
+        </svg>
+        Staff
+      </a>
+      <div class="nav-section">Tools</div>
+      <a href="agent.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/>
+        </svg>
+        AI Agent
+        <span class="nav-badge green">Live</span>
+      </a>
+      <a href="settings.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="8" cy="8" r="2.2"/>
+          <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M2.697 2.697l1.06 1.06M12.243 12.243l1.06 1.06M13.303 2.697l-1.06 1.06M3.757 12.243l-1.06 1.06"/>
+        </svg>
+        Settings
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-av">LC</div>
+        <div>
+          <div class="user-name">Lumière Clinic</div>
+          <div class="user-role">Clinic Owner</div>
+        </div>
+      </div>
+      <a href="#" style="display:block;text-align:center;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 0;margin-top:2px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">Sign out</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="page-title">Calendar</span>
+        <div style="width:1px;height:22px;background:var(--border);margin:0 4px;"></div>
+        <div class="week-nav">
+          <button class="btn btn-secondary btn-sm" onclick="prevWeek()">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 3L5 8l5 5"/></svg>
+          </button>
+          <span class="week-label" id="weekLabel">Week of Feb 16–22, 2026</span>
+          <button class="btn btn-secondary btn-sm" onclick="nextWeek()">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 3l5 5-5 5"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="toggle-group">
+          <button class="toggle-btn" onclick="setView('day',this)">Day</button>
+          <button class="toggle-btn active" onclick="setView('week',this)">Week</button>
+        </div>
+        <button class="btn btn-primary" onclick="openBookingModal()">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
+          New Booking
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="content">
+      <div class="card" style="overflow:hidden;margin-bottom:20px;">
+        <div class="cal-wrap">
+          <!-- Calendar grid -->
+          <div class="cal-grid-area">
+            <div class="week-grid">
+              <!-- Day headers -->
+              <div class="week-header">
+                <div class="week-header-spacer"></div>
+                <div class="day-col-header" id="dh0"><span class="day-num">16</span>Mon</div>
+                <div class="day-col-header" id="dh1"><span class="day-num">17</span>Tue</div>
+                <div class="day-col-header" id="dh2"><span class="day-num">18</span>Wed</div>
+                <div class="day-col-header" id="dh3"><span class="day-num">19</span>Thu</div>
+                <div class="day-col-header" id="dh4"><span class="day-num">20</span>Fri</div>
+                <div class="day-col-header today" id="dh5"><span class="day-num">21</span>Sat</div>
+              </div>
+              <!-- Body -->
+              <div class="week-body">
+                <!-- Time column -->
+                <div class="time-col" id="timeCol"></div>
+                <!-- Day columns -->
+                <div class="days-area" id="daysArea">
+                  <div class="day-column" id="col0"></div>
+                  <div class="day-column" id="col1"></div>
+                  <div class="day-column" id="col2"></div>
+                  <div class="day-column" id="col3"></div>
+                  <div class="day-column" id="col4"></div>
+                  <div class="day-column today" id="col5"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right side panel -->
+          <div class="cal-side">
+            <div class="cal-side-section">
+              <div class="cal-title" style="font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:12px;">February 2026</div>
+              <div class="mini-cal">
+                <div class="mini-cal-grid" id="miniCalGrid"></div>
+              </div>
+            </div>
+            <div class="cal-side-section" style="flex:1;">
+              <div class="cal-side-title">Today's Open Slots</div>
+              <div class="slot-item" onclick="openBookingModal()">
+                <div class="slot-dot"></div>
+                <span>13:00 – 14:00</span>
+              </div>
+              <div class="slot-item" onclick="openBookingModal()">
+                <div class="slot-dot"></div>
+                <span>15:30 – 16:00</span>
+              </div>
+              <div class="slot-item" onclick="openBookingModal()">
+                <div class="slot-dot"></div>
+                <span>16:30 – 18:00</span>
+              </div>
+              <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px;" onclick="openBookingModal()">
+                Quick Book
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming this week -->
+      <div class="upcoming-section">
+        <div class="upcoming-header open" onclick="toggleUpcoming()">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="section-title">Upcoming This Week</span>
+            <span class="badge badge-brand">6 bookings</span>
+          </div>
+          <svg id="upcomingChevron" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform 0.2s;transform:rotate(180deg)"><path d="M4 6l4 4 4-4"/></svg>
+        </div>
+        <div class="upcoming-body" id="upcomingBody">
+          <table style="width:100%;border-collapse:collapse;background:var(--surface);">
+            <thead><tr>
+              <th>Date &amp; Time</th><th>Client</th><th>Service</th><th>Staff</th><th>Duration</th><th>Status</th>
+            </tr></thead>
+            <tbody>
+              <tr><td>Mon 16, 09:00</td><td>Sophie Laurent</td><td>Hydrafacial</td><td>Dr. Carter</td><td>60 min</td><td><span class="badge badge-green">Confirmed</span></td></tr>
+              <tr><td>Tue 17, 10:30</td><td>James Mitchell</td><td>Laser Treatment</td><td>Dr. Nair</td><td>90 min</td><td><span class="badge badge-green">Confirmed</span></td></tr>
+              <tr><td>Wed 18, 09:00</td><td>Amara Kim</td><td>Botox</td><td>Dr. Carter</td><td>60 min</td><td><span class="badge badge-blue">In Progress</span></td></tr>
+              <tr><td>Thu 19, 14:00</td><td>Oliver Webb</td><td>Dermal Filler</td><td>Dr. Nair</td><td>90 min</td><td><span class="badge badge-brand">Confirmed</span></td></tr>
+              <tr><td>Fri 20, 11:00</td><td>Isabelle Dumont</td><td>Chemical Peel</td><td>Nina Ross</td><td>60 min</td><td><span class="badge badge-brand">Confirmed</span></td></tr>
+              <tr><td>Sat 21, 14:00</td><td>Mei Zhang</td><td>Hydrafacial</td><td>Dr. Carter</td><td>60 min</td><td><span class="badge badge-brand">Confirmed</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- NEW BOOKING MODAL -->
+<div class="modal-overlay" id="bookingModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">New Booking</span>
+      <button class="btn-icon" onclick="closeBookingModal()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input type="date" class="input" value="2026-02-22" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Time</label>
+          <input type="time" class="input" value="09:00" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Client</label>
+        <input type="text" class="input" placeholder="Search by name or email…" id="clientSearch" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Service</label>
+          <select class="select">
+            <option>Hydrafacial</option>
+            <option>Botox</option>
+            <option>Dermal Filler</option>
+            <option>Laser Treatment</option>
+            <option>Chemical Peel</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Staff</label>
+          <select class="select">
+            <option>Dr. Emily Carter</option>
+            <option>Dr. Priya Nair</option>
+            <option>Nina Ross</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Notes</label>
+        <textarea class="textarea" placeholder="Optional notes for this appointment…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeBookingModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmBooking()">Book Appointment</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+  /* ── Constants ── */
+  const START_HOUR = 8;
+  const END_HOUR   = 19;
+  const HOUR_H     = 52; // px per hour
+
+  /* ── Appointments data ── */
+  const appts = [
+    { col: 0, start: 9,    end: 10,   color: 'teal',   name: 'Sophie Laurent',  service: 'Hydrafacial'     },
+    { col: 1, start: 10.5, end: 12,   color: 'blue',   name: 'James Mitchell',  service: 'Laser Treatment' },
+    { col: 2, start: 9,    end: 10,   color: 'purple', name: 'Amara Kim',       service: 'Botox'           },
+    { col: 3, start: 14,   end: 15.5, color: 'pink',   name: 'Oliver Webb',     service: 'Dermal Filler'   },
+    { col: 4, start: 11,   end: 12,   color: 'orange', name: 'Isabelle Dumont', service: 'Chemical Peel'   },
+    { col: 5, start: 14,   end: 15,   color: 'teal',   name: 'Mei Zhang',       service: 'Hydrafacial'     },
+  ];
+
+  /* ── Render time labels ── */
+  function renderTimeCol() {
+    const tc = document.getElementById('timeCol');
+    let h = '';
+    for (let hr = START_HOUR; hr <= END_HOUR; hr++) {
+      h += `<div class="time-label">${String(hr).padStart(2,'0')}:00</div>`;
+    }
+    tc.innerHTML = h;
+  }
+
+  /* ── Render hour cells per day column ── */
+  function renderHourCells() {
+    for (let c = 0; c < 6; c++) {
+      const col = document.getElementById(`col${c}`);
+      let h = '';
+      for (let hr = START_HOUR; hr <= END_HOUR; hr++) {
+        h += `<div class="hour-cell"></div>`;
+      }
+      col.innerHTML = h;
+    }
+  }
+
+  /* ── Render appointment blocks ── */
+  function renderAppts() {
+    appts.forEach(a => {
+      const col = document.getElementById(`col${a.col}`);
+      const top  = (a.start - START_HOUR) * HOUR_H;
+      const height = (a.end - a.start) * HOUR_H - 4;
+      const fmtTime = h => `${String(Math.floor(h)).padStart(2,'0')}:${h%1===0.5?'30':'00'}`;
+      const block = document.createElement('div');
+      block.className = `appt-block appt-${a.color}`;
+      block.style.top = `${top + 2}px`;
+      block.style.height = `${height}px`;
+      block.innerHTML = `
+        <div class="appt-name">${a.name}</div>
+        <div class="appt-service">${a.service}</div>
+        <div class="appt-time-lbl">${fmtTime(a.start)}–${fmtTime(a.end)}</div>`;
+      block.addEventListener('click', () => {
+        showToast(`${a.name} — ${a.service}`, `${fmtTime(a.start)}–${fmtTime(a.end)}`);
+      });
+      col.appendChild(block);
+    });
+  }
+
+  /* ── Mini calendar ── */
+  function renderMiniCal() {
+    const grid = document.getElementById('miniCalGrid');
+    const days = ['M','T','W','T','F','S','S'];
+    let h = days.map(d => `<div class="mini-cal-day-name">${d}</div>`).join('');
+    // Feb 2026: 1st is a Sunday (day index 6 in Mon-first)
+    const offset = 6; // Sunday = index 6 in Mon-based week
+    for (let i = 0; i < offset; i++) h += `<div class="mini-cal-day other-month"></div>`;
+    for (let d = 1; d <= 28; d++) {
+      const inWeek = d >= 16 && d <= 22;
+      const isToday = d === 22;
+      let cls = 'mini-cal-day';
+      if (isToday) cls += ' today';
+      else if (inWeek) cls += ' in-week';
+      h += `<div class="${cls}">${d}</div>`;
+    }
+    grid.innerHTML = h;
+  }
+
+  /* ── Week nav (cosmetic) ── */
+  let weekOffset = 0;
+  const weekLabels = [
+    'Week of Feb 16–22, 2026',
+    'Week of Feb 23 – Mar 1, 2026',
+    'Week of Mar 2–8, 2026',
+    'Week of Feb 9–15, 2026',
+    'Week of Feb 2–8, 2026',
+  ];
+  function prevWeek() {
+    weekOffset = Math.max(-2, weekOffset - 1);
+    document.getElementById('weekLabel').textContent = weekLabels[Math.abs(weekOffset)] || weekLabels[0];
+  }
+  function nextWeek() {
+    weekOffset = Math.min(2, weekOffset + 1);
+    document.getElementById('weekLabel').textContent = weekLabels[weekOffset] || weekLabels[0];
+  }
+
+  /* ── View toggle ── */
+  function setView(v, btn) {
+    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (v === 'day') showToast('Day view', 'Showing today\'s schedule');
+  }
+
+  /* ── Upcoming toggle ── */
+  function toggleUpcoming() {
+    const body = document.getElementById('upcomingBody');
+    const chev = document.getElementById('upcomingChevron');
+    const open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : '';
+    chev.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+  }
+
+  /* ── Modal ── */
+  function openBookingModal() { document.getElementById('bookingModal').classList.add('open'); }
+  function closeBookingModal() { document.getElementById('bookingModal').classList.remove('open'); }
+  function confirmBooking() {
+    closeBookingModal();
+    showToast('Booking confirmed!', 'Appointment added to calendar');
+  }
+  document.getElementById('bookingModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeBookingModal(); });
+
+  /* ── Toast ── */
+  function showToast(title, msg) {
+    const wrap = document.getElementById('toastWrap');
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.innerHTML = `<div class="toast-icon">📅</div><div class="toast-content"><div class="toast-title">${title}</div>${msg ? `<div class="toast-msg">${msg}</div>` : ''}</div>`;
+    wrap.appendChild(t);
+    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }, 3500);
+  }
+
+  /* ── Init ── */
+  renderTimeCol();
+  renderHourCells();
+  renderAppts();
+  renderMiniCal();
+</script>
+</body>
+</html>

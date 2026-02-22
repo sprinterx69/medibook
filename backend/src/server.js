@@ -7,10 +7,12 @@ import 'dotenv/config';
 import Fastify from 'fastify';
 import websocketPlugin from '@fastify/websocket';
 import formbodyPlugin from '@fastify/formbody';
+import corsPlugin from '@fastify/cors';
 
 import { inboundCallHandler } from './handlers/inbound-call.js';
 import { mediaStreamHandler } from './handlers/media-stream.js';
 import { statusCallbackHandler } from './handlers/status-callback.js';
+import agentRoutes from './routes/agent-routes.js';
 
 const server = Fastify({
   logger: {
@@ -24,6 +26,24 @@ const server = Fastify({
 // ─── Plugins ──────────────────────────────────────────────────────────────────
 await server.register(websocketPlugin);
 await server.register(formbodyPlugin);
+
+// CORS — allow requests from the frontend (app.medibook.io or localhost during dev)
+await server.register(corsPlugin, {
+  origin: process.env.FRONTEND_URL
+    ? [process.env.FRONTEND_URL, 'http://localhost:3000', 'http://127.0.0.1:3000']
+    : true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  credentials: true,
+});
+
+// ─── API Content-Type ─────────────────────────────────────────────────────────
+// Parse JSON bodies for API routes
+server.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => {
+  try { done(null, JSON.parse(body)); } catch (err) { done(err); }
+});
+
+// ─── API Routes ───────────────────────────────────────────────────────────────
+await server.register(agentRoutes);
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 server.get('/health', async () => ({

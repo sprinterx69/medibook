@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — MediBook</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.settings-layout { display: grid; grid-template-columns: 200px 1fr; gap: 24px; }
+.settings-nav { }
+.settings-nav-item { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 7px; text-decoration: none; color: var(--text-muted); font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all 0.15s; margin-bottom: 2px; border: none; background: none; font-family: inherit; width: 100%; text-align: left; }
+.settings-nav-item:hover { background: var(--surface-2); color: var(--text-2); }
+.settings-nav-item.active { background: var(--brand-dim); color: var(--brand-text); font-weight: 600; }
+.settings-panel { display: none; }
+.settings-panel.active { display: block; }
+.color-picker-wrap { display: flex; align-items: center; gap: 10px; }
+.color-swatch { width: 36px; height: 36px; border-radius: 8px; border: 2px solid var(--border); cursor: pointer; }
+.plan-card { border: 2px solid var(--border); border-radius: var(--radius-lg); padding: 20px; cursor: pointer; transition: all 0.15s; }
+.plan-card:hover { border-color: var(--border-strong); }
+.plan-card.current { border-color: var(--brand); background: var(--brand-dim); }
+.plan-name { font-size: 16px; font-weight: 700; color: var(--text); }
+.plan-price { font-size: 28px; font-weight: 800; color: var(--text); letter-spacing: -0.03em; margin: 4px 0; }
+.plan-price span { font-size: 14px; font-weight: 400; color: var(--text-muted); }
+.plan-feature { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-2); margin-top: 8px; }
+.check-icon { color: var(--green); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">M</div>
+    <span class="logo-text">MediBook</span>
+  </div>
+  <div class="sidebar-scroll">
+    <div class="nav-section">Clinic</div>
+    <a href="dashboard.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</a>
+    <a href="calendar.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>Calendar</a>
+    <a href="clients.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Clients</a>
+    <a href="payments.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payments</a>
+    <a href="staff.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Staff</a>
+    <div class="nav-section">AI & Settings</div>
+    <a href="agent.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.63 19a19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6.08 6.08l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>AI Agent</a>
+    <a href="settings.html" class="nav-item active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Settings</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-av">LC</div>
+      <div><div class="user-name">Lumière Clinic</div><div class="user-role">Clinic Owner</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="page-title">Settings</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="settings-layout">
+
+      <!-- Settings nav -->
+      <nav class="settings-nav">
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);letter-spacing:0.07em;text-transform:uppercase;padding:0 12px 8px">Configuration</div>
+        <button class="settings-nav-item active" onclick="switchPanel('clinic',this)">🏥 Clinic Info</button>
+        <button class="settings-nav-item" onclick="switchPanel('services',this)">💆 Services</button>
+        <button class="settings-nav-item" onclick="switchPanel('branding',this)">🎨 Branding</button>
+        <button class="settings-nav-item" onclick="switchPanel('notifications',this)">🔔 Notifications</button>
+        <div style="height:1px;background:var(--border);margin:10px 12px"></div>
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);letter-spacing:0.07em;text-transform:uppercase;padding:0 12px 8px">Account</div>
+        <button class="settings-nav-item" onclick="switchPanel('plan',this)">💳 Plan & Billing</button>
+        <button class="settings-nav-item" onclick="switchPanel('integrations',this)">🔌 Integrations</button>
+        <button class="settings-nav-item" onclick="switchPanel('team',this)">👥 Team Access</button>
+      </nav>
+
+      <!-- Panels -->
+      <div>
+
+        <!-- Clinic Info -->
+        <div class="settings-panel active" id="panel-clinic">
+          <div class="card card-body" style="margin-bottom:16px">
+            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:18px">Clinic Information</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Clinic Name</label>
+                <input class="input" type="text" value="Lumière Aesthetics">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Business Type</label>
+                <select class="select">
+                  <option selected>Medical Aesthetics</option>
+                  <option>Dental Clinic</option>
+                  <option>Physiotherapy</option>
+                  <option>Hair Clinic</option>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input class="input" type="tel" value="+44 20 7946 0001">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input class="input" type="email" value="hello@lumiere.co.uk">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Website</label>
+              <input class="input" type="url" value="https://lumiere.co.uk">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Address</label>
+              <input class="input" type="text" value="42 Wimpole Street, Marylebone" style="margin-bottom:8px">
+              <div class="form-row">
+                <input class="input" type="text" placeholder="City" value="London">
+                <input class="input" type="text" placeholder="Postcode" value="W1G 8YF">
+              </div>
+            </div>
+            <div class="form-row" style="margin-bottom:0">
+              <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">Timezone</label>
+                <select class="select">
+                  <option selected>Europe/London (GMT+0)</option>
+                  <option>Europe/Paris (GMT+1)</option>
+                  <option>America/New_York (GMT-5)</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">Currency</label>
+                <select class="select">
+                  <option selected>GBP (£)</option>
+                  <option>EUR (€)</option>
+                  <option>USD ($)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-body">
+            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:18px">AI Voice Receptionist Phone Number</div>
+            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:14px">
+              <div style="width:40px;height:40px;border-radius:10px;background:var(--brand-dim);display:flex;align-items:center;justify-content:center;font-size:20px">📞</div>
+              <div>
+                <div style="font-size:15px;font-weight:700;color:var(--text)">+44 20 7946 0042</div>
+                <div style="font-size:12px;color:var(--text-muted)">Twilio number · AI agent active · Marylebone, London</div>
+              </div>
+              <span class="badge badge-green badge-dot" style="margin-left:auto">Active</span>
+            </div>
+            <div style="font-size:12.5px;color:var(--text-muted)">This number routes to your AI voice agent. Callers will hear your configured greeting. <a href="agent.html" style="color:var(--brand)">Configure agent →</a></div>
+          </div>
+        </div>
+
+        <!-- Services -->
+        <div class="settings-panel" id="panel-services">
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div><div class="card-title">Services</div><div class="card-subtitle">Treatments offered at your clinic</div></div>
+              <button class="btn btn-primary btn-sm" onclick="showToast('info','Add service form coming soon')">+ Add Service</button>
+            </div>
+            <div class="card-body" style="padding:0">
+              <table style="width:100%;border-collapse:collapse">
+                <thead><tr><th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);border-bottom:1px solid var(--border);letter-spacing:0.05em;text-transform:uppercase;background:var(--surface-2)">Service</th><th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);border-bottom:1px solid var(--border);letter-spacing:0.05em;text-transform:uppercase;background:var(--surface-2)">Duration</th><th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);border-bottom:1px solid var(--border);letter-spacing:0.05em;text-transform:uppercase;background:var(--surface-2)">Price</th><th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);border-bottom:1px solid var(--border);letter-spacing:0.05em;text-transform:uppercase;background:var(--surface-2)">Status</th><th style="background:var(--surface-2);border-bottom:1px solid var(--border)"></th></tr></thead>
+                <tbody id="servicesTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Branding -->
+        <div class="settings-panel" id="panel-branding">
+          <div class="card card-body" style="margin-bottom:16px">
+            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:18px">Brand Colours</div>
+            <div class="form-group">
+              <label class="form-label">Primary Brand Colour</label>
+              <div class="color-picker-wrap">
+                <input type="color" value="#0d9488" style="width:44px;height:44px;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:2px">
+                <input class="input" type="text" value="#0d9488" style="width:120px">
+                <div style="width:44px;height:44px;background:#0d9488;border-radius:8px;border:1px solid var(--border)"></div>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Clinic Logo</label>
+              <div style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:32px;text-align:center;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
+                <div style="font-size:28px;margin-bottom:8px">🖼️</div>
+                <div style="font-size:13.5px;font-weight:600;color:var(--text)">Upload logo</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:4px">PNG or SVG, max 2MB. Recommended: 200×60px</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="settings-panel" id="panel-notifications">
+          <div class="card card-body">
+            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:18px">Notification Preferences</div>
+            <div class="toggle-row">
+              <div><div class="toggle-label">Email booking confirmations to clients</div><div class="toggle-desc">Automatically email clients when an appointment is confirmed by the AI agent.</div></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-label">SMS reminders (24h before)</div><div class="toggle-desc">Send a text reminder to clients 24 hours before their appointment.</div></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-label">Notify me of new AI bookings</div><div class="toggle-desc">Send an email to the clinic owner when the AI agent makes a booking.</div></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-label">Daily summary email</div><div class="toggle-desc">Receive a morning digest of the day's appointments and any overnight AI calls.</div></div>
+              <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row" style="border-bottom:none">
+              <div><div class="toggle-label">Payment failure alerts</div><div class="toggle-desc">Immediately notify me if a client's payment fails.</div></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plan & Billing -->
+        <div class="settings-panel" id="panel-plan">
+          <div style="font-size:12.5px;font-weight:700;color:var(--text-muted);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:12px">Current Plan</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px">
+            <div class="plan-card">
+              <div class="plan-name">Starter</div>
+              <div class="plan-price">£49<span>/mo</span></div>
+              <div class="plan-feature"><span class="check-icon">✓</span> Up to 2 staff</div>
+              <div class="plan-feature"><span class="check-icon">✓</span> 1 location</div>
+              <div class="plan-feature" style="color:var(--text-muted)">✗ AI Voice Agent</div>
+            </div>
+            <div class="plan-card current">
+              <div style="display:flex;justify-content:space-between;align-items:start"><div class="plan-name">Pro</div><span class="badge badge-brand">Current</span></div>
+              <div class="plan-price">£129<span>/mo</span></div>
+              <div class="plan-feature"><span class="check-icon">✓</span> Unlimited staff</div>
+              <div class="plan-feature"><span class="check-icon">✓</span> Up to 3 locations</div>
+              <div class="plan-feature"><span class="check-icon">✓</span> AI Voice Agent</div>
+            </div>
+            <div class="plan-card">
+              <div class="plan-name">Enterprise</div>
+              <div class="plan-price" style="font-size:20px;padding-top:6px">Custom</div>
+              <div class="plan-feature"><span class="check-icon">✓</span> Unlimited locations</div>
+              <div class="plan-feature"><span class="check-icon">✓</span> White-label</div>
+              <div class="plan-feature"><span class="check-icon">✓</span> Dedicated support</div>
+            </div>
+          </div>
+          <div class="card card-body">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+              <div style="font-size:15px;font-weight:700">Billing Details</div>
+              <button class="btn btn-secondary btn-sm" onclick="showToast('info','Opening Stripe billing portal…')">Manage Billing</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div style="padding:14px;background:var(--surface-2);border-radius:var(--radius);border:1px solid var(--border)"><div style="font-size:11.5px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px">Next Payment</div><div style="font-size:16px;font-weight:700;color:var(--text)">£129.00</div><div style="font-size:12px;color:var(--text-muted)">Due 22 Mar 2026</div></div>
+              <div style="padding:14px;background:var(--surface-2);border-radius:var(--radius);border:1px solid var(--border)"><div style="font-size:11.5px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px">Payment Method</div><div style="font-size:15px;font-weight:700;color:var(--text)">•••• 4242</div><div style="font-size:12px;color:var(--text-muted)">Visa · Expires 08/27</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Integrations -->
+        <div class="settings-panel" id="panel-integrations">
+          <div id="intGrid" style="display:flex;flex-direction:column;gap:12px"></div>
+        </div>
+
+        <!-- Team -->
+        <div class="settings-panel" id="panel-team">
+          <div class="card">
+            <div class="card-header">
+              <div><div class="card-title">Team Members</div><div class="card-subtitle">Manage who has access to your MediBook account</div></div>
+              <button class="btn btn-primary btn-sm">+ Invite</button>
+            </div>
+            <div class="card-body" style="padding:0">
+              <table style="width:100%;border-collapse:collapse">
+                <thead><tr><th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);border-bottom:1px solid var(--border);letter-spacing:0.05em;text-transform:uppercase;background:var(--surface-2)">Member</th><th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);border-bottom:1px solid var(--border);letter-spacing:0.05em;text-transform:uppercase;background:var(--surface-2)">Role</th><th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);border-bottom:1px solid var(--border);letter-spacing:0.05em;text-transform:uppercase;background:var(--surface-2)">Last Login</th><th style="padding:11px 16px;background:var(--surface-2);border-bottom:1px solid var(--border)"></th></tr></thead>
+                <tbody>
+                  <tr><td style="padding:13px 16px"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="background:var(--brand-dim);color:var(--brand-text)">PP</div><div><div style="font-size:13.5px;font-weight:600;color:var(--text)">Dr. Priya Patel</div><div style="font-size:12px;color:var(--text-muted)">priya@lumiere.co.uk</div></div></div></td><td style="padding:13px 16px"><span class="badge badge-brand">Owner</span></td><td style="padding:13px 16px;font-size:13px;color:var(--text-muted)">Today, 9:14am</td><td style="padding:13px 16px"></td></tr>
+                  <tr><td style="padding:13px 16px"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="background:#f5f3ff;color:#5b21b6">EC</div><div><div style="font-size:13.5px;font-weight:600;color:var(--text)">Dr. Elena Chen</div><div style="font-size:12px;color:var(--text-muted)">elena@lumiere.co.uk</div></div></div></td><td style="padding:13px 16px"><span class="badge badge-gray">Manager</span></td><td style="padding:13px 16px;font-size:13px;color:var(--text-muted)">Yesterday</td><td style="padding:13px 16px"><button class="btn btn-ghost btn-sm" onclick="showToast('info','Edit permissions coming soon')">Edit</button></td></tr>
+                  <tr><td style="padding:13px 16px"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="background:#fffbeb;color:#92400e">TN</div><div><div style="font-size:13.5px;font-weight:600;color:var(--text)">Tom Nakamura</div><div style="font-size:12px;color:var(--text-muted)">tom@lumiere.co.uk</div></div></div></td><td style="padding:13px 16px"><span class="badge badge-gray">Staff</span></td><td style="padding:13px 16px;font-size:13px;color:var(--text-muted)">3 days ago</td><td style="padding:13px 16px"><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-wrap"><div class="toast" id="toast"><span class="toast-icon" id="toastIcon">✓</span><div class="toast-content"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div></div>
+
+<script>
+const SERVICES = [
+  { name:'Hydrafacial', duration:'60 min', price:'£180', active:true },
+  { name:'Botox', duration:'45 min', price:'£280', active:true },
+  { name:'Laser Treatment', duration:'90 min', price:'£320', active:true },
+  { name:'Dermal Filler', duration:'60 min', price:'£420', active:true },
+  { name:'Chemical Peel', duration:'60 min', price:'£150', active:true },
+  { name:'Consultation', duration:'30 min', price:'£90', active:true },
+];
+
+const INTEGRATIONS = [
+  { name:'Twilio', desc:'Phone numbers & AI call routing', status:'connected', icon:'📞' },
+  { name:'OpenAI (GPT-4o)', desc:'AI receptionist intelligence', status:'connected', icon:'🤖' },
+  { name:'ElevenLabs', desc:'Natural text-to-speech voices', status:'connected', icon:'🎙️' },
+  { name:'Deepgram', desc:'Real-time speech recognition', status:'connected', icon:'👂' },
+  { name:'Stripe', desc:'Subscription billing & payments', status:'connected', icon:'💳' },
+  { name:'Resend', desc:'Transactional email delivery', status:'connected', icon:'✉️' },
+];
+
+function switchPanel(id, btn) {
+  document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function buildServicesTable() {
+  document.getElementById('servicesTable').innerHTML = SERVICES.map(s => `
+    <tr>
+      <td style="padding:12px 16px;font-size:13.5px;font-weight:600;color:var(--text);border-bottom:1px solid var(--border)">${s.name}</td>
+      <td style="padding:12px 16px;font-size:13px;color:var(--text-muted);border-bottom:1px solid var(--border)">${s.duration}</td>
+      <td style="padding:12px 16px;font-size:13.5px;font-weight:600;color:var(--text);border-bottom:1px solid var(--border)">${s.price}</td>
+      <td style="padding:12px 16px;border-bottom:1px solid var(--border)"><span class="badge badge-green badge-dot">Active</span></td>
+      <td style="padding:12px 16px;border-bottom:1px solid var(--border);text-align:right"><button class="btn btn-ghost btn-sm" onclick="showToast('info','Edit service coming soon')">Edit</button></td>
+    </tr>`).join('');
+}
+
+function buildIntegrations() {
+  document.getElementById('intGrid').innerHTML = INTEGRATIONS.map(i => `
+    <div class="card" style="display:flex;align-items:center;padding:16px 20px;gap:14px">
+      <div style="width:40px;height:40px;border-radius:10px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;border:1px solid var(--border)">${i.icon}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600;color:var(--text)">${i.name}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${i.desc}</div>
+      </div>
+      <span class="badge badge-green badge-dot">Connected</span>
+      <button class="btn btn-secondary btn-sm" onclick="showToast('info','Configure ${i.name} in Admin → API Integrations')">Configure</button>
+    </div>`).join('');
+}
+
+function saveSettings() { showToast('success', 'Settings saved', 'Your clinic settings have been updated.'); }
+
+let toastTimer;
+function showToast(type, title, msg='') {
+  const icons = { success:'✓', error:'✕', info:'ℹ' };
+  document.getElementById('toastIcon').textContent = icons[type] || 'ℹ';
+  document.getElementById('toastTitle').textContent = title;
+  document.getElementById('toastMsg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.className = 'toast ' + type + ' show';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+document.addEventListener('DOMContentLoaded', () => { buildServicesTable(); buildIntegrations(); });
+</script>
+</body>
+</html>
