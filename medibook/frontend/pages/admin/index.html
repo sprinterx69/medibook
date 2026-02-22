@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediBook — Super Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@400;500&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080c14;
+  --surface:#0d1420;
+  --surface2:#111827;
+  --surface3:#1a2235;
+  --border:#1e2d45;
+  --border2:#263554;
+  --gold:#d4a84b;
+  --gold2:#f0c96a;
+  --gold-dim:rgba(212,168,75,0.1);
+  --gold-glow:rgba(212,168,75,0.25);
+  --electric:#00d4ff;
+  --electric-dim:rgba(0,212,255,0.08);
+  --electric-glow:rgba(0,212,255,0.2);
+  --green:#22c55e;
+  --green-dim:rgba(34,197,94,0.1);
+  --amber:#f59e0b;
+  --amber-dim:rgba(245,158,11,0.1);
+  --red:#ef4444;
+  --red-dim:rgba(239,68,68,0.1);
+  --rose:#f472b6;
+  --purple:#a78bfa;
+  --blue:#3b82f6;
+  --teal:#2dd4bf;
+  --text:#e2e8f0;
+  --muted:#64748b;
+  --muted2:#374151;
+  --mono:'Geist Mono',monospace;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:'Geist',sans-serif;font-size:13px;color:var(--text);display:flex;flex-direction:column}
+
+/* ── TOP CHROME ── */
+.chrome{
+  height:48px;background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 20px;gap:0;
+  flex-shrink:0;position:relative;
+  z-index:100;
+}
+.chrome::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,212,255,0.3),transparent);
+}
+.chrome-logo{
+  font-family:'Instrument Serif',serif;font-size:18px;color:#fff;
+  letter-spacing:0.01em;flex-shrink:0;margin-right:20px;
+}
+.chrome-logo span{color:var(--gold)}
+.chrome-badge{
+  font-size:9px;letter-spacing:0.14em;text-transform:uppercase;
+  padding:3px 9px;border-radius:3px;font-weight:700;
+  background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);
+  color:#ef4444;margin-right:24px;flex-shrink:0;font-family:var(--mono);
+}
+.chrome-stats{display:flex;gap:0;margin-right:auto}
+.chrome-stat{
+  padding:0 20px;border-right:1px solid var(--border);
+  display:flex;flex-direction:column;justify-content:center;
+}
+.chrome-stat:first-child{padding-left:0}
+.chrome-stat-n{font-family:var(--mono);font-size:15px;font-weight:500;line-height:1;color:var(--text)}
+.chrome-stat-l{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.chrome-right{display:flex;align-items:center;gap:10px}
+.chrome-indicator{
+  display:flex;align-items:center;gap:6px;
+  font-size:10px;font-family:var(--mono);
+  color:var(--muted);
+}
+.indicator-dot{width:6px;height:6px;border-radius:50%}
+.ind-green{background:var(--green);box-shadow:0 0 6px var(--green)}
+.ind-gold{background:var(--gold);box-shadow:0 0 6px var(--gold);animation:goldpulse 2s infinite}
+@keyframes goldpulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.chrome-btn{
+  padding:6px 14px;border-radius:5px;font-size:11px;font-weight:600;
+  cursor:pointer;border:none;font-family:'Geist',sans-serif;
+  letter-spacing:0.04em;transition:all 0.18s;
+}
+.cb-electric{background:var(--electric-dim);border:1px solid var(--electric-glow);color:var(--electric)}
+.cb-electric:hover{background:rgba(0,212,255,0.14);box-shadow:0 0 12px var(--electric-dim)}
+.cb-ghost{background:transparent;border:1px solid var(--border2);color:var(--muted)}
+.cb-ghost:hover{border-color:var(--border);color:var(--text)}
+
+/* ── LAYOUT ── */
+.body{flex:1;display:flex;overflow:hidden}
+
+/* Sidebar */
+.sidebar{
+  width:200px;flex-shrink:0;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:0;overflow-y:auto;
+}
+.sb-section{padding:16px 12px 6px;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted2);font-family:var(--mono)}
+.sb-item{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 12px;margin:1px 4px;
+  border-radius:6px;cursor:pointer;
+  color:var(--muted);font-size:12px;
+  border:1px solid transparent;
+  transition:all 0.15s;position:relative;
+}
+.sb-item:hover{background:var(--surface2);color:var(--text)}
+.sb-item.active{background:var(--electric-dim);border-color:var(--electric-glow);color:var(--electric)}
+.sb-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sb-badge{margin-left:auto;font-size:9px;font-family:var(--mono);padding:1px 6px;border-radius:3px;background:var(--surface3);color:var(--muted);border:1px solid var(--border)}
+.sb-badge.alert{background:var(--red-dim);color:var(--red);border-color:rgba(239,68,68,0.2)}
+.sb-bottom{margin-top:auto;padding:12px;border-top:1px solid var(--border)}
+.sb-you{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px;display:flex;align-items:center;gap:8px}
+.sb-you-av{width:28px;height:28px;border-radius:6px;background:linear-gradient(135deg,var(--gold),#a07830);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#000;flex-shrink:0}
+.sb-you-name{font-size:11px;font-weight:600;color:var(--text)}
+.sb-you-role{font-size:9px;color:var(--electric);font-family:var(--mono);letter-spacing:0.04em}
+
+/* Main content */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{
+  height:46px;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px;flex-shrink:0;
+}
+.tb-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px}
+.tb-breadcrumb{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.tb-right{display:flex;align-items:center;gap:8px}
+.tb-btn{padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Geist',sans-serif;border:none;transition:all 0.18s;display:flex;align-items:center;gap:5px}
+.tb-gold{background:var(--gold);color:#000}
+.tb-gold:hover{background:var(--gold2);transform:translateY(-1px)}
+.tb-outline{background:transparent;border:1px solid var(--border2);color:var(--muted)}
+.tb-outline:hover{border-color:var(--border);color:var(--text)}
+.tb-red{background:var(--red-dim);border:1px solid rgba(239,68,68,0.2);color:var(--red)}
+.tb-red:hover{background:rgba(239,68,68,0.15)}
+
+.content{flex:1;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column;gap:18px}
+.content::-webkit-scrollbar{width:3px}
+.content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── VIEWS ── */
+.view{display:none;flex-direction:column;gap:18px;animation:fadeIn 0.2s ease}
+.view.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── STAT CARDS ── */
+.stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;
+  transition:border-color 0.2s;
+}
+.stat-card:hover{border-color:var(--border2)}
+.stat-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  border-radius:2px 2px 0 0;
+}
+.sc-gold::before{background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.sc-electric::before{background:linear-gradient(90deg,transparent,var(--electric),transparent)}
+.sc-green::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.sc-rose::before{background:linear-gradient(90deg,transparent,var(--rose),transparent)}
+.sc-purple::before{background:linear-gradient(90deg,transparent,var(--purple),transparent)}
+.stat-label{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:10px}
+.stat-val{font-family:'Instrument Serif',serif;font-size:34px;font-weight:400;line-height:1;margin-bottom:6px}
+.sv-gold{color:var(--gold)}
+.sv-electric{color:var(--electric)}
+.sv-green{color:var(--green)}
+.sv-rose{color:var(--rose)}
+.sv-purple{color:var(--purple)}
+.stat-sub{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.stat-delta{color:var(--green)}
+.stat-delta.down{color:var(--red)}
+
+/* ── DATA TABLE ── */
+.data-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.dc-header{
+  padding:12px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface2);
+}
+.dc-title{font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;font-family:var(--mono);letter-spacing:0.02em;color:var(--text)}
+.dc-actions{display:flex;gap:8px;align-items:center}
+.dc-search{
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text);padding:5px 10px;border-radius:5px;
+  font-family:var(--mono);font-size:11px;outline:none;width:180px;
+  transition:border-color 0.2s;
+}
+.dc-search:focus{border-color:var(--electric-glow)}
+.dc-search::placeholder{color:var(--muted2)}
+.filter-pill{
+  padding:4px 10px;border-radius:12px;font-size:10px;
+  font-family:var(--mono);cursor:pointer;border:1px solid var(--border);
+  color:var(--muted);background:var(--surface);transition:all 0.15s;
+}
+.filter-pill.active{border-color:var(--electric-glow);color:var(--electric);background:var(--electric-dim)}
+.filter-pill:hover:not(.active){border-color:var(--border2);color:var(--text)}
+
+/* Table */
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--bg);border-bottom:1px solid var(--border)}
+thead th{
+  padding:8px 16px;text-align:left;
+  font-size:9px;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--muted);font-family:var(--mono);font-weight:500;
+  white-space:nowrap;cursor:pointer;user-select:none;
+}
+thead th:hover{color:var(--text)}
+thead th.sorted{color:var(--electric)}
+tbody tr{border-bottom:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:background 0.12s}
+tbody tr:hover{background:var(--surface2)}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:10px 16px;vertical-align:middle}
+
+/* Clinic row elements */
+.clinic-name-cell{display:flex;align-items:center;gap:10px}
+.clinic-av{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.clinic-name{font-size:12px;font-weight:600;color:var(--text)}
+.clinic-slug{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.plan-badge{
+  font-size:9px;font-family:var(--mono);letter-spacing:0.08em;
+  padding:2px 8px;border-radius:3px;font-weight:600;text-transform:uppercase;
+}
+.pb-pro{background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-glow)}
+.pb-starter{background:var(--surface3);color:var(--muted);border:1px solid var(--border)}
+.pb-enterprise{background:rgba(167,139,250,0.1);color:var(--purple);border:1px solid rgba(167,139,250,0.2)}
+.status-dot-cell{display:flex;align-items:center;gap:6px;font-size:11px}
+.sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sdot-green{background:var(--green);box-shadow:0 0 5px var(--green)}
+.sdot-amber{background:var(--amber)}
+.sdot-red{background:var(--red)}
+.sdot-gray{background:var(--muted2)}
+.mono-cell{font-family:var(--mono);font-size:11px;color:var(--text)}
+.muted-cell{font-size:11px;color:var(--muted)}
+.gold-cell{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--gold)}
+.action-btns{display:flex;gap:5px;opacity:0;transition:opacity 0.15s}
+tbody tr:hover .action-btns{opacity:1}
+.action-btn{
+  padding:4px 10px;border-radius:5px;font-size:10px;font-weight:600;
+  cursor:pointer;border:none;font-family:var(--mono);transition:all 0.15s;
+}
+.ab-view{background:var(--electric-dim);color:var(--electric);border:1px solid var(--electric-glow)}
+.ab-view:hover{background:rgba(0,212,255,0.15)}
+.ab-impersonate{background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-glow)}
+.ab-impersonate:hover{background:rgba(212,168,75,0.18)}
+.ab-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,0.2)}
+.ab-danger:hover{background:rgba(239,68,68,0.15)}
+
+/* ── CHART AREA ── */
+.charts-row{display:grid;grid-template-columns:1fr 1fr 320px;gap:14px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.cc-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;justify-content:space-between;align-items:center}
+.cc-title{font-size:11px;font-weight:600;font-family:var(--mono);color:var(--text);letter-spacing:0.02em}
+.cc-sub{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.cc-body{padding:16px}
+
+/* Revenue chart bars */
+.bar-chart{display:flex;align-items:flex-end;gap:5px;height:100px;margin-bottom:8px}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar{width:100%;border-radius:3px 3px 0 0;transition:opacity 0.15s;cursor:pointer;min-height:3px}
+.bar:hover{opacity:0.8}
+.bar-label{font-size:8px;color:var(--muted);font-family:var(--mono);white-space:nowrap}
+
+/* Sparkline */
+.sparkline{height:48px;position:relative;margin:4px 0}
+.sparkline svg{width:100%;height:100%}
+
+/* Donut */
+.donut-wrap{display:flex;align-items:center;gap:16px}
+.donut-svg{width:80px;height:80px;flex-shrink:0}
+.donut-legend{flex:1}
+.dl-item{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.dl-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.dl-label{font-size:11px;color:var(--muted);flex:1}
+.dl-val{font-size:11px;font-family:var(--mono);color:var(--text);font-weight:500}
+
+/* ── API INTEGRATION CARDS ── */
+.int-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color 0.2s}
+.int-card:hover{border-color:var(--border2)}
+.int-card.connected{border-left:3px solid var(--green)}
+.int-card.degraded{border-left:3px solid var(--gold)}
+.int-card.disconnected{border-left:3px solid var(--red)}
+.int-card.testing{border-left:3px solid var(--electric)}
+.int-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer}
+.int-logo{width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;border:1px solid var(--border2)}
+.int-meta{flex:1;min-width:0}
+.int-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px}
+.int-desc{font-size:11px;color:var(--text3)}
+.int-status{display:flex;align-items:center;gap:14px;flex-shrink:0}
+.int-status-pill{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:4px 10px;border-radius:4px;font-family:var(--mono)}
+.int-status-pill.connected{background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);color:var(--green)}
+.int-status-pill.degraded{background:rgba(212,168,75,0.1);border:1px solid rgba(212,168,75,0.25);color:var(--gold)}
+.int-status-pill.disconnected{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:var(--red)}
+.int-status-pill.testing{background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.25);color:var(--electric)}
+.int-status-dot{width:5px;height:5px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.int-chevron{color:var(--text3);font-size:12px;transition:transform 0.2s;flex-shrink:0}
+.int-card.expanded .int-chevron{transform:rotate(180deg)}
+.int-latency{font-size:11px;color:var(--text3);font-family:var(--mono)}
+
+.int-body{display:none;border-top:1px solid var(--border);padding:20px}
+.int-card.expanded .int-body{display:block;animation:fadeSlide 0.2s ease}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+.int-body-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+.int-field{margin-bottom:14px}
+.int-field:last-child{margin-bottom:0}
+.int-field-label{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.int-field-label span{font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);opacity:0.6}
+
+.key-input-wrap{position:relative;display:flex;gap:8px}
+.key-input{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:7px;font-family:var(--mono);font-size:12px;outline:none;transition:border-color 0.2s,box-shadow 0.2s;letter-spacing:0.04em}
+.key-input:focus{border-color:var(--electric);box-shadow:0 0 0 3px rgba(0,212,255,0.08)}
+.key-input.saved{border-color:rgba(74,222,128,0.3)}
+.key-input.error{border-color:rgba(239,68,68,0.4)}
+.key-btn{padding:0 14px;border-radius:7px;font-family:'Geist',sans-serif;font-size:11px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;height:38px;display:flex;align-items:center}
+.key-btn-save{background:var(--electric);color:#000}
+.key-btn-save:hover{background:#00bde0}
+.key-btn-test{background:var(--surface3);border:1px solid var(--border2);color:var(--text2)}
+.key-btn-test:hover{border-color:var(--electric);color:var(--electric)}
+.key-btn-reveal{background:var(--surface3);border:1px solid var(--border);color:var(--text3);padding:0 10px;font-size:12px}
+.key-btn-reveal:hover{color:var(--text)}
+
+.key-hint{font-size:10px;color:var(--text3);margin-top:5px;line-height:1.5}
+.key-hint a{color:var(--electric);text-decoration:none}
+.key-hint a:hover{text-decoration:underline}
+
+.int-stats-row{display:flex;gap:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.int-stat{flex:1;padding:12px;text-align:center;border-right:1px solid var(--border)}
+.int-stat:last-child{border-right:none}
+.int-stat-n{font-family:'Instrument Serif',serif;font-size:20px;font-weight:600;line-height:1;margin-bottom:3px}
+.int-stat-l{font-size:9px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;font-family:var(--mono)}
+
+.int-select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 32px 9px 12px;border-radius:7px;font-family:'Geist',sans-serif;font-size:12px;outline:none;appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' stroke='%234a5878' stroke-width='1.5' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;transition:border-color 0.2s}
+.int-select:focus{border-color:var(--electric);outline:none}
+
+.int-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.int-toggle-row:last-child{border-bottom:none}
+.int-toggle-label{font-size:12px;color:var(--text)}
+.int-toggle-desc{font-size:10px;color:var(--text3);margin-top:1px}
+.int-toggle{width:36px;height:20px;border-radius:10px;background:var(--surface3);border:1px solid var(--border2);cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0}
+.int-toggle.on{background:var(--electric);border-color:var(--electric)}
+.int-toggle-thumb{width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.4)}
+.int-toggle.on .int-toggle-thumb{left:18px}
+
+.test-result{margin-top:10px;padding:10px 14px;border-radius:6px;font-size:11px;font-family:var(--mono);line-height:1.7;display:none}
+.test-result.show{display:block}
+.test-result.ok{background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);color:var(--green)}
+.test-result.fail{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#f87171}
+.test-result.running{background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.15);color:var(--electric)}
+
+.int-divider{height:1px;background:var(--border);margin:16px 0}
+
+.int-danger-zone{background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.15);border-radius:8px;padding:14px 16px}
+.int-danger-title{font-size:11px;font-weight:600;color:#f87171;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;font-family:var(--mono)}
+
+
+.detail-panel{
+  position:fixed;top:0;right:0;bottom:0;width:480px;
+  background:var(--surface);border-left:1px solid var(--border);
+  z-index:500;transform:translateX(100%);
+  transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  display:flex;flex-direction:column;
+  box-shadow:-20px 0 60px rgba(0,0,0,0.5);
+}
+.detail-panel.open{transform:translateX(0)}
+.dp-header{
+  padding:18px 22px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;justify-content:space-between;
+}
+.dp-clinic-info{display:flex;align-items:center;gap:12px}
+.dp-av{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0}
+.dp-name{font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px}
+.dp-slug{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.dp-close{
+  width:28px;height:28px;border-radius:5px;background:var(--surface2);
+  border:1px solid var(--border);color:var(--muted);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:15px;
+  transition:all 0.15s;flex-shrink:0;
+}
+.dp-close:hover{color:var(--text)}
+.dp-body{flex:1;overflow-y:auto;padding:18px 22px}
+.dp-body::-webkit-scrollbar{width:3px}
+.dp-body::-webkit-scrollbar-thumb{background:var(--border2)}
+.dp-section{margin-bottom:20px}
+.dp-sec-title{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted2);font-family:var(--mono);margin-bottom:10px}
+.dp-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.dp-stat{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:12px;text-align:center}
+.dp-stat-n{font-family:'Instrument Serif',serif;font-size:22px;font-weight:400;line-height:1;margin-bottom:3px}
+.dp-stat-l{font-size:9px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase}
+.dp-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px}
+.dp-row:last-child{border-bottom:none}
+.dp-row-label{color:var(--muted)}
+.dp-row-val{color:var(--text);font-family:var(--mono);font-size:11px}
+.dp-row-val.green{color:var(--green)}
+.dp-row-val.gold{color:var(--gold)}
+.dp-row-val.red{color:var(--red)}
+.dp-row-val.amber{color:var(--amber)}
+.dp-actions{padding:16px 22px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+.dp-action-btn{
+  width:100%;padding:10px;border-radius:7px;
+  font-family:'Geist',sans-serif;font-size:12px;font-weight:600;
+  cursor:pointer;border:none;transition:all 0.18s;display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.dp-electric{background:var(--electric-dim);border:1px solid var(--electric-glow);color:var(--electric)}
+.dp-electric:hover{background:rgba(0,212,255,0.14)}
+.dp-gold{background:var(--gold);color:#000}
+.dp-gold:hover{background:var(--gold2)}
+.dp-danger{background:var(--red-dim);border:1px solid rgba(239,68,68,0.2);color:var(--red)}
+.dp-danger:hover{background:rgba(239,68,68,0.15)}
+.dp-outline{background:transparent;border:1px solid var(--border2);color:var(--muted)}
+.dp-outline:hover{border-color:var(--border);color:var(--text)}
+.dp-row-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* ── ALERTS VIEW ── */
+.alert-item{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:14px 16px;
+  display:flex;align-items:flex-start;gap:12px;
+  transition:border-color 0.15s;cursor:pointer;
+}
+.alert-item:hover{border-color:var(--border2)}
+.alert-item.crit{border-left:3px solid var(--red)}
+.alert-item.warn{border-left:3px solid var(--amber)}
+.alert-item.info{border-left:3px solid var(--electric)}
+.alert-icon{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.ai-red{background:var(--red-dim)}
+.ai-amber{background:var(--amber-dim)}
+.ai-blue{background:var(--electric-dim)}
+.alert-content{flex:1}
+.alert-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px}
+.alert-desc{font-size:11px;color:var(--muted);line-height:1.5}
+.alert-time{font-size:10px;color:var(--muted2);font-family:var(--mono);flex-shrink:0;margin-top:2px}
+.alert-resolve{font-size:10px;font-family:var(--mono);padding:3px 10px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all 0.15s;white-space:nowrap;margin-top:2px}
+.alert-resolve:hover{border-color:var(--green);color:var(--green)}
+
+/* ── MRR TIMELINE ── */
+.timeline-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.timeline-row:last-child{border-bottom:none}
+.tl-date{font-family:var(--mono);font-size:10px;color:var(--muted);width:80px;flex-shrink:0}
+.tl-event{flex:1;font-size:11px;color:var(--text)}
+.tl-clinic{font-size:10px;color:var(--muted)}
+.tl-amount{font-family:var(--mono);font-size:11px;font-weight:500;white-space:nowrap}
+.tl-positive{color:var(--green)}
+.tl-negative{color:var(--red)}
+
+/* ── IMPERSONATE OVERLAY ── */
+.impersonate-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.85);
+  z-index:1000;display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.impersonate-overlay.show{display:flex}
+.impersonate-modal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:28px;width:400px;
+  box-shadow:0 40px 80px rgba(0,0,0,0.7);
+  animation:modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes modalIn{from{transform:scale(0.9);opacity:0}to{transform:scale(1);opacity:1}}
+.im-title{font-family:'Instrument Serif',serif;font-size:22px;color:var(--text);margin-bottom:6px}
+.im-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:20px}
+.im-clinic{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.im-warning{background:var(--amber-dim);border:1px solid rgba(245,158,11,0.2);border-radius:7px;padding:10px 13px;font-size:11px;color:var(--amber);margin-bottom:20px;display:flex;gap:7px}
+.im-actions{display:flex;gap:10px}
+.im-cancel{flex:1;padding:10px;border-radius:7px;background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:'Geist',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s}
+.im-cancel:hover{border-color:var(--border);color:var(--text)}
+.im-confirm{flex:1;padding:10px;border-radius:7px;background:var(--electric-dim);border:1px solid var(--electric-glow);color:var(--electric);font-family:'Geist',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s}
+.im-confirm:hover{background:rgba(0,212,255,0.15)}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:11px 18px;font-size:12px;color:var(--text);z-index:9999;opacity:0;transition:all 0.28s;pointer-events:none;white-space:nowrap;display:flex;align-items:center;gap:8px;box-shadow:0 16px 40px rgba(0,0,0,0.5);font-family:var(--mono)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- TOP CHROME -->
+<div class="chrome">
+  <div class="chrome-logo">Medi<span>Book</span></div>
+  <div class="chrome-badge">SUPER ADMIN</div>
+  <div class="chrome-stats">
+    <div class="chrome-stat">
+      <div class="chrome-stat-n" id="hdrMrr">£48,230</div>
+      <div class="chrome-stat-l">Monthly MRR</div>
+    </div>
+    <div class="chrome-stat">
+      <div class="chrome-stat-n" id="hdrClinics">24</div>
+      <div class="chrome-stat-l">Active Clinics</div>
+    </div>
+    <div class="chrome-stat">
+      <div class="chrome-stat-n" id="hdrCalls">1,847</div>
+      <div class="chrome-stat-l">AI Calls Today</div>
+    </div>
+    <div class="chrome-stat">
+      <div class="chrome-stat-n" style="color:var(--green)">99.8%</div>
+      <div class="chrome-stat-l">Uptime</div>
+    </div>
+  </div>
+  <div class="chrome-right">
+    <div class="chrome-indicator"><div class="indicator-dot ind-green"></div>All systems operational</div>
+    <div class="chrome-indicator" style="margin-left:8px"><div class="indicator-dot ind-gold"></div>3 alerts</div>
+    <button class="chrome-btn cb-electric" onclick="switchView('alerts',document.querySelector('[data-view=alerts]'))">⚠ View Alerts</button>
+    <button class="chrome-btn cb-ghost" onclick="addClinic()">+ Onboard Clinic</button>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="body">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sb-section">Platform</div>
+    <div class="sb-item active" data-view="overview" onclick="switchView('overview',this)">
+      <div class="sb-dot" style="background:var(--electric)"></div>Overview
+      <span class="sb-badge">24</span>
+    </div>
+    <div class="sb-item" data-view="clinics" onclick="switchView('clinics',this)">
+      <div class="sb-dot" style="background:var(--gold)"></div>All Clinics
+      <span class="sb-badge">24</span>
+    </div>
+    <div class="sb-item" data-view="revenue" onclick="switchView('revenue',this)">
+      <div class="sb-dot" style="background:var(--green)"></div>Revenue & MRR
+    </div>
+    <div class="sb-item" data-view="alerts" onclick="switchView('alerts',this)">
+      <div class="sb-dot" style="background:var(--red)"></div>Alerts
+      <span class="sb-badge alert">3</span>
+    </div>
+    <div class="sb-section">Infrastructure</div>
+    <div class="sb-item" data-view="voice" onclick="switchView('voice',this)">
+      <div class="sb-dot" style="background:var(--teal)"></div>Voice Agent Health
+    </div>
+    <div class="sb-item" data-view="trials" onclick="switchView('trials',this)">
+      <div class="sb-dot" style="background:var(--purple)"></div>Trials & Churn
+    </div>
+    <div class="sb-item" data-view="integrations" onclick="switchView('integrations',this)">
+      <div class="sb-dot" style="background:var(--electric)"></div>API Integrations
+      <span class="sb-badge" style="background:rgba(0,212,255,0.15);color:var(--electric);border-color:rgba(0,212,255,0.3)">7</span>
+    </div>
+    <div class="sb-bottom">
+      <div class="sb-you">
+        <div class="sb-you-av">YO</div>
+        <div>
+          <div class="sb-you-name">You (Owner)</div>
+          <div class="sb-you-role">SUPER_ADMIN</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title">
+        <span id="viewTitle">Platform Overview</span>
+        <span class="tb-breadcrumb" id="viewBreadcrumb">medibook.io / admin</span>
+      </div>
+      <div class="tb-right">
+        <button class="tb-btn tb-outline" onclick="showToast('📊','Exporting report…')">Export CSV</button>
+        <button class="tb-btn tb-gold" onclick="addClinic()">+ Onboard New Clinic</button>
+      </div>
+    </div>
+
+    <div class="content" id="mainContent">
+
+      <!-- ══ VIEW: OVERVIEW ══ -->
+      <div class="view active" id="view-overview">
+        <div class="stat-row">
+          <div class="stat-card sc-gold">
+            <div class="stat-label">Monthly MRR</div>
+            <div class="stat-val sv-gold">£48,230</div>
+            <div class="stat-sub"><span class="stat-delta">↑ £3,870</span> vs last month</div>
+          </div>
+          <div class="stat-card sc-electric">
+            <div class="stat-label">Active Clinics</div>
+            <div class="stat-val sv-electric">24</div>
+            <div class="stat-sub"><span class="stat-delta">↑ 3 new</span> this month</div>
+          </div>
+          <div class="stat-card sc-green">
+            <div class="stat-label">AI Calls This Month</div>
+            <div class="stat-val sv-green">12,847</div>
+            <div class="stat-sub"><span class="stat-delta">↑ 22%</span> vs last month</div>
+          </div>
+          <div class="stat-card sc-rose">
+            <div class="stat-label">Churned This Month</div>
+            <div class="stat-val sv-rose">1</div>
+            <div class="stat-sub"><span class="stat-delta down">-£129</span> MRR lost</div>
+          </div>
+          <div class="stat-card sc-purple">
+            <div class="stat-label">On Trial</div>
+            <div class="stat-val sv-purple">6</div>
+            <div class="stat-sub">Converting in <span style="color:var(--amber)">avg 11d</span></div>
+          </div>
+        </div>
+
+        <div class="charts-row">
+          <!-- MRR chart -->
+          <div class="chart-card">
+            <div class="cc-header">
+              <span class="cc-title">MRR Growth</span>
+              <span class="cc-sub">Last 8 months</span>
+            </div>
+            <div class="cc-body">
+              <div class="bar-chart" id="mrrChart"></div>
+              <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--muted);font-family:var(--mono)" id="mrrLabels"></div>
+            </div>
+          </div>
+          <!-- AI call volume -->
+          <div class="chart-card">
+            <div class="cc-header">
+              <span class="cc-title">AI Call Volume</span>
+              <span class="cc-sub">Daily — last 14 days</span>
+            </div>
+            <div class="cc-body">
+              <div class="sparkline"><svg id="sparkSvg" viewBox="0 0 300 48" preserveAspectRatio="none"></svg></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+                <div style="font-size:10px;color:var(--muted);font-family:var(--mono)">Peak: <span style="color:var(--teal)">1,847 calls</span></div>
+                <div style="font-size:10px;color:var(--muted);font-family:var(--mono)">Avg: <span style="color:var(--text)">1,203/day</span></div>
+              </div>
+            </div>
+          </div>
+          <!-- Plan mix donut -->
+          <div class="chart-card">
+            <div class="cc-header">
+              <span class="cc-title">Plan Distribution</span>
+              <span class="cc-sub">24 active clinics</span>
+            </div>
+            <div class="cc-body">
+              <div class="donut-wrap">
+                <svg class="donut-svg" viewBox="0 0 80 80" id="donutSvg"></svg>
+                <div class="donut-legend">
+                  <div class="dl-item"><div class="dl-dot" style="background:var(--gold)"></div><span class="dl-label">Pro</span><span class="dl-val">16</span></div>
+                  <div class="dl-item"><div class="dl-dot" style="background:var(--muted2)"></div><span class="dl-label">Starter</span><span class="dl-val">5</span></div>
+                  <div class="dl-item"><div class="dl-dot" style="background:var(--purple)"></div><span class="dl-label">Enterprise</span><span class="dl-val">3</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent clinics table (abbreviated) -->
+        <div class="data-card">
+          <div class="dc-header">
+            <span class="dc-title">🏥 Recent Activity</span>
+            <button class="tb-btn tb-outline" style="font-size:10px;padding:4px 12px" onclick="switchView('clinics',document.querySelector('[data-view=clinics]'))">View All Clinics →</button>
+          </div>
+          <div id="overviewClinicTable"></div>
+        </div>
+      </div>
+
+      <!-- ══ VIEW: ALL CLINICS ══ -->
+      <div class="view" id="view-clinics">
+        <div class="data-card">
+          <div class="dc-header">
+            <span class="dc-title">🏥 All Clinics <span style="color:var(--muted);font-weight:400">(24)</span></span>
+            <div class="dc-actions">
+              <input class="dc-search" placeholder="Search clinics…" oninput="filterClinics(this.value)" id="clinicSearch">
+              <div class="filter-pill active" onclick="setFilter('all',this)">All</div>
+              <div class="filter-pill" onclick="setFilter('pro',this)">Pro</div>
+              <div class="filter-pill" onclick="setFilter('trial',this)">Trial</div>
+              <div class="filter-pill" onclick="setFilter('issue',this)">Issues</div>
+            </div>
+          </div>
+          <table id="clinicTable">
+            <thead>
+              <tr>
+                <th onclick="sortTable('name')">Clinic</th>
+                <th onclick="sortTable('plan')">Plan</th>
+                <th onclick="sortTable('status')">Status</th>
+                <th onclick="sortTable('mrr')">MRR</th>
+                <th onclick="sortTable('calls')">AI Calls</th>
+                <th onclick="sortTable('joined')">Joined</th>
+                <th onclick="sortTable('lastActive')">Last Active</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="clinicTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ VIEW: REVENUE ══ -->
+      <div class="view" id="view-revenue">
+        <div class="stat-row" style="grid-template-columns:repeat(4,1fr)">
+          <div class="stat-card sc-gold"><div class="stat-label">Current MRR</div><div class="stat-val sv-gold">£48,230</div><div class="stat-sub"><span class="stat-delta">↑ 8.7%</span> month-on-month</div></div>
+          <div class="stat-card sc-green"><div class="stat-label">ARR Run Rate</div><div class="stat-val sv-green">£578k</div><div class="stat-sub">Projected annual</div></div>
+          <div class="stat-card sc-electric"><div class="stat-label">New MRR This Month</div><div class="stat-val sv-electric">£3,870</div><div class="stat-sub">3 new clinics × avg £129</div></div>
+          <div class="stat-card sc-rose"><div class="stat-label">Churned MRR</div><div class="stat-val sv-rose">£129</div><div class="stat-sub">1 clinic churned</div></div>
+        </div>
+        <div class="charts-row" style="grid-template-columns:1fr 1fr">
+          <div class="chart-card">
+            <div class="cc-header"><span class="cc-title">MRR Waterfall — Feb 2026</span></div>
+            <div class="cc-body" id="waterfallChart"></div>
+          </div>
+          <div class="chart-card">
+            <div class="cc-header"><span class="cc-title">Top Clinics by MRR</span></div>
+            <div class="cc-body" id="topClinicsMrr"></div>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="dc-header"><span class="dc-title">📋 MRR Event Log</span><span class="cc-sub">All subscription changes</span></div>
+          <div style="padding:0 16px" id="mrrTimeline"></div>
+        </div>
+      </div>
+
+      <!-- ══ VIEW: ALERTS ══ -->
+      <div class="view" id="view-alerts">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div style="font-size:11px;color:var(--muted);font-family:var(--mono)">3 active alerts · Last checked 2 min ago</div>
+          <button class="tb-btn tb-outline" style="font-size:10px;padding:4px 12px" onclick="showToast('✅','All alerts marked resolved')">Mark all resolved</button>
+        </div>
+        <div id="alertsList"></div>
+      </div>
+
+      <!-- ══ VIEW: VOICE HEALTH ══ -->
+      <div class="view" id="view-voice">
+        <div class="stat-row">
+          <div class="stat-card sc-electric"><div class="stat-label">Agents Online</div><div class="stat-val sv-electric">22</div><div class="stat-sub">2 paused by clinic</div></div>
+          <div class="stat-card sc-green"><div class="stat-label">Calls Today</div><div class="stat-val sv-green">1,847</div><div class="stat-sub">Across 22 agents</div></div>
+          <div class="stat-card sc-gold"><div class="stat-label">Booking Rate</div><div class="stat-val sv-gold">68%</div><div class="stat-sub">Industry avg: 45%</div></div>
+          <div class="stat-card sc-purple"><div class="stat-label">Avg Response</div><div class="stat-val sv-purple">1.6s</div><div class="stat-sub">SLA target: &lt;3s</div></div>
+          <div class="stat-card sc-rose"><div class="stat-label">Transfer Rate</div><div class="stat-val sv-rose">12%</div><div class="stat-sub">Calls handed to staff</div></div>
+        </div>
+        <div class="data-card">
+          <div class="dc-header"><span class="dc-title">🎙️ Agent Health Per Clinic</span></div>
+          <table>
+            <thead><tr>
+              <th>Clinic</th><th>Agent Status</th><th>Calls Today</th><th>Booking Rate</th><th>Avg Response</th><th>Last Call</th><th>Health</th>
+            </tr></thead>
+            <tbody id="voiceHealthBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ VIEW: TRIALS & CHURN ══ -->
+      <div class="view" id="view-trials">
+        <div class="stat-row" style="grid-template-columns:repeat(4,1fr)">
+          <div class="stat-card sc-purple"><div class="stat-label">Active Trials</div><div class="stat-val sv-purple">6</div><div class="stat-sub">Avg day 8 of 14</div></div>
+          <div class="stat-card sc-gold"><div class="stat-label">Trial→Paid Rate</div><div class="stat-val sv-gold">74%</div><div class="stat-sub">Last 90 days</div></div>
+          <div class="stat-card sc-rose"><div class="stat-label">Churned (30d)</div><div class="stat-val sv-rose">1</div><div class="stat-sub">Reason: price</div></div>
+          <div class="stat-card sc-green"><div class="stat-label">At-Risk Clinics</div><div class="stat-val sv-green">2</div><div class="stat-sub">Low usage &lt;7d</div></div>
+        </div>
+        <div class="charts-row" style="grid-template-columns:1fr 1fr">
+          <div class="data-card">
+            <div class="dc-header"><span class="dc-title">⏱ Active Trials — Expiry Countdown</span></div>
+            <div style="padding:0 16px" id="trialsBody"></div>
+          </div>
+          <div class="data-card">
+            <div class="dc-header"><span class="dc-title">⚠ At-Risk Clinics</span><span class="cc-sub">Low engagement score</span></div>
+            <div style="padding:0 16px" id="atRiskBody"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════
+           VIEW: API INTEGRATIONS
+      ═════════════════════════════════════════════════════ -->
+      <div class="view" id="view-integrations">
+
+        <!-- Alert banner -->
+        <div id="integrationsAlert" style="display:none;align-items:center;gap:10px;padding:10px 16px;border-radius:7px;margin-bottom:18px;font-size:12px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#f87171">
+          <span>🔴</span><span id="integrationsAlertText"></span>
+        </div>
+
+        <!-- Status strip -->
+        <div class="stat-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+          <div class="stat-card sc-green">
+            <div class="stat-label">Services Connected</div>
+            <div class="stat-val sv-green" id="intConnected">6 / 7</div>
+            <div class="stat-sub">All critical online</div>
+          </div>
+          <div class="stat-card sc-electric">
+            <div class="stat-label">API Calls Today</div>
+            <div class="stat-val sv-electric">48,291</div>
+            <div class="stat-sub">Across all services</div>
+          </div>
+          <div class="stat-card sc-gold">
+            <div class="stat-label">Est. Monthly Cost</div>
+            <div class="stat-val sv-gold" id="intMonthlyCost">£1,840</div>
+            <div class="stat-sub">GPT-4o + ElevenLabs</div>
+          </div>
+          <div class="stat-card sc-purple">
+            <div class="stat-label">Last Key Rotation</div>
+            <div class="stat-val sv-purple" style="font-size:20px">14d ago</div>
+            <div class="stat-sub">Next: Mar 8, 2026</div>
+          </div>
+        </div>
+
+        <!-- Integration cards grid -->
+        <div id="integrationsGrid" style="display:flex;flex-direction:column;gap:14px"></div>
+
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /body -->
+
+<!-- CLINIC DETAIL PANEL -->
+<div class="detail-panel" id="detailPanel">
+  <div class="dp-header">
+    <div class="dp-clinic-info">
+      <div class="dp-av" id="dpAv"></div>
+      <div>
+        <div class="dp-name" id="dpName"></div>
+        <div class="dp-slug" id="dpSlug"></div>
+      </div>
+    </div>
+    <div class="dp-close" onclick="closeDetail()">✕</div>
+  </div>
+  <div class="dp-body" id="dpBody"></div>
+  <div class="dp-actions">
+    <button class="dp-action-btn dp-electric" onclick="impersonate(currentClinic)">👁 Impersonate — View as This Clinic</button>
+    <div class="dp-row-grid">
+      <button class="dp-action-btn dp-outline" onclick="showToast('📧','Email sent to clinic owner')">✉ Email Owner</button>
+      <button class="dp-action-btn dp-outline" onclick="showToast('💬','Opening Slack…')">💬 Slack</button>
+    </div>
+    <button class="dp-action-btn dp-gold" onclick="showToast('↑','Upgrading plan…')">⭐ Upgrade Plan</button>
+    <button class="dp-action-btn dp-danger" onclick="showToast('⏸','Account suspended')">⏸ Suspend Account</button>
+  </div>
+</div>
+
+<!-- IMPERSONATE MODAL -->
+<div class="impersonate-overlay" id="impersonateOverlay" onclick="if(event.target===this)closeImpersonate()">
+  <div class="impersonate-modal">
+    <div class="im-title">Impersonate Clinic</div>
+    <div class="im-desc">You're about to view the MediBook dashboard as this clinic owner. All actions you take will be logged against your admin account.</div>
+    <div class="im-clinic" id="imClinicInfo"></div>
+    <div class="im-warning">⚠ This session will be logged. The clinic owner will NOT be notified. Exit impersonation at any time via the banner.</div>
+    <div class="im-actions">
+      <button class="im-cancel" onclick="closeImpersonate()">Cancel</button>
+      <button class="im-confirm" onclick="confirmImpersonate()">Enter as Clinic →</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── CLINIC DATA ──────────────────────────────────────────────────────────────
+const CLINICS = [
+  {id:1,name:'Lumière Aesthetics',slug:'lumiere',initials:'LA',color:'#d4a84b',bg:'rgba(212,168,75,0.15)',plan:'PRO',status:'active',mrr:129,calls:142,joined:'Sep 2024',lastActive:'2 min ago',staff:8,clients:847,bookings:1204,revenue:38420,trialEnd:null,agent:true,health:98,bookRate:71,avgResp:1.3,city:'London'},
+  {id:2,name:'Glow Aesthetics',slug:'glowaesthetics',initials:'GA',color:'#f472b6',bg:'rgba(244,114,182,0.15)',plan:'PRO',status:'active',mrr:129,calls:98,joined:'Oct 2024',lastActive:'14 min ago',staff:5,clients:412,bookings:623,revenue:18240,trialEnd:null,agent:true,health:95,bookRate:68,avgResp:1.5,city:'Manchester'},
+  {id:3,name:'Dr. Patel Clinic',slug:'drpatel',initials:'DP',color:'#60a5fa',bg:'rgba(96,165,250,0.15)',plan:'PRO',status:'active',mrr:129,calls:76,joined:'Nov 2024',lastActive:'1h ago',staff:3,clients:248,bookings:390,revenue:11200,trialEnd:null,agent:true,health:92,bookRate:64,avgResp:1.8,city:'Birmingham'},
+  {id:4,name:'Revive Skin Clinic',slug:'reviveskin',initials:'RS',color:'#2dd4bf',bg:'rgba(45,212,191,0.15)',plan:'ENTERPRISE',status:'active',mrr:499,calls:318,joined:'Aug 2024',lastActive:'5 min ago',staff:14,clients:1240,bookings:2100,revenue:84000,trialEnd:null,agent:true,health:99,bookRate:79,avgResp:1.1,city:'London'},
+  {id:5,name:'Pure Beauty Studio',slug:'purebeauty',initials:'PB',color:'#a78bfa',bg:'rgba(167,139,250,0.15)',plan:'STARTER',status:'active',mrr:49,calls:32,joined:'Dec 2024',lastActive:'3h ago',staff:2,clients:156,bookings:210,revenue:6800,trialEnd:null,agent:false,health:88,bookRate:0,avgResp:0,city:'Bristol'},
+  {id:6,name:'The Aesthetic Room',slug:'aestheticroom',initials:'AR',color:'#4ade80',bg:'rgba(74,222,128,0.15)',plan:'PRO',status:'trial',mrr:0,calls:12,joined:'Feb 2026',lastActive:'1 day ago',staff:3,clients:28,bookings:34,revenue:1200,trialEnd:'Mar 6',agent:true,health:85,bookRate:55,avgResp:2.1,city:'Edinburgh'},
+  {id:7,name:'Bloom Wellness',slug:'bloomwellness',initials:'BW',color:'#f59e0b',bg:'rgba(245,158,11,0.15)',plan:'STARTER',status:'active',mrr:49,calls:18,joined:'Jan 2025',lastActive:'2 days ago',staff:2,clients:98,bookings:130,revenue:4200,trialEnd:null,agent:false,health:72,bookRate:0,avgResp:0,city:'Leeds'},
+  {id:8,name:'Nova Skin',slug:'novaskin',initials:'NS',color:'#ef4444',bg:'rgba(239,68,68,0.15)',plan:'PRO',status:'past_due',mrr:129,calls:0,joined:'Oct 2024',lastActive:'5 days ago',staff:4,clients:210,bookings:280,revenue:9800,trialEnd:null,agent:false,health:0,bookRate:0,avgResp:0,city:'Glasgow'},
+  {id:9,name:'Serenity Aesthetics',slug:'serenity',initials:'SA',color:'#2dd4bf',bg:'rgba(45,212,191,0.15)',plan:'PRO',status:'trial',mrr:0,calls:8,joined:'Feb 2026',lastActive:'12h ago',staff:2,clients:14,bookings:18,revenue:800,trialEnd:'Mar 3',agent:true,health:90,bookRate:60,avgResp:1.9,city:'London'},
+  {id:10,name:'Harley Med Spa',slug:'harleymed',initials:'HM',color:'#a78bfa',bg:'rgba(167,139,250,0.15)',plan:'ENTERPRISE',status:'active',mrr:799,calls:520,joined:'Jun 2024',lastActive:'Just now',staff:22,clients:2100,bookings:3800,revenue:142000,trialEnd:null,agent:true,health:99,bookRate:82,avgResp:1.0,city:'London'},
+];
+
+let currentClinic = null;
+let currentFilter = 'all';
+let currentView = 'overview';
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  buildMrrChart();
+  buildSparkline();
+  buildDonut();
+  buildOverviewTable();
+  buildClinicTable(CLINICS);
+  buildRevenue();
+  buildAlerts();
+  buildVoiceHealth();
+  buildTrials();
+});
+
+// ─── VIEW SWITCHING ───────────────────────────────────────────────────────────
+const VIEW_TITLES = {
+  overview: ['Platform Overview', 'medibook.io / admin'],
+  clinics: ['All Clinics', 'medibook.io / admin / clinics'],
+  revenue: ['Revenue & MRR', 'medibook.io / admin / revenue'],
+  alerts: ['System Alerts', 'medibook.io / admin / alerts'],
+  voice: ['Voice Agent Health', 'medibook.io / admin / voice'],
+  trials: ['Trials & Churn', 'medibook.io / admin / trials'],
+};
+function switchView(id, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(s => s.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  el.classList.add('active');
+  currentView = id;
+  const [title, bc] = VIEW_TITLES[id] || ['Admin', ''];
+  document.getElementById('viewTitle').textContent = title;
+  document.getElementById('viewBreadcrumb').textContent = bc;
+  closeDetail();
+}
+
+// ─── CHARTS ───────────────────────────────────────────────────────────────────
+const MRR_DATA = [28400, 31200, 33800, 36100, 38900, 41200, 44360, 48230];
+const MRR_MONTHS = ['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb'];
+
+function buildMrrChart() {
+  const chart = document.getElementById('mrrChart');
+  const labels = document.getElementById('mrrLabels');
+  const max = Math.max(...MRR_DATA);
+  chart.innerHTML = MRR_DATA.map((v, i) => {
+    const pct = (v / max) * 100;
+    const isLast = i === MRR_DATA.length - 1;
+    return `<div class="bar-wrap">
+      <div class="bar" style="height:${pct}%;background:${isLast ? 'var(--gold)' : 'var(--surface3)'};border:1px solid ${isLast ? 'var(--gold-glow)' : 'var(--border)'};${isLast ? 'box-shadow:0 0 12px rgba(212,168,75,0.25)' : ''}" title="£${v.toLocaleString()}"></div>
+    </div>`;
+  }).join('');
+  labels.innerHTML = MRR_MONTHS.map(m => `<span>${m}</span>`).join('');
+}
+
+function buildSparkline() {
+  const vals = [980,1120,1050,1340,1220,1480,1390,1600,1520,1700,1640,1820,1780,1847];
+  const svg = document.getElementById('sparkSvg');
+  const max = Math.max(...vals), min = Math.min(...vals);
+  const w = 300, h = 48;
+  const pts = vals.map((v, i) => {
+    const x = (i / (vals.length - 1)) * w;
+    const y = h - ((v - min) / (max - min)) * (h - 8) - 4;
+    return `${x},${y}`;
+  }).join(' ');
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--teal)" stop-opacity="0.3"/>
+        <stop offset="100%" stop-color="var(--teal)" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <polygon points="${pts} ${w},${h} 0,${h}" fill="url(#sg)"/>
+    <polyline points="${pts}" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${(13/13)*w}" cy="${h - ((vals[13]-min)/(max-min))*(h-8)-4}" r="3" fill="var(--teal)" filter="drop-shadow(0 0 4px var(--teal))"/>`;
+}
+
+function buildDonut() {
+  const svg = document.getElementById('donutSvg');
+  const data = [{v:16,c:'var(--gold)'},{v:5,c:'var(--muted2)'},{v:3,c:'var(--purple)'}];
+  const total = data.reduce((s, d) => s + d.v, 0);
+  const r = 28, cx = 40, cy = 40, stroke = 12;
+  let offset = 0;
+  const circ = 2 * Math.PI * r;
+  svg.innerHTML = data.map(d => {
+    const pct = d.v / total;
+    const dash = pct * circ;
+    const gap = circ - dash;
+    const rot = offset * 360;
+    offset += pct;
+    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${d.c}" stroke-width="${stroke}" stroke-dasharray="${dash} ${gap}" transform="rotate(${rot - 90} ${cx} ${cy})" opacity="0.9"/>`;
+  }).join('');
+}
+
+// ─── OVERVIEW TABLE ───────────────────────────────────────────────────────────
+function buildOverviewTable() {
+  const el = document.getElementById('overviewClinicTable');
+  const recent = CLINICS.slice(0, 6);
+  el.innerHTML = `<table><thead><tr>
+    <th>Clinic</th><th>Plan</th><th>Status</th><th>MRR</th><th>AI Calls</th><th>Actions</th>
+  </tr></thead><tbody>
+    ${recent.map(c => clinicRow(c, true)).join('')}
+  </tbody></table>`;
+}
+
+// ─── CLINICS TABLE ────────────────────────────────────────────────────────────
+function buildClinicTable(data) {
+  document.getElementById('clinicTableBody').innerHTML = data.map(c => clinicRow(c, false)).join('');
+}
+
+function clinicRow(c, brief) {
+  const statusMap = {
+    active: `<div class="status-dot-cell"><div class="sdot sdot-green"></div>Active</div>`,
+    trial: `<div class="status-dot-cell"><div class="sdot" style="background:var(--purple)"></div>Trial → ${c.trialEnd}</div>`,
+    past_due: `<div class="status-dot-cell"><div class="sdot sdot-red"></div>Payment Failed</div>`,
+    paused: `<div class="status-dot-cell"><div class="sdot sdot-gray"></div>Paused</div>`,
+  };
+  const planMap = {
+    PRO: `<span class="plan-badge pb-pro">PRO</span>`,
+    STARTER: `<span class="plan-badge pb-starter">STARTER</span>`,
+    ENTERPRISE: `<span class="plan-badge pb-enterprise">ENTERPRISE</span>`,
+  };
+  return `<tr onclick="openDetail(${c.id})">
+    <td><div class="clinic-name-cell">
+      <div class="clinic-av" style="background:${c.bg};color:${c.color}">${c.initials}</div>
+      <div><div class="clinic-name">${c.name}</div><div class="clinic-slug">${c.slug}.medibook.io · ${c.city}</div></div>
+    </div></td>
+    <td>${planMap[c.plan]}</td>
+    <td>${statusMap[c.status] || ''}</td>
+    <td class="gold-cell">${c.mrr > 0 ? '£' + c.mrr : '—'}</td>
+    <td class="mono-cell" style="color:var(--teal)">${c.calls}</td>
+    ${!brief ? `<td class="muted-cell">${c.joined}</td><td class="muted-cell">${c.lastActive}</td>` : ''}
+    <td><div class="action-btns">
+      <button class="action-btn ab-view" onclick="event.stopPropagation();openDetail(${c.id})">View</button>
+      <button class="action-btn ab-impersonate" onclick="event.stopPropagation();impersonate(CLINICS.find(x=>x.id===${c.id}))">Impersonate</button>
+      ${c.status==='past_due' ? `<button class="action-btn ab-danger" onclick="event.stopPropagation();showToast('⚠','Sending payment reminder…')">Remind</button>` : ''}
+    </div></td>
+  </tr>`;
+}
+
+function filterClinics(q) {
+  const filtered = CLINICS.filter(c =>
+    c.name.toLowerCase().includes(q.toLowerCase()) ||
+    c.slug.toLowerCase().includes(q.toLowerCase()) ||
+    c.city.toLowerCase().includes(q.toLowerCase())
+  );
+  buildClinicTable(filtered);
+}
+
+function setFilter(type, el) {
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = type;
+  let filtered = CLINICS;
+  if(type === 'pro') filtered = CLINICS.filter(c => c.plan === 'PRO');
+  if(type === 'trial') filtered = CLINICS.filter(c => c.status === 'trial');
+  if(type === 'issue') filtered = CLINICS.filter(c => c.status === 'past_due' || c.health < 80);
+  buildClinicTable(filtered);
+}
+
+function sortTable(col) {
+  const sorted = [...CLINICS].sort((a,b) => {
+    if(typeof a[col] === 'number') return b[col] - a[col];
+    return String(a[col]).localeCompare(String(b[col]));
+  });
+  buildClinicTable(sorted);
+}
+
+// ─── DETAIL PANEL ─────────────────────────────────────────────────────────────
+function openDetail(id) {
+  const c = CLINICS.find(x => x.id === id);
+  if(!c) return;
+  currentClinic = c;
+  document.getElementById('dpAv').style.cssText = `background:${c.bg};color:${c.color};`;
+  document.getElementById('dpAv').textContent = c.initials;
+  document.getElementById('dpName').textContent = c.name;
+  document.getElementById('dpSlug').textContent = `${c.slug}.medibook.io`;
+
+  const statusColors = {active:'var(--green)',trial:'var(--purple)',past_due:'var(--red)'};
+  const statusLabels = {active:'Active',trial:`Trial (ends ${c.trialEnd})`,past_due:'Payment Failed'};
+
+  document.getElementById('dpBody').innerHTML = `
+    <div class="dp-section">
+      <div class="dp-sec-title">Key Metrics</div>
+      <div class="dp-stats-grid">
+        <div class="dp-stat"><div class="dp-stat-n" style="color:var(--gold)">£${c.revenue.toLocaleString()}</div><div class="dp-stat-l">Revenue</div></div>
+        <div class="dp-stat"><div class="dp-stat-n" style="color:var(--teal)">${c.clients}</div><div class="dp-stat-l">Clients</div></div>
+        <div class="dp-stat"><div class="dp-stat-n" style="color:var(--blue)">${c.bookings}</div><div class="dp-stat-l">Bookings</div></div>
+      </div>
+    </div>
+    <div class="dp-section">
+      <div class="dp-sec-title">Subscription</div>
+      <div class="dp-row"><span class="dp-row-label">Plan</span><span class="dp-row-val gold">${c.plan}</span></div>
+      <div class="dp-row"><span class="dp-row-label">MRR</span><span class="dp-row-val gold">${c.mrr > 0 ? '£'+c.mrr+'/mo' : 'Trial'}</span></div>
+      <div class="dp-row"><span class="dp-row-label">Status</span><span class="dp-row-val" style="color:${statusColors[c.status]}">${statusLabels[c.status]}</span></div>
+      <div class="dp-row"><span class="dp-row-label">Joined</span><span class="dp-row-val">${c.joined}</span></div>
+      <div class="dp-row"><span class="dp-row-label">Last Active</span><span class="dp-row-val">${c.lastActive}</span></div>
+    </div>
+    <div class="dp-section">
+      <div class="dp-sec-title">AI Voice Agent</div>
+      <div class="dp-row"><span class="dp-row-label">Agent Status</span><span class="dp-row-val ${c.agent?'green':'red'}">${c.agent ? '● Online' : '○ Offline'}</span></div>
+      <div class="dp-row"><span class="dp-row-label">Calls Today</span><span class="dp-row-val">${c.calls}</span></div>
+      <div class="dp-row"><span class="dp-row-label">Booking Rate</span><span class="dp-row-val ${c.bookRate>60?'green':c.bookRate>40?'amber':'red'}">${c.bookRate > 0 ? c.bookRate+'%' : 'N/A (Starter)'}</span></div>
+      <div class="dp-row"><span class="dp-row-label">Avg Response</span><span class="dp-row-val">${c.avgResp > 0 ? c.avgResp+'s' : '—'}</span></div>
+    </div>
+    <div class="dp-section">
+      <div class="dp-sec-title">Clinic Details</div>
+      <div class="dp-row"><span class="dp-row-label">Location</span><span class="dp-row-val">${c.city}, UK</span></div>
+      <div class="dp-row"><span class="dp-row-label">Staff Members</span><span class="dp-row-val">${c.staff}</span></div>
+      <div class="dp-row"><span class="dp-row-label">Health Score</span><span class="dp-row-val ${c.health>90?'green':c.health>70?'amber':'red'}">${c.health}%</span></div>
+    </div>`;
+
+  document.getElementById('detailPanel').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('open');
+  currentClinic = null;
+}
+
+// ─── IMPERSONATE ──────────────────────────────────────────────────────────────
+function impersonate(c) {
+  if(!c) return;
+  currentClinic = c;
+  document.getElementById('imClinicInfo').innerHTML = `
+    <div class="dp-av" style="background:${c.bg};color:${c.color};width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${c.initials}</div>
+    <div><div style="font-size:13px;font-weight:600;color:var(--text)">${c.name}</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono)">${c.slug}.medibook.io · ${c.plan}</div></div>`;
+  document.getElementById('impersonateOverlay').classList.add('show');
+}
+
+function closeImpersonate() {
+  document.getElementById('impersonateOverlay').classList.remove('show');
+}
+
+function confirmImpersonate() {
+  closeImpersonate();
+  closeDetail();
+  showToast('👁', `Impersonating ${currentClinic.name} — you are now viewing as this clinic`);
+}
+
+// ─── ALERTS ───────────────────────────────────────────────────────────────────
+const ALERTS = [
+  {type:'crit',icon:'💳',iconClass:'ai-red',title:'Payment failed — Nova Skin',desc:'Stripe invoice #INV-2026-008 failed for £129. 3rd attempt. Account at risk of suspension.',time:'5 days ago',clinic:8},
+  {type:'warn',icon:'⏰',iconClass:'ai-amber',title:'2 trials expiring in 48 hours',desc:'The Aesthetic Room (6 days left) and Serenity Aesthetics (3 days left) are approaching trial end. No payment method on file for Serenity.',time:'Now',clinic:null},
+  {type:'info',icon:'📉',iconClass:'ai-blue',title:'Bloom Wellness — low engagement',desc:'Only 2 logins in the past 14 days. Churn risk elevated. Consider proactive outreach.',time:'2 days ago',clinic:7},
+];
+
+function buildAlerts() {
+  document.getElementById('alertsList').innerHTML = ALERTS.map((a, i) => `
+    <div class="alert-item ${a.type}" style="margin-bottom:10px">
+      <div class="alert-icon ${a.iconClass}">${a.icon}</div>
+      <div class="alert-content">
+        <div class="alert-title">${a.title}</div>
+        <div class="alert-desc">${a.desc}</div>
+        ${a.clinic ? `<button class="alert-resolve" onclick="event.stopPropagation();openDetail(${a.clinic})">View Clinic →</button>` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <div class="alert-time">${a.time}</div>
+        <button class="alert-resolve" onclick="resolveAlert(${i},this)">✓ Resolve</button>
+      </div>
+    </div>`).join('');
+}
+
+function resolveAlert(i, btn) {
+  btn.closest('.alert-item').style.opacity = '0.4';
+  btn.textContent = 'Resolved';
+  btn.style.color = 'var(--green)';
+}
+
+// ─── VOICE HEALTH ─────────────────────────────────────────────────────────────
+function buildVoiceHealth() {
+  const body = document.getElementById('voiceHealthBody');
+  body.innerHTML = CLINICS.filter(c => c.plan !== 'STARTER').map(c => `
+    <tr onclick="openDetail(${c.id})">
+      <td><div class="clinic-name-cell"><div class="clinic-av" style="background:${c.bg};color:${c.color}">${c.initials}</div><div><div class="clinic-name">${c.name}</div></div></div></td>
+      <td><div class="status-dot-cell"><div class="sdot ${c.agent?'sdot-green':'sdot-gray'}"></div>${c.agent?'Online':'Paused'}</div></td>
+      <td class="mono-cell" style="color:var(--teal)">${c.calls}</td>
+      <td><div style="display:flex;align-items:center;gap:7px"><div style="width:60px;height:3px;background:var(--surface3);border-radius:2px"><div style="height:3px;width:${c.bookRate}%;background:${c.bookRate>65?'var(--green)':c.bookRate>45?'var(--amber)':'var(--red)'};border-radius:2px"></div></div><span class="mono-cell" style="font-size:10px;color:${c.bookRate>65?'var(--green)':c.bookRate>45?'var(--amber)':'var(--red)'}">${c.bookRate > 0 ? c.bookRate+'%' : '—'}</span></div></td>
+      <td class="mono-cell">${c.avgResp > 0 ? c.avgResp+'s' : '—'}</td>
+      <td class="muted-cell">${c.lastActive}</td>
+      <td><div style="display:flex;align-items:center;gap:6px;font-size:10px;font-family:var(--mono)"><div style="width:36px;height:3px;background:var(--surface3);border-radius:2px"><div style="height:3px;width:${c.health}%;background:${c.health>90?'var(--green)':c.health>70?'var(--amber)':'var(--red)'};border-radius:2px"></div></div><span style="color:${c.health>90?'var(--green)':c.health>70?'var(--amber)':'var(--red)'}">${c.health}%</span></div></td>
+    </tr>`).join('');
+}
+
+// ─── REVENUE ──────────────────────────────────────────────────────────────────
+function buildRevenue() {
+  // Waterfall
+  const wf = document.getElementById('waterfallChart');
+  const items = [
+    {l:'Jan MRR',v:44360,c:'var(--surface3)',base:0},
+    {l:'New clinics',v:3*129,c:'var(--green)',base:44360},
+    {l:'Upgrades',v:370,c:'var(--teal)',base:44360+387},
+    {l:'Churn',v:-129,c:'var(--red)',base:44360+387+370},
+    {l:'Feb MRR',v:48230,c:'var(--gold)',base:0},
+  ];
+  const max = 50000;
+  wf.innerHTML = `<div style="display:flex;align-items:flex-end;gap:8px;height:100px">
+    ${items.map(i => {
+      const baseH = (i.base/max)*100;
+      const h = (Math.abs(i.v)/max)*100;
+      const isNeg = i.v < 0;
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative">
+        <div style="position:relative;width:100%;height:100px;display:flex;align-items:flex-end">
+          <div style="width:100%;position:absolute;bottom:${isNeg?baseH-h:baseH}%;height:${h}%;background:${i.c};border-radius:2px 2px 0 0;opacity:0.85;min-height:3px"></div>
+        </div>
+        <div style="font-size:8px;color:var(--muted);font-family:var(--mono);text-align:center;white-space:nowrap">${i.l}</div>
+        <div style="font-size:9px;font-family:var(--mono);color:${i.v<0?'var(--red)':'var(--text)'};font-weight:500">${i.v<0?'-':''}£${Math.abs(i.v).toLocaleString()}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+
+  // Top clinics
+  const top = [...CLINICS].sort((a,b) => b.mrr-a.mrr).slice(0,6);
+  const maxMrr = top[0].mrr;
+  document.getElementById('topClinicsMrr').innerHTML = top.map(c => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div class="clinic-av" style="background:${c.bg};color:${c.color};width:26px;height:26px;border-radius:6px;font-size:9px">${c.initials}</div>
+      <div style="flex:1">
+        <div style="font-size:11px;font-weight:500;color:var(--text);margin-bottom:3px">${c.name}</div>
+        <div style="height:3px;background:var(--surface3);border-radius:2px"><div style="height:3px;width:${(c.mrr/maxMrr)*100}%;background:${c.color};border-radius:2px"></div></div>
+      </div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--gold);font-weight:500;min-width:50px;text-align:right">£${c.mrr}</div>
+    </div>`).join('');
+
+  // MRR timeline
+  const events = [
+    {date:'Feb 21','event':'Nova Skin — payment failed (3rd attempt)','clinic':'Nova Skin',amount:-129,type:'churn'},
+    {date:'Feb 18','event':'Harley Med Spa — upgraded to Enterprise','clinic':'Harley Med Spa',amount:670,type:'upgrade'},
+    {date:'Feb 12','event':'Serenity Aesthetics — trial started','clinic':'Serenity',amount:0,type:'trial'},
+    {date:'Feb 10','event':'The Aesthetic Room — trial started','clinic':'Aesthetic Room',amount:0,type:'trial'},
+    {date:'Feb 08','event':'Dr. Patel Clinic — renewed','clinic':'Dr. Patel',amount:129,type:'renewal'},
+    {date:'Jan 31','event':'Pure Beauty Studio — downgraded to Starter','clinic':'Pure Beauty',amount:-80,type:'churn'},
+  ];
+  document.getElementById('mrrTimeline').innerHTML = events.map(e => `
+    <div class="timeline-row">
+      <div class="tl-date">${e.date}</div>
+      <div class="tl-event">${e.event}<div class="tl-clinic">${e.clinic}</div></div>
+      <div class="tl-amount ${e.amount > 0 ? 'tl-positive' : e.amount < 0 ? 'tl-negative' : ''}">${e.amount !== 0 ? (e.amount > 0 ? '+' : '') + '£' + Math.abs(e.amount) : 'Trial'}</div>
+    </div>`).join('');
+}
+
+// ─── TRIALS ───────────────────────────────────────────────────────────────────
+function buildTrials() {
+  const trials = CLINICS.filter(c => c.status === 'trial');
+  document.getElementById('trialsBody').innerHTML = trials.map(c => {
+    const daysLeft = c.slug === 'serenity' ? 10 : 14;
+    const used = 14 - daysLeft;
+    return `<div class="timeline-row" onclick="openDetail(${c.id})" style="cursor:pointer">
+      <div style="display:flex;align-items:center;gap:8px;width:100%">
+        <div class="clinic-av" style="background:${c.bg};color:${c.color};width:28px;height:28px;border-radius:7px;font-size:9px;flex-shrink:0">${c.initials}</div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px">${c.name}</div>
+          <div style="height:3px;background:var(--surface3);border-radius:2px;margin-bottom:3px"><div style="height:3px;width:${(used/14)*100}%;background:${daysLeft<4?'var(--red)':daysLeft<7?'var(--amber)':'var(--purple)'};border-radius:2px"></div></div>
+          <div style="font-size:9px;color:var(--muted);font-family:var(--mono)">${daysLeft} days left · Expires ${c.trialEnd}</div>
+        </div>
+        <div style="font-size:10px;font-family:var(--mono);color:${daysLeft<4?'var(--red)':'var(--muted)'}">Day ${used}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const atRisk = CLINICS.filter(c => c.health < 80 && c.status === 'active');
+  document.getElementById('atRiskBody').innerHTML = atRisk.length > 0 ? atRisk.map(c => `
+    <div class="timeline-row" onclick="openDetail(${c.id})" style="cursor:pointer">
+      <div style="display:flex;align-items:center;gap:8px;width:100%">
+        <div class="clinic-av" style="background:${c.bg};color:${c.color};width:28px;height:28px;border-radius:7px;font-size:9px;flex-shrink:0">${c.initials}</div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:var(--text)">${c.name}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Health: <span style="color:${c.health>70?'var(--amber)':'var(--red)'};">${c.health}%</span> · Last active: ${c.lastActive}</div>
+        </div>
+        <button class="action-btn ab-view" onclick="event.stopPropagation();showToast('📧','Outreach email sent to '+CLINICS.find(x=>x.id===${c.id}).name)">Reach Out</button>
+      </div>
+    </div>`).join('') : `<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px">✓ No at-risk clinics</div>`;
+}
+
+// ─── MISC ─────────────────────────────────────────────────────────────────────
+function addClinic() {
+  showToast('🏥', 'Opening new clinic onboarding flow…');
+}
+
+let toastTimer;
+function showToast(icon, msg) {
+  clearTimeout(toastTimer);
+  const t = document.getElementById('toast');
+  t.innerHTML = `<span>${icon}</span>${msg}`;
+  t.classList.add('show');
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─── INTEGRATIONS ─────────────────────────────────────────────────────────────
+
+const INTEGRATIONS = [
+  {
+    id: 'openai',
+    name: 'OpenAI — GPT-4o',
+    desc: 'Powers the AI brain. Processes every voice call, understands intent, and decides what to do.',
+    icon: '🧠',
+    iconBg: 'rgba(167,139,250,0.12)',
+    status: 'connected',
+    latency: '820ms avg',
+    fields: [
+      { id:'openai_key', label:'API Key', placeholder:'sk-proj-...', hint:'From platform.openai.com/api-keys', type:'key', value:'sk-proj-••••••••••••••••••••••••••••••••••••••Xk9q' },
+      { id:'openai_org', label:'Organization ID (optional)', placeholder:'org-...', hint:'Required if you use an org account', type:'text', value:'' },
+    ],
+    selects: [
+      { id:'openai_model', label:'Model', options:['gpt-4o','gpt-4o-mini','gpt-4-turbo','gpt-3.5-turbo'], value:'gpt-4o', hint:'gpt-4o is recommended. gpt-4o-mini reduces cost by ~90% with slightly lower quality.' },
+      { id:'openai_temp', label:'Temperature', options:['0.2 — Very focused','0.4 — Balanced (recommended)','0.7 — More creative','1.0 — Experimental'], value:'0.4 — Balanced (recommended)', hint:'Lower = more predictable responses. Higher = more varied language.' },
+    ],
+    toggles: [
+      { label:'Stream responses', desc:'Send audio chunks as they arrive — reduces perceived latency', on:true },
+      { label:'Log all conversations', desc:'Store full GPT-4o message history per call for review', on:true },
+      { label:'Enable fallback to gpt-4o-mini', desc:'Automatically use cheaper model during high load', on:false },
+    ],
+    stats: [
+      { n:'1,284', l:'Calls Today' },
+      { n:'£38', l:'Cost Today', col:'var(--gold)' },
+      { n:'£0.03', l:'Per Call', col:'var(--gold)' },
+      { n:'820ms', l:'Avg Response', col:'var(--electric)' },
+    ],
+    testFn: 'openai',
+  },
+  {
+    id: 'elevenlabs',
+    name: 'ElevenLabs — Text to Speech',
+    desc: 'Converts GPT-4o\'s text responses into natural-sounding voice audio streamed back to callers.',
+    icon: '🔊',
+    iconBg: 'rgba(212,168,75,0.12)',
+    status: 'connected',
+    latency: '310ms first chunk',
+    fields: [
+      { id:'eleven_key', label:'API Key', placeholder:'sk_...', hint:'From elevenlabs.io/app/settings/api-keys', type:'key', value:'sk_••••••••••••••••••••••••••••••••••••••••••••••••' },
+    ],
+    selects: [
+      { id:'eleven_model', label:'TTS Model', options:['eleven_turbo_v2 (recommended — fastest)','eleven_multilingual_v2','eleven_monolingual_v1'], value:'eleven_turbo_v2 (recommended — fastest)', hint:'turbo_v2 is the best balance of speed and quality for real-time calls.' },
+      { id:'eleven_stability', label:'Voice Stability', options:['0.3 — More expressive','0.5 — Balanced (recommended)','0.7 — Very stable','0.9 — Robotic stability'], value:'0.5 — Balanced (recommended)', hint:'Higher stability = more consistent but less human-sounding.' },
+    ],
+    toggles: [
+      { label:'Optimise for streaming latency', desc:'Sacrifice slight quality for faster first audio chunk', on:true },
+      { label:'Allow clinics to select their own voice', desc:'Clinics can pick from approved voices in their Agent Settings', on:true },
+    ],
+    stats: [
+      { n:'1,284', l:'Synths Today' },
+      { n:'£22', l:'Cost Today', col:'var(--gold)' },
+      { n:'310ms', l:'First Chunk', col:'var(--electric)' },
+      { n:'6', l:'Voices Active' },
+    ],
+    testFn: 'elevenlabs',
+    voiceManager: true,
+  },
+  {
+    id: 'deepgram',
+    name: 'Deepgram — Speech to Text',
+    desc: 'Transcribes caller speech in real time. Uses the medical-grade model for accurate treatment names.',
+    icon: '🎙️',
+    iconBg: 'rgba(45,212,191,0.12)',
+    status: 'connected',
+    latency: '~200ms transcript',
+    fields: [
+      { id:'deepgram_key', label:'API Key', placeholder:'Token ...', hint:'From console.deepgram.com/project/api-keys', type:'key', value:'••••••••••••••••••••••••••••••••••••••••••••' },
+    ],
+    selects: [
+      { id:'deepgram_model', label:'STT Model', options:['nova-2-medical (recommended)','nova-2-general','nova-2-phonecall','nova-1-general'], value:'nova-2-medical (recommended)', hint:'nova-2-medical handles aesthetic treatment names (Botox, Hydrafacial, etc.) with high accuracy.' },
+      { id:'deepgram_lang', label:'Language', options:['en-GB (UK English)','en-US (US English)','fr (French)','es (Spanish)','ar (Arabic)'], value:'en-GB (UK English)', hint:'Match this to the primary language of your clinic clients.' },
+    ],
+    toggles: [
+      { label:'Endpointing (silence detection)', desc:'Detect when the caller has stopped speaking', on:true },
+      { label:'Smart formatting', desc:'Format numbers, dates, and addresses automatically', on:true },
+      { label:'Profanity filter', desc:'Redact profanity in transcripts', on:false },
+    ],
+    stats: [
+      { n:'1,284', l:'Transcripts' },
+      { n:'£4', l:'Cost Today', col:'var(--gold)' },
+      { n:'200ms', l:'Avg Latency', col:'var(--electric)' },
+      { n:'97%', l:'Accuracy', col:'var(--green)' },
+    ],
+    testFn: 'deepgram',
+  },
+  {
+    id: 'twilio',
+    name: 'Twilio — Voice & SMS',
+    desc: 'Handles all inbound phone calls, media streaming, and SMS confirmations sent to patients.',
+    icon: '📞',
+    iconBg: 'rgba(239,68,68,0.1)',
+    status: 'connected',
+    latency: '210ms',
+    fields: [
+      { id:'twilio_sid', label:'Account SID', placeholder:'AC...', hint:'From console.twilio.com — Account Info panel', type:'key', value:'AC••••••••••••••••••••••••••••••••' },
+      { id:'twilio_token', label:'Auth Token', placeholder:'••••••••••••••••••••••••••••••••', hint:'Keep this secret — used to sign webhook requests', type:'key', value:'••••••••••••••••••••••••••••••••' },
+      { id:'twilio_webhook', label:'Webhook Base URL', placeholder:'https://api.medibook.io', hint:'Your server must be publicly reachable at this URL', type:'text', value:'https://api.medibook.io' },
+    ],
+    selects: [
+      { id:'twilio_sms_from', label:'Default SMS Sender', options:['+44 7700 900123 (London)','+44 7700 900456 (Manchester)','Alphanumeric: MediBook'], value:'+44 7700 900123 (London)', hint:'Clinics on Pro can override this with their own number.' },
+    ],
+    toggles: [
+      { label:'Record all calls', desc:'Store call recordings in your Twilio account for QA', on:false },
+      { label:'Send SMS on booking', desc:'Automatically SMS patient after AI books an appointment', on:true },
+      { label:'Send SMS on cancellation', desc:'Send confirmation SMS when AI cancels or reschedules', on:true },
+    ],
+    stats: [
+      { n:'1,284', l:'Calls Today' },
+      { n:'847', l:'SMS Sent' },
+      { n:'£18', l:'Cost Today', col:'var(--gold)' },
+      { n:'210ms', l:'Latency', col:'var(--electric)' },
+    ],
+    testFn: 'twilio',
+    phoneManager: true,
+  },
+  {
+    id: 'stripe',
+    name: 'Stripe — Payments & Billing',
+    desc: 'Handles all MediBook subscriptions, trials, invoices, and plan management for every clinic.',
+    icon: '💳',
+    iconBg: 'rgba(96,165,250,0.12)',
+    status: 'connected',
+    latency: 'Webhook: 45ms',
+    fields: [
+      { id:'stripe_secret', label:'Secret Key', placeholder:'sk_live_...', hint:'From dashboard.stripe.com/apikeys — use live key in production', type:'key', value:'sk_live_••••••••••••••••••••••••••••••••••••••••••••••' },
+      { id:'stripe_pub', label:'Publishable Key', placeholder:'pk_live_...', hint:'Safe to expose in frontend — used for Stripe.js Elements', type:'key', value:'pk_live_••••••••••••••••••••••••••••••••••••••••••••••' },
+      { id:'stripe_webhook', label:'Webhook Secret', placeholder:'whsec_...', hint:'From Stripe Dashboard → Webhooks → your endpoint', type:'key', value:'whsec_••••••••••••••••••••••••••••••••••' },
+    ],
+    selects: [
+      { id:'stripe_mode', label:'Mode', options:['Live (Production)','Test (Development)'], value:'Live (Production)', hint:'⚠ Switch to Test when developing. Never use live keys locally.' },
+    ],
+    toggles: [
+      { label:'Auto-retry failed payments', desc:'Stripe retries failed charges on day 3, 5, and 7', on:true },
+      { label:'Send payment receipts via Stripe', desc:'Let Stripe email invoices directly to clinic owners', on:true },
+      { label:'Allow promo codes', desc:'Clinics can enter promo codes at checkout', on:true },
+    ],
+    stats: [
+      { n:'£24,381', l:'MRR', col:'var(--gold)' },
+      { n:'47', l:'Active Subs' },
+      { n:'99.9%', l:'Webhook OK', col:'var(--green)' },
+      { n:'2', l:'Past Due', col:'var(--red)' },
+    ],
+    testFn: 'stripe',
+  },
+  {
+    id: 'resend',
+    name: 'Resend — Transactional Email',
+    desc: 'Sends booking confirmations, reminders, trial alerts, payment receipts, and staff notifications.',
+    icon: '✉️',
+    iconBg: 'rgba(74,222,128,0.1)',
+    status: 'connected',
+    latency: '< 1s delivery',
+    fields: [
+      { id:'resend_key', label:'API Key', placeholder:'re_...', hint:'From resend.com/api-keys — create a production key', type:'key', value:'re_••••••••••••••••••••••••••••••••' },
+      { id:'resend_from', label:'From Email Address', placeholder:'noreply@medibook.io', hint:'Must be verified in your Resend account', type:'text', value:'noreply@medibook.io' },
+      { id:'resend_reply', label:'Reply-To Address', placeholder:'support@medibook.io', hint:'Where clinic owners can reply if they respond to emails', type:'text', value:'support@medibook.io' },
+    ],
+    selects: [],
+    toggles: [
+      { label:'Send booking confirmations', desc:'Email sent to client after AI books appointment', on:true },
+      { label:'Send 24h appointment reminders', desc:'Automatic reminder the day before each appointment', on:true },
+      { label:'Send trial ending alerts', desc:'Email clinic owners 3 days before their trial ends', on:true },
+      { label:'Send payment failure alerts', desc:'Notify clinic owner immediately on payment failure', on:true },
+    ],
+    stats: [
+      { n:'3,841', l:'Sent Today' },
+      { n:'98.2%', l:'Delivered', col:'var(--green)' },
+      { n:'£0', l:'Cost', col:'var(--gold)' },
+      { n:'< 1s', l:'Delivery', col:'var(--electric)' },
+    ],
+    testFn: 'resend',
+  },
+  {
+    id: 'prisma',
+    name: 'Database — PostgreSQL via Prisma',
+    desc: 'The primary database. All clinic data, bookings, clients, and subscriptions live here.',
+    icon: '🗄️',
+    iconBg: 'rgba(0,212,255,0.08)',
+    status: 'connected',
+    latency: '12ms avg query',
+    fields: [
+      { id:'db_url', label:'DATABASE_URL', placeholder:'postgresql://user:pass@host:5432/medibook', hint:'Full connection string including credentials. Never expose this.', type:'key', value:'postgresql://medibook:••••••••@db.medibook.io:5432/medibook_prod' },
+      { id:'db_shadow', label:'SHADOW_DATABASE_URL (migrations)', placeholder:'postgresql://...', hint:'Required for Prisma migrate — use a separate shadow DB', type:'key', value:'' },
+    ],
+    selects: [
+      { id:'db_pool', label:'Connection Pool Size', options:['5 connections','10 connections (recommended)','20 connections','50 connections'], value:'10 connections (recommended)', hint:'Increase if you see pool timeout errors under high load.' },
+    ],
+    toggles: [
+      { label:'Enable query logging', desc:'Log all Prisma queries — only enable for debugging', on:false },
+      { label:'Auto-run migrations on deploy', desc:'Apply pending Prisma migrations on every deployment', on:true },
+      { label:'Enable read replica', desc:'Route read queries to a replica to reduce primary load', on:false },
+    ],
+    stats: [
+      { n:'12ms', l:'Avg Query', col:'var(--electric)' },
+      { n:'0', l:'Slow Queries' },
+      { n:'99.99%', l:'Uptime', col:'var(--green)' },
+      { n:'4.2GB', l:'DB Size' },
+    ],
+    testFn: 'db',
+  },
+];
+
+// Key visibility state
+const keyVisible = {};
+
+function buildIntegrations() {
+  const grid = document.getElementById('integrationsGrid');
+  grid.innerHTML = INTEGRATIONS.map(intg => buildIntCard(intg)).join('');
+}
+
+function buildIntCard(intg) {
+  const statusClass = intg.status;
+  const statusLabel = {connected:'Connected', degraded:'Degraded', disconnected:'Disconnected', testing:'Testing'}[intg.status];
+
+  const statsHtml = intg.stats ? `
+    <div class="int-stats-row">
+      ${intg.stats.map(s => `<div class="int-stat"><div class="int-stat-n" style="color:${s.col||'var(--text)'}">${s.n}</div><div class="int-stat-l">${s.l}</div></div>`).join('')}
+    </div>` : '';
+
+  const fieldsHtml = intg.fields.map(f => `
+    <div class="int-field">
+      <div class="int-field-label">${f.label} ${f.type==='key'?'<span>click 👁 to reveal</span>':''}</div>
+      <div class="key-input-wrap">
+        <input class="key-input" id="${f.id}" type="${f.type==='key'?'password':'text'}" value="${f.value}" placeholder="${f.placeholder}" oninput="markIntDirty('${intg.id}')">
+        ${f.type==='key'?`<button class="key-btn key-btn-reveal" onclick="toggleKeyVis('${f.id}',this)">👁</button>`:''}
+        <button class="key-btn key-btn-save" onclick="saveKey('${intg.id}','${f.id}',this)">Save</button>
+      </div>
+      <div class="key-hint">${f.hint} ${f.type==='key'&&f.value?'<a href="#" onclick="return false">Rotate key →</a>':''}</div>
+    </div>`).join('');
+
+  const selectsHtml = intg.selects.map(s => `
+    <div class="int-field">
+      <div class="int-field-label">${s.label}</div>
+      <select class="int-select" id="${s.id}" oninput="markIntDirty('${intg.id}')">
+        ${s.options.map(o => `<option ${o===s.value?'selected':''}>${o}</option>`).join('')}
+      </select>
+      ${s.hint?`<div class="key-hint">${s.hint}</div>`:''}
+    </div>`).join('');
+
+  const togglesHtml = intg.toggles.length ? `
+    <div class="int-divider"></div>
+    <div class="int-field-label" style="margin-bottom:10px">Behaviour Settings</div>
+    ${intg.toggles.map((tg,i) => `
+    <div class="int-toggle-row">
+      <div>
+        <div class="int-toggle-label">${tg.label}</div>
+        <div class="int-toggle-desc">${tg.desc}</div>
+      </div>
+      <div class="int-toggle ${tg.on?'on':''}" onclick="this.classList.toggle('on');markIntDirty('${intg.id}')"><div class="int-toggle-thumb"></div></div>
+    </div>`).join('')}` : '';
+
+  const voiceMgrHtml = intg.voiceManager ? `
+    <div class="int-divider"></div>
+    <div class="int-field-label" style="margin-bottom:10px">Approved Clinic Voices</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${[['Aria','Warm British female','en-GB',true],['James','Neutral British male','en-GB',true],['Sophie','French-accented female','fr',true],['Marcus','American male','en-US',true],['Luna','Australian female','en-AU',false],['Eli','Neutral American male','en-US',false]].map(([n,d,l,active])=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:7px">
+        <span style="font-size:16px">${{Aria:'👩‍💼',James:'👨‍⚕️',Sophie:'👩‍🦱',Marcus:'👨‍💼',Luna:'👩',Eli:'🧑'}[n]}</span>
+        <div style="flex:1"><div style="font-size:12px;font-weight:600">${n}</div><div style="font-size:10px;color:var(--text3)">${d} · ${l}</div></div>
+        <div class="int-toggle ${active?'on':''}" onclick="this.classList.toggle('on');markIntDirty('${intg.id}')"><div class="int-toggle-thumb"></div></div>
+      </div>`).join('')}
+    </div>` : '';
+
+  const phoneMgrHtml = intg.phoneManager ? `
+    <div class="int-divider"></div>
+    <div class="int-field-label" style="margin-bottom:10px">Phone Numbers <span style="float:right"><button class="key-btn key-btn-test" style="height:24px;font-size:10px;padding:0 10px" onclick="showToast('📞','Opening Twilio Console…')">+ Buy Number</button></span></div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${[['+44 20 7946 0123','Lumière Aesthetics','London','Active'],
+         ['+44 161 946 0456','Glow Aesthetics','Manchester','Active'],
+         ['+44 121 946 0789','Dr. Patel Clinic','Birmingham','Active'],
+         ['+44 20 7946 0321','Revive Skin Clinic','London','Active'],
+         ['+44 117 946 0654','Unassigned','—','Available']].map(([num,clinic,city,st])=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:7px">
+        <span style="font-family:var(--mono);font-size:12px;color:var(--electric);min-width:160px">${num}</span>
+        <div style="flex:1"><div style="font-size:12px;font-weight:500">${clinic}</div><div style="font-size:10px;color:var(--text3)">${city}</div></div>
+        <span style="font-size:9px;padding:2px 8px;border-radius:3px;font-family:var(--mono);font-weight:600;${st==='Active'?'background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,0.2)':'background:rgba(0,212,255,0.08);color:var(--electric);border:1px solid rgba(0,212,255,0.2)'}">${st}</span>
+      </div>`).join('')}
+    </div>` : '';
+
+  const testResultId = `test-${intg.id}`;
+
+  return `
+  <div class="int-card ${statusClass}" id="intcard-${intg.id}">
+    <div class="int-header" onclick="toggleIntCard('${intg.id}')">
+      <div class="int-logo" style="background:${intg.iconBg}">${intg.icon}</div>
+      <div class="int-meta">
+        <div class="int-name">${intg.name}</div>
+        <div class="int-desc">${intg.desc}</div>
+      </div>
+      <div class="int-status">
+        <span class="int-latency">${intg.latency}</span>
+        <div class="int-status-pill ${statusClass}">
+          <div class="int-status-dot"></div>
+          ${statusLabel}
+        </div>
+        <span class="int-chevron">▾</span>
+      </div>
+    </div>
+    <div class="int-body">
+      ${statsHtml}
+      <div class="int-body-grid">
+        <div>
+          ${fieldsHtml}
+        </div>
+        <div>
+          ${selectsHtml}
+          <div class="int-field">
+            <div class="int-field-label">Connection Test</div>
+            <button class="key-btn key-btn-test" style="width:100%;justify-content:center;height:38px" onclick="testConnection('${intg.id}','${testResultId}')">
+              ▶ Test Connection
+            </button>
+            <div class="test-result" id="${testResultId}"></div>
+          </div>
+        </div>
+      </div>
+      ${togglesHtml}
+      ${voiceMgrHtml}
+      ${phoneMgrHtml}
+      <div class="int-divider"></div>
+      <div class="int-danger-zone">
+        <div class="int-danger-title">⚠ Danger Zone</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="key-btn" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;height:34px;font-size:11px" onclick="showToast('🔑','Key rotation initiated for ${intg.name}')">Rotate API Key</button>
+          <button class="key-btn" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;height:34px;font-size:11px" onclick="showToast('⏸','${intg.name} paused — all dependent features offline')">Pause Service</button>
+          ${intg.id!=='prisma'?`<button class="key-btn" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;height:34px;font-size:11px" onclick="disconnectIntegration('${intg.id}')">Disconnect</button>`:''}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleIntCard(id) {
+  const card = document.getElementById('intcard-' + id);
+  card.classList.toggle('expanded');
+}
+
+function toggleKeyVis(fieldId, btn) {
+  const input = document.getElementById(fieldId);
+  const isHidden = input.type === 'password';
+  input.type = isHidden ? 'text' : 'password';
+  btn.textContent = isHidden ? '🙈' : '👁';
+}
+
+function saveKey(intgId, fieldId, btn) {
+  const input = document.getElementById(fieldId);
+  const val = input.value.trim();
+  if(!val) { showToast('⚠', 'Key cannot be empty'); return; }
+  btn.textContent = '...';
+  btn.disabled = true;
+  setTimeout(() => {
+    input.classList.add('saved');
+    btn.textContent = '✓ Saved';
+    btn.style.background = 'var(--green)';
+    btn.style.color = '#000';
+    showToast('✅', `${intgId.toUpperCase()} key saved securely`);
+    setTimeout(() => {
+      btn.textContent = 'Save';
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.disabled = false;
+    }, 2000);
+  }, 800);
+}
+
+const TEST_RESPONSES = {
+  openai: { ok:true, msg:`✓ OpenAI API reachable\nModel: gpt-4o — available\nOrg: medibook-ltd\nRate limit: 500k tokens/min\nLatency: 812ms` },
+  elevenlabs: { ok:true, msg:`✓ ElevenLabs API reachable\nModel: eleven_turbo_v2 — active\nQuota remaining: 84,200 chars\nVoices loaded: 6 approved\nLatency: 308ms` },
+  deepgram: { ok:true, msg:`✓ Deepgram API reachable\nModel: nova-2-medical — active\nBalance: $142.40\nWebSocket: OK\nLatency: 194ms` },
+  twilio: { ok:true, msg:`✓ Twilio API reachable\nAccount: AC••••••••\nNumbers active: 5\nSMS balance: £48.20\nLatency: 207ms` },
+  stripe: { ok:true, msg:`✓ Stripe API reachable\nMode: Live\nWebhooks: All 6 registered\nActive subscriptions: 47\nLatency: 44ms` },
+  resend: { ok:true, msg:`✓ Resend API reachable\nDomain: medibook.io (verified)\nEmails today: 3,841\nDelivery rate: 98.2%\nLatency: 182ms` },
+  db: { ok:true, msg:`✓ PostgreSQL connection OK\nHost: db.medibook.io:5432\nPool: 3/10 connections used\nMigrations: up to date\nQuery latency: 12ms` },
+};
+
+function testConnection(intgId, resultId) {
+  const result = document.getElementById(resultId);
+  result.className = 'test-result running show';
+  result.textContent = `Testing ${intgId} connection…`;
+
+  const card = document.getElementById('intcard-' + intgId);
+  card.className = `int-card testing expanded`;
+
+  setTimeout(() => {
+    const res = TEST_RESPONSES[intgId];
+    if(res) {
+      result.className = `test-result ${res.ok ? 'ok' : 'fail'} show`;
+      result.textContent = res.msg;
+      card.className = `int-card ${res.ok?'connected':'disconnected'} expanded`;
+      showToast(res.ok?'✅':'❌', `${intgId.toUpperCase()} — ${res.ok?'Connection OK':'Connection failed'}`);
+    }
+  }, 1200 + Math.random()*600);
+}
+
+function disconnectIntegration(id) {
+  showToast('⚠', `Disconnecting ${id}… this will take features offline`);
+  setTimeout(() => {
+    const card = document.getElementById('intcard-' + id);
+    card.className = 'int-card disconnected expanded';
+    card.querySelector('.int-status-pill').className = 'int-status-pill disconnected';
+    card.querySelector('.int-status-pill').innerHTML = '<div class="int-status-dot"></div>Disconnected';
+    showToast('🔴', `${id.toUpperCase()} disconnected — dependent features paused`);
+  }, 600);
+}
+
+function markIntDirty(id) {
+  // Could show a per-card save prompt — for now just toast on save
+}
+
+// Register integrations view in switchView
+const _origSwitchView = switchView;
+switchView = function(id, el) {
+  _origSwitchView(id, el);
+  if(id === 'integrations') {
+    if(!document.getElementById('integrationsGrid').innerHTML) {
+      buildIntegrations();
+    }
+    // Update view title
+    document.getElementById('viewTitle').textContent = 'API Integrations';
+    document.getElementById('viewBreadcrumb').textContent = 'medibook.io / admin / integrations';
+  }
+};
+</script>
+</body>
+</html>
