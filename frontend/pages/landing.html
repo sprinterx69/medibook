@@ -940,5 +940,10 @@ const obs = new IntersectionObserver((entries) => {
 }, { threshold: 0.12 });
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 </script>
+<!-- Hub navigation button -->
+<a href="../index.html" title="Back to Feature Hub" style="position:fixed;bottom:24px;left:24px;z-index:9999;display:flex;align-items:center;gap:7px;background:#0d1b2a;border:1px solid rgba(201,169,110,0.3);color:#c9a96e;text-decoration:none;padding:9px 16px;border-radius:9px;font-size:12px;font-family:'Outfit',sans-serif;font-weight:500;transition:all 0.2s;box-shadow:0 4px 20px rgba(0,0,0,0.2)" onmouseover="this.style.borderColor='rgba(201,169,110,0.6)';this.style.background='#122236'" onmouseout="this.style.borderColor='rgba(201,169,110,0.3)';this.style.background='#0d1b2a'">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+  Hub
+</a>
 </body>
 </html>

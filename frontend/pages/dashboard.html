@@ -726,6 +726,12 @@ document.addEventListener('DOMContentLoaded', () => {
   buildPayments();
   buildStaff();
   buildMiniCal();
+  // URL hash deep-link: e.g. dashboard.html#calendar
+  const hash = location.hash.slice(1);
+  if (hash && ['overview','calendar','clients','payments','staff'].includes(hash)) {
+    const navEl = document.querySelector(`[onclick*="'${hash}'"]`);
+    if (navEl) switchView(hash, navEl);
+  }
 });
 
 // ─── VIEW SWITCHING ──────────────────────────────────────
@@ -964,5 +970,10 @@ function showToast(icon, msg){
   toastTimer = setTimeout(()=>t.classList.remove('show'), 3200);
 }
 </script>
+<!-- Hub navigation button -->
+<a href="../index.html" title="Back to Feature Hub" style="position:fixed;bottom:20px;left:20px;z-index:9999;display:flex;align-items:center;gap:7px;background:#161b27;border:1px solid #252d42;color:#d4a84b;text-decoration:none;padding:8px 14px;border-radius:9px;font-size:12px;font-family:'Bricolage Grotesque',sans-serif;font-weight:500;transition:all 0.2s;box-shadow:0 4px 16px rgba(0,0,0,0.3)" onmouseover="this.style.borderColor='rgba(212,168,75,0.4)';this.style.background='#1c2235'" onmouseout="this.style.borderColor='#252d42';this.style.background='#161b27'">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+  Hub
+</a>
 </body>
 </html>
