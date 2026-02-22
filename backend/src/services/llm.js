@@ -163,32 +163,80 @@ async function executeTool(toolName, args, session) {
 }
 
 // ─── System Prompt Builder ────────────────────────────────────────────────────
+// Uses voice agent settings saved via the /api/tenants/:id/agent-settings API.
+// Falls back to sensible defaults if settings have not been configured yet.
 function buildSystemPrompt(tenantContext) {
-  const { name, services, hours, location } = tenantContext;
+  const { name, services, hours, location, voiceAgent } = tenantContext;
+  const va = voiceAgent ?? {};
 
-  return `You are a friendly, professional AI receptionist for ${name}, a premium medical aesthetics clinic.
+  const agentName    = va.agentName    ?? 'Aria';
+  const greeting     = va.greeting     ?? `Hello! Thank you for calling ${name}. How can I help you today?`;
+  const clinicCtx    = va.clinicContext ?? '';
+  const neverSay     = va.neverSay     ?? [];
+  const rules        = va.bookingRules ?? {};
+  const faqs         = va.faqs         ?? [];
 
-Your job is to:
-- Answer incoming calls and greet callers warmly
+  // Filter to enabled services only if configured
+  const enabledIds = va.enabledServiceIds ?? [];
+  const activeServices = enabledIds.length > 0
+    ? (services ?? []).filter(s => enabledIds.includes(s.id))
+    : (services ?? []);
+  const servicesList = activeServices.length > 0
+    ? activeServices.map(s => `${s.name} (${s.durationMins} min, £${(s.priceCents / 100).toFixed(0)})`).join('; ')
+    : 'General appointments';
+
+  const faqBlock = faqs.length > 0
+    ? '\nFREQUENTLY ASKED QUESTIONS:\n' + faqs.map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n')
+    : '';
+
+  const neverSayLine = neverSay.length > 0
+    ? `\nNEVER use these words or phrases: ${neverSay.join(', ')}`
+    : '';
+
+  const minNotice  = rules.minNoticeHours       ?? 2;
+  const maxFuture  = rules.maxFutureDays         ?? 60;
+  const newClient  = rules.newClientPolicy       ?? 'book_directly';
+  const deposit    = rules.requireDeposit        ?? false;
+  const depositPct = rules.depositPercent        ?? 25;
+  const allowRsched = rules.allowRescheduling    ?? true;
+  const allowCancel = rules.allowCancellation    ?? true;
+  const cancelNotice = rules.cancellationNoticeHours ?? 24;
+
+  return `You are ${agentName}, a professional AI receptionist for ${name}.
+
+OPENING GREETING (use this exactly when you answer):
+"${greeting}"
+
+YOUR ROLE:
 - Help callers book, reschedule, or cancel appointments
-- Answer questions about services, pricing, and opening hours
-- Always be concise — this is a phone call, not a chat. Keep responses under 3 sentences unless listing options.
+- Answer questions about services, pricing, and clinic info
+- Keep responses short — max 2–3 sentences per turn (this is a phone call)
+- Speak naturally and warmly — no bullet lists in speech
 
-CLINIC DETAILS:
+CLINIC INFO:
 - Name: ${name}
 - Location: ${location ?? 'Central London'}
 - Hours: ${hours ?? 'Monday–Saturday 9am–7pm'}
-- Services: ${services?.map(s => s.name).join(', ') ?? 'Hydrafacial, Botox, Laser Treatments, Dermal Fillers, Chemical Peels'}
+- Services: ${servicesList}
+${clinicCtx ? `\nCONTEXT: ${clinicCtx}` : ''}
 
-RULES:
-1. ALWAYS confirm the caller's name before booking.
-2. ALWAYS call check_availability before booking — never invent slots.
-3. ALWAYS read back the full booking details (service, date, time, practitioner) before confirming.
-4. If the caller wants to speak to a human, say: "Of course, let me transfer you now" and end with [TRANSFER].
-5. If you don't know something, say "Let me check that for you" and use a tool.
-6. Be warm and professional. Treat every caller as a valued client.
-7. For sensitive medical questions, refer callers to speak with a practitioner.
-8. Keep your voice responses natural and conversational — no bullet points or lists.
+BOOKING RULES:
+- Min. booking notice: ${minNotice}h
+- Max advance booking: ${maxFuture} days
+- New clients: ${newClient === 'require_consultation' ? 'Must book a consultation first — do not book treatments directly for new callers' : 'Can book any service directly'}
+- Deposits: ${deposit ? `Required — collect ${depositPct}% upfront (advise caller at time of booking)` : 'Not required'}
+- Rescheduling: ${allowRsched ? `Allowed with ${cancelNotice}h notice` : 'Not permitted by phone — direct to reception'}
+- Cancellation: ${allowCancel ? `Allowed with ${cancelNotice}h notice` : 'Not permitted by phone — direct to reception'}
+
+RULES (never break these):
+1. Always confirm caller's full name before booking.
+2. Always call check_availability first — never invent or guess slots.
+3. Always read back full booking details (service, date, time, staff) before confirming.
+4. If asked to speak to a human, say "Of course, let me connect you now" then end with [TRANSFER].
+5. Use tools whenever you need to look something up — never make up information.
+6. For clinical/medical questions, say "I'd recommend speaking with one of our practitioners."
+7. Never mention competitor clinics.${neverSayLine}
+${faqBlock}
 
 CURRENT DATE/TIME: ${new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })}`;
 }
