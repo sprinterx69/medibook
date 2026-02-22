@@ -1,28 +1,867 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MediBook</title>
-  <meta http-equiv="refresh" content="0; url=pages/landing.html">
-  <style>
-    body { background: #090c12; color: #d0d8f0; font-family: sans-serif;
-           display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-    a { color: #d4a84b; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediBook — Feature Navigator</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0f1117;
+  --surface:#161b27;
+  --surface2:#1c2235;
+  --surface3:#222840;
+  --border:#252d42;
+  --border2:#2e3a56;
+  --gold:#d4a84b;
+  --gold-dim:rgba(212,168,75,0.15);
+  --gold-border:rgba(212,168,75,0.25);
+  --teal:#2dd4bf;
+  --teal-dim:rgba(45,212,191,0.12);
+  --rose:#f472b6;
+  --rose-dim:rgba(244,114,182,0.12);
+  --blue:#60a5fa;
+  --blue-dim:rgba(96,165,250,0.12);
+  --green:#4ade80;
+  --green-dim:rgba(74,222,128,0.12);
+  --purple:#a78bfa;
+  --purple-dim:rgba(167,139,250,0.12);
+  --amber:#fbbf24;
+  --red:#f87171;
+  --electric:#00d4ff;
+  --electric-dim:rgba(0,212,255,0.1);
+  --text:#e8eaf0;
+  --muted:#6b7a96;
+  --muted2:#4a5568;
+  --sidebar-w:220px;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:'Bricolage Grotesque',sans-serif;font-size:13px;display:flex;overflow:hidden;line-height:1.5}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;overflow-y:auto;overflow-x:hidden}
+.sb-logo{padding:20px 16px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo-mark{width:30px;height:30px;background:linear-gradient(135deg,var(--gold),#a07830);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#000;flex-shrink:0}
+.logo-text{font-size:16px;font-weight:700;letter-spacing:-0.01em}
+.logo-text span{color:var(--gold)}
+.sb-badge{margin-top:2px;font-size:9px;background:var(--teal-dim);color:var(--teal);border:1px solid rgba(45,212,191,0.2);padding:2px 8px;border-radius:10px;letter-spacing:0.05em;font-weight:600}
+.sb-section{padding:16px 14px 5px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted2);font-weight:500;flex-shrink:0}
+.sb-link{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:7px;margin:1px 6px;cursor:pointer;text-decoration:none;color:var(--muted);font-size:12px;transition:all 0.15s;border:1px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-link:hover{background:var(--surface2);color:var(--text)}
+.sb-link.active{background:var(--gold-dim);color:var(--gold);border-color:var(--gold-border);font-weight:500}
+.sb-link .sb-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sb-link .icon{font-size:12px;flex-shrink:0;width:14px;text-align:center}
+.sb-divider{height:1px;background:var(--border);margin:8px 14px}
+.sb-bottom{margin-top:auto;padding:14px;border-top:1px solid var(--border);flex-shrink:0}
+.sb-preview-btn{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:12px;text-decoration:none;transition:all 0.18s;width:100%}
+.sb-preview-btn:hover{border-color:var(--border2);color:var(--text)}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;height:100vh}
+.topbar{height:56px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;gap:16px}
+.topbar-title{font-size:15px;font-weight:600;color:var(--text);white-space:nowrap}
+.topbar-subtitle{font-size:12px;color:var(--muted);margin-left:8px}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.search-wrap{position:relative;flex:1;max-width:380px}
+.search-input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 12px 7px 32px;border-radius:8px;font-family:'Bricolage Grotesque',sans-serif;font-size:12px;outline:none;transition:border-color 0.2s}
+.search-input::placeholder{color:var(--muted)}
+.search-input:focus{border-color:var(--border2)}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px}
+
+/* Role filter pills */
+.role-filter{display:flex;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:3px}
+.role-btn{padding:4px 12px;border-radius:5px;border:none;background:none;color:var(--muted);font-family:'Bricolage Grotesque',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.role-btn.active{background:var(--surface3);color:var(--text);border:1px solid var(--border)}
+.role-btn:hover:not(.active){color:var(--text)}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;padding:24px}
+.feature-section{margin-bottom:36px}
+.feature-section.hidden{display:none}
+
+/* Section header */
+.section-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.section-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.section-title{font-size:15px;font-weight:600;color:var(--text)}
+.section-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.section-count{margin-left:auto;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:10px;font-weight:600;padding:3px 10px;border-radius:10px;white-space:nowrap;letter-spacing:0.04em;flex-shrink:0}
+
+/* Cards grid */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+
+/* Feature card */
+.feature-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:10px;transition:all 0.2s;cursor:default;position:relative;overflow:hidden}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity 0.2s}
+.feature-card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.2)}
+.feature-card:hover::before{opacity:1}
+.feature-card.hidden{display:none}
+.feature-card.highlight{border-color:var(--gold-border)}
+.feature-card.highlight::before{background:linear-gradient(90deg,var(--gold),transparent);opacity:1}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.card-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.card-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:0.05em;align-self:flex-start;margin-top:2px;white-space:nowrap}
+.card-title{font-size:13px;font-weight:600;color:var(--text);line-height:1.3}
+.card-desc{font-size:11px;color:var(--muted);line-height:1.6;flex:1}
+.card-tags{display:flex;flex-wrap:wrap;gap:5px}
+.card-tag{font-size:10px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:2px 8px;border-radius:5px;letter-spacing:0.02em}
+.card-actions{display:flex;gap:7px;margin-top:2px}
+.btn-open{flex:1;padding:7px 0;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;font-family:'Bricolage Grotesque',sans-serif;font-size:11px;font-weight:500;cursor:pointer;text-decoration:none;text-align:center;transition:all 0.18s;display:flex;align-items:center;justify-content:center;gap:5px}
+.btn-open:hover{background:var(--surface3);border-color:var(--border2)}
+.btn-preview{padding:7px 14px;background:none;border:1px solid var(--border);color:var(--muted);border-radius:7px;font-family:'Bricolage Grotesque',sans-serif;font-size:11px;cursor:pointer;transition:all 0.18s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.btn-preview:hover{border-color:var(--border2);color:var(--text)}
+.btn-open.gold{background:var(--gold-dim);border-color:var(--gold-border);color:var(--gold)}
+.btn-open.gold:hover{background:rgba(212,168,75,0.22)}
+.btn-open.teal{background:var(--teal-dim);border-color:rgba(45,212,191,0.22);color:var(--teal)}
+.btn-open.teal:hover{background:rgba(45,212,191,0.2)}
+
+/* No results */
+.no-results{text-align:center;padding:60px 20px;color:var(--muted)}
+.no-results-icon{font-size:36px;margin-bottom:12px;opacity:0.5}
+
+/* ── PREVIEW OVERLAY ── */
+.preview-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s;backdrop-filter:blur(4px)}
+.preview-overlay.open{opacity:1;pointer-events:all}
+.preview-chrome{width:calc(100vw - 80px);height:calc(100vh - 80px);background:var(--surface);border:1px solid var(--border2);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.6)}
+.preview-bar{height:46px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:12px;flex-shrink:0}
+.preview-dots{display:flex;gap:6px;flex-shrink:0}
+.pd{width:11px;height:11px;border-radius:50%}
+.pd.r{background:#ff5f57}
+.pd.y{background:#ffbd2e}
+.pd.g{background:#28ca41}
+.preview-url-bar{flex:1;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:11px;color:var(--muted);font-family:'Bricolage Grotesque',monospace;display:flex;align-items:center;gap:8px;min-width:0}
+.preview-url-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.preview-actions-bar{display:flex;gap:8px;flex-shrink:0}
+.preview-action-btn{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface3);color:var(--muted);font-family:'Bricolage Grotesque',sans-serif;font-size:11px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px}
+.preview-action-btn:hover{color:var(--text);border-color:var(--border2)}
+.preview-action-btn.close{background:rgba(248,113,113,0.1);border-color:rgba(248,113,113,0.2);color:var(--red)}
+.preview-frame{flex:1;border:none;background:#0a0c12}
+
+/* ── STATUS BAR ── */
+.status-bar{display:flex;align-items:center;gap:16px;padding:8px 24px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.status-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.status-dot.green{background:var(--green)}
+.status-dot.gold{background:var(--gold)}
+.status-dot.teal{background:var(--teal)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:860px){
+  .sidebar{display:none}
+  .topbar-subtitle{display:none}
+  .cards-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:540px){
+  .cards-grid{grid-template-columns:1fr}
+  .role-filter{display:none}
+}
+</style>
 </head>
 <body>
-  <div style="text-align:center">
-    <div style="font-size:28px; margin-bottom:12px">MediBook</div>
-    <p>Redirecting… <a href="pages/landing.html">click here if not redirected</a></p>
-    <p style="margin-top:20px; font-size:13px; color:#6b7a96">
-      <a href="pages/landing.html">Landing</a> ·
-      <a href="pages/onboarding.html">Onboarding</a> ·
-      <a href="pages/dashboard.html">Dashboard</a> ·
-      <a href="pages/agent-settings.html">Agent Settings</a> ·
-      <a href="pages/admin/index.html">Admin Panel</a> ·
-      <a href="pages/preview.html">Full Preview</a>
-    </p>
+
+<!-- ── SIDEBAR ────────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="logo-mark">M</div>
+    <div>
+      <div class="logo-text">Medi<span>Book</span></div>
+      <div class="sb-badge">DEV HUB</div>
+    </div>
   </div>
+
+  <div class="sb-section">Jump to Section</div>
+  <a href="#section-public" class="sb-link" onclick="highlightSection('public')">
+    <span class="icon">🌐</span> Public Pages
+  </a>
+  <a href="#section-clinic" class="sb-link" onclick="highlightSection('clinic')">
+    <span class="icon">🏥</span> Clinic Dashboard
+  </a>
+  <a href="#section-agent" class="sb-link" onclick="highlightSection('agent')">
+    <span class="icon">🤖</span> AI Voice Agent
+  </a>
+  <a href="#section-admin" class="sb-link" onclick="highlightSection('admin')">
+    <span class="icon">⚙️</span> Super Admin
+  </a>
+
+  <div class="sb-divider"></div>
+  <div class="sb-section">Clinic Views</div>
+  <a href="pages/dashboard.html#overview" class="sb-link" target="_blank">
+    <div class="sb-dot" style="background:var(--gold)"></div> Overview
+  </a>
+  <a href="pages/dashboard.html#calendar" class="sb-link" target="_blank">
+    <div class="sb-dot" style="background:var(--blue)"></div> Calendar
+  </a>
+  <a href="pages/dashboard.html#clients" class="sb-link" target="_blank">
+    <div class="sb-dot" style="background:var(--teal)"></div> Clients
+  </a>
+  <a href="pages/dashboard.html#payments" class="sb-link" target="_blank">
+    <div class="sb-dot" style="background:var(--green)"></div> Payments
+  </a>
+  <a href="pages/dashboard.html#staff" class="sb-link" target="_blank">
+    <div class="sb-dot" style="background:var(--rose)"></div> Staff
+  </a>
+
+  <div class="sb-divider"></div>
+  <div class="sb-section">AI Agent</div>
+  <a href="pages/agent-settings.html#identity" class="sb-link" target="_blank">
+    <div class="sb-dot" style="background:var(--teal)"></div> Identity & Voice
+  </a>
+  <a href="pages/agent-settings.html#greeting" class="sb-link" target="_blank">
+    <div class="sb-dot" style="background:var(--blue)"></div> Greeting
+  </a>
+  <a href="pages/agent-settings.html#knowledge" class="sb-link" target="_blank">
+    <div class="sb-dot" style="background:var(--purple)"></div> Knowledge Base
+  </a>
+  <a href="pages/agent-settings.html#simulator" class="sb-link" target="_blank">
+    <div class="sb-dot" style="background:var(--gold)"></div> Call Simulator
+  </a>
+
+  <div class="sb-divider"></div>
+  <div class="sb-section">Admin Views</div>
+  <a href="pages/admin/index.html#overview" class="sb-link" target="_blank">
+    <div class="sb-dot" style="background:var(--electric)"></div> Overview
+  </a>
+  <a href="pages/admin/index.html#clinics" class="sb-link" target="_blank">
+    <div class="sb-dot" style="background:var(--gold)"></div> All Clinics
+  </a>
+  <a href="pages/admin/index.html#revenue" class="sb-link" target="_blank">
+    <div class="sb-dot" style="background:var(--green)"></div> Revenue
+  </a>
+  <a href="pages/admin/index.html#alerts" class="sb-link" target="_blank">
+    <div class="sb-dot" style="background:var(--red)"></div> Alerts
+  </a>
+  <a href="pages/admin/index.html#voice" class="sb-link" target="_blank">
+    <div class="sb-dot" style="background:var(--teal)"></div> Voice Health
+  </a>
+  <a href="pages/admin/index.html#integrations" class="sb-link" target="_blank">
+    <div class="sb-dot" style="background:var(--purple)"></div> API Keys
+  </a>
+
+  <div class="sb-bottom">
+    <a href="pages/preview.html" class="sb-preview-btn" target="_blank">
+      <span>🎥</span> Full Preview Carousel
+    </a>
+  </div>
+</aside>
+
+<!-- ── MAIN ────────────────────────────────────────────────── -->
+<div class="main">
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <div class="status-item">
+      <div class="status-dot green"></div>
+      <span>22 features</span>
+    </div>
+    <div class="status-item">
+      <div class="status-dot gold"></div>
+      <span>5 dashboard views</span>
+    </div>
+    <div class="status-item">
+      <div class="status-dot teal"></div>
+      <span>6 AI agent sections</span>
+    </div>
+    <div class="status-item" style="margin-left:auto;color:var(--gold)">
+      <span>MVP Build · Feb 2026</span>
+    </div>
+  </div>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div style="display:flex;align-items:baseline;gap:4px;min-width:0">
+      <div class="topbar-title">Feature Navigator</div>
+      <div class="topbar-subtitle">Click any card to launch or preview</div>
+    </div>
+    <div class="topbar-right">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="search" class="search-input" placeholder="Search features…" id="searchInput" oninput="filterFeatures(this.value)">
+      </div>
+      <div class="role-filter">
+        <button class="role-btn active" onclick="setRole('all',this)">All</button>
+        <button class="role-btn" onclick="setRole('visitor',this)">Visitor</button>
+        <button class="role-btn" onclick="setRole('clinic',this)">Clinic</button>
+        <button class="role-btn" onclick="setRole('admin',this)">Admin</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="mainContent">
+
+    <!-- ── PUBLIC PAGES ── -->
+    <div class="feature-section" id="section-public" data-roles="visitor all">
+      <div class="section-header">
+        <div class="section-icon" style="background:var(--blue-dim)">🌐</div>
+        <div>
+          <div class="section-title">Public Pages</div>
+          <div class="section-sub">Marketing, onboarding, and platform showcase</div>
+        </div>
+        <div class="section-count">2 pages</div>
+      </div>
+      <div class="cards-grid">
+
+        <div class="feature-card" data-search="landing marketing pricing public hero testimonials" data-roles="visitor all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--blue-dim)">🌐</div>
+            <span class="card-badge" style="background:var(--blue-dim);color:var(--blue)">PUBLIC</span>
+          </div>
+          <div class="card-title">Landing Page</div>
+          <div class="card-desc">Full marketing page with hero section, feature showcase, AI voice demo, pricing tiers (Starter £49, Pro £129, Enterprise), testimonials, and call-to-action buttons.</div>
+          <div class="card-tags">
+            <span class="card-tag">Marketing</span>
+            <span class="card-tag">Pricing</span>
+            <span class="card-tag">Testimonials</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/landing.html" target="_blank" class="btn-open">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/landing.html','Landing Page')">⊙ Preview</button>
+          </div>
+        </div>
+
+        <div class="feature-card" data-search="onboarding signup wizard registration business services team plan payment" data-roles="visitor all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--purple-dim)">📋</div>
+            <span class="card-badge" style="background:var(--purple-dim);color:var(--purple)">5 STEPS</span>
+          </div>
+          <div class="card-title">Onboarding Wizard</div>
+          <div class="card-desc">Full 5-step clinic signup flow: Business Info → Services → Team & Hours → Plan Selection → Stripe Payment. Includes brand colour picker, staff invites, and confetti on completion.</div>
+          <div class="card-tags">
+            <span class="card-tag">Registration</span>
+            <span class="card-tag">Stripe</span>
+            <span class="card-tag">Multi-step</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/onboarding.html" target="_blank" class="btn-open">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/onboarding.html','Onboarding Wizard')">⊙ Preview</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── CLINIC DASHBOARD ── -->
+    <div class="feature-section" id="section-clinic" data-roles="clinic all">
+      <div class="section-header">
+        <div class="section-icon" style="background:var(--gold-dim)">🏥</div>
+        <div>
+          <div class="section-title">Clinic Dashboard</div>
+          <div class="section-sub">Full clinic management — appointments, clients, payments, staff</div>
+        </div>
+        <div class="section-count">5 views</div>
+      </div>
+      <div class="cards-grid">
+
+        <div class="feature-card" data-search="overview stats appointments dashboard today staff ai metrics" data-roles="clinic all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--gold-dim)">📊</div>
+            <span class="card-badge" style="background:var(--gold-dim);color:var(--gold)">OVERVIEW</span>
+          </div>
+          <div class="card-title">Dashboard Overview</div>
+          <div class="card-desc">Stats cards (today's revenue, appointments, new clients, AI calls), today's appointment list with status badges, staff on duty, and AI voice performance metrics.</div>
+          <div class="card-tags">
+            <span class="card-tag">Stats</span>
+            <span class="card-tag">Appointments</span>
+            <span class="card-tag">AI Metrics</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/dashboard.html#overview" target="_blank" class="btn-open gold">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/dashboard.html#overview','Dashboard — Overview')">⊙ Preview</button>
+          </div>
+        </div>
+
+        <div class="feature-card" data-search="calendar week grid appointments booking slots schedule time" data-roles="clinic all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--blue-dim)">📅</div>
+            <span class="card-badge" style="background:var(--blue-dim);color:var(--blue)">CALENDAR</span>
+          </div>
+          <div class="card-title">Calendar View</div>
+          <div class="card-desc">Interactive week grid with colour-coded appointment blocks, 8am–6pm time slots, drag-to-view mini calendar sidebar, upcoming appointments list, and New Booking modal button.</div>
+          <div class="card-tags">
+            <span class="card-tag">Week Grid</span>
+            <span class="card-tag">Mini Cal</span>
+            <span class="card-tag">Bookings</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/dashboard.html#calendar" target="_blank" class="btn-open gold">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/dashboard.html#calendar','Dashboard — Calendar')">⊙ Preview</button>
+          </div>
+        </div>
+
+        <div class="feature-card" data-search="clients crm search filter history spend risk churn detail" data-roles="clinic all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--teal-dim)">👥</div>
+            <span class="card-badge" style="background:var(--teal-dim);color:var(--teal)">CLIENTS</span>
+          </div>
+          <div class="card-title">Client Management</div>
+          <div class="card-desc">Searchable, sortable client database with spend tracking (lifetime £), visit history, churn risk score bars, status badges, and a detailed right-panel showing notes, tags, and booking history.</div>
+          <div class="card-tags">
+            <span class="card-tag">CRM</span>
+            <span class="card-tag">Risk Scoring</span>
+            <span class="card-tag">Search</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/dashboard.html#clients" target="_blank" class="btn-open gold">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/dashboard.html#clients','Dashboard — Clients')">⊙ Preview</button>
+          </div>
+        </div>
+
+        <div class="feature-card" data-search="payments revenue transactions stripe refund chart pie" data-roles="clinic all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--green-dim)">💳</div>
+            <span class="card-badge" style="background:var(--green-dim);color:var(--green)">PAYMENTS</span>
+          </div>
+          <div class="card-title">Payments & Revenue</div>
+          <div class="card-desc">Monthly revenue bar chart, service breakdown pie chart, full transaction history table with paid / pending / refunded status chips, deposit tracking, and export functionality.</div>
+          <div class="card-tags">
+            <span class="card-tag">Revenue</span>
+            <span class="card-tag">Charts</span>
+            <span class="card-tag">Stripe</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/dashboard.html#payments" target="_blank" class="btn-open gold">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/dashboard.html#payments','Dashboard — Payments')">⊙ Preview</button>
+          </div>
+        </div>
+
+        <div class="feature-card" data-search="staff team management utilization availability rating schedule" data-roles="clinic all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--rose-dim)">🧑‍⚕️</div>
+            <span class="card-badge" style="background:var(--rose-dim);color:var(--rose)">STAFF</span>
+          </div>
+          <div class="card-title">Staff Management</div>
+          <div class="card-desc">Staff cards with avatar, role, today's appointments, rating stars, weekly utilisation percentage, 7-day availability heatmap, and online/offline status indicator.</div>
+          <div class="card-tags">
+            <span class="card-tag">Utilisation</span>
+            <span class="card-tag">Ratings</span>
+            <span class="card-tag">Availability</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/dashboard.html#staff" target="_blank" class="btn-open gold">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/dashboard.html#staff','Dashboard — Staff')">⊙ Preview</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── AI VOICE AGENT ── -->
+    <div class="feature-section" id="section-agent" data-roles="clinic all">
+      <div class="section-header">
+        <div class="section-icon" style="background:var(--teal-dim)">🤖</div>
+        <div>
+          <div class="section-title">AI Voice Agent</div>
+          <div class="section-sub">Configure and test the 24/7 AI phone receptionist</div>
+        </div>
+        <div class="section-count">6 sections</div>
+      </div>
+      <div class="cards-grid">
+
+        <div class="feature-card" data-search="identity voice name elevenlabs aria tone personality warmth" data-roles="clinic all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--teal-dim)">🎙️</div>
+            <span class="card-badge" style="background:var(--teal-dim);color:var(--teal)">IDENTITY</span>
+          </div>
+          <div class="card-title">Identity & Voice</div>
+          <div class="card-desc">Set agent name (default: Aria), select from 6 ElevenLabs voice presets with live preview playback, adjust personality tone slider from "Warm & Caring" to "Crisp & Efficient".</div>
+          <div class="card-tags">
+            <span class="card-tag">ElevenLabs</span>
+            <span class="card-tag">6 Voices</span>
+            <span class="card-tag">Personality</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/agent-settings.html#identity" target="_blank" class="btn-open teal">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/agent-settings.html#identity','AI Agent — Identity & Voice')">⊙ Preview</button>
+          </div>
+        </div>
+
+        <div class="feature-card" data-search="greeting script welcome message after hours transfer business hours open close" data-roles="clinic all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--blue-dim)">👋</div>
+            <span class="card-badge" style="background:var(--blue-dim);color:var(--blue)">GREETING</span>
+          </div>
+          <div class="card-title">Greeting Script</div>
+          <div class="card-desc">Write the opening greeting, after-hours voicemail message, and human-transfer handoff phrase. Configure per-day business hours with open/close toggles and custom time pickers.</div>
+          <div class="card-tags">
+            <span class="card-tag">Script</span>
+            <span class="card-tag">Hours</span>
+            <span class="card-tag">After-hours</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/agent-settings.html#greeting" target="_blank" class="btn-open teal">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/agent-settings.html#greeting','AI Agent — Greeting Script')">⊙ Preview</button>
+          </div>
+        </div>
+
+        <div class="feature-card" data-search="services config bookable toggle deposit hydrafacial botox laser" data-roles="clinic all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--purple-dim)">💆</div>
+            <span class="card-badge" style="background:var(--purple-dim);color:var(--purple)">SERVICES</span>
+          </div>
+          <div class="card-title">Services Configuration</div>
+          <div class="card-desc">Toggle which treatments the AI can book via phone. Enable/disable deposit requirements per service, set booking-window constraints, and control which staff the agent can assign.</div>
+          <div class="card-tags">
+            <span class="card-tag">Toggle</span>
+            <span class="card-tag">Deposits</span>
+            <span class="card-tag">Booking Rules</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/agent-settings.html#services" target="_blank" class="btn-open teal">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/agent-settings.html#services','AI Agent — Services Config')">⊙ Preview</button>
+          </div>
+        </div>
+
+        <div class="feature-card" data-search="knowledge base faq questions answers parking clinic context never say" data-roles="clinic all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--gold-dim)">🧠</div>
+            <span class="card-badge" style="background:var(--gold-dim);color:var(--gold)">KNOWLEDGE</span>
+          </div>
+          <div class="card-title">Knowledge Base</div>
+          <div class="card-desc">Expandable FAQ library (parking, prep, aftercare, payment policy), free-text clinic context description field, and "Never Say" guidelines that shape GPT-4o's response boundaries.</div>
+          <div class="card-tags">
+            <span class="card-tag">FAQs</span>
+            <span class="card-tag">Context</span>
+            <span class="card-tag">Guidelines</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/agent-settings.html#knowledge" target="_blank" class="btn-open teal">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/agent-settings.html#knowledge','AI Agent — Knowledge Base')">⊙ Preview</button>
+          </div>
+        </div>
+
+        <div class="feature-card" data-search="booking rules notice advance new client buffer time slots constraints" data-roles="clinic all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--rose-dim)">📋</div>
+            <span class="card-badge" style="background:var(--rose-dim);color:var(--rose)">RULES</span>
+          </div>
+          <div class="card-title">Booking Rules</div>
+          <div class="card-desc">Set minimum notice period, maximum future booking window, slot interval, and new-client policies. Control whether the AI can reschedule, confirm by SMS, or require consultation first.</div>
+          <div class="card-tags">
+            <span class="card-tag">Constraints</span>
+            <span class="card-tag">New Clients</span>
+            <span class="card-tag">Policy</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/agent-settings.html#rules" target="_blank" class="btn-open teal">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/agent-settings.html#rules','AI Agent — Booking Rules')">⊙ Preview</button>
+          </div>
+        </div>
+
+        <div class="feature-card highlight" data-search="simulator call test interactive gpt chat phone conversation" data-roles="clinic all">
+          <div class="card-top">
+            <div class="card-icon" style="background:rgba(212,168,75,0.12)">📞</div>
+            <span class="card-badge" style="background:var(--gold-dim);color:var(--gold)">★ LIVE TEST</span>
+          </div>
+          <div class="card-title">Call Simulator</div>
+          <div class="card-desc">Interactive right-panel chat with the AI agent. Use quick-reply buttons (Book Appointment, Check Prices, Cancel, Hours) or type anything. Displays GPT-4o tool calls in real time.</div>
+          <div class="card-tags">
+            <span class="card-tag">Interactive</span>
+            <span class="card-tag">GPT-4o</span>
+            <span class="card-tag">Tool Calls</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/agent-settings.html#simulator" target="_blank" class="btn-open gold">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/agent-settings.html#simulator','AI Agent — Call Simulator')">⊙ Preview</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── SUPER ADMIN ── -->
+    <div class="feature-section" id="section-admin" data-roles="admin all">
+      <div class="section-header">
+        <div class="section-icon" style="background:var(--rose-dim)">⚙️</div>
+        <div>
+          <div class="section-title">Super Admin Panel</div>
+          <div class="section-sub">Operator control — all clinics, revenue, infrastructure & API keys</div>
+        </div>
+        <div class="section-count">7 views</div>
+      </div>
+      <div class="cards-grid">
+
+        <div class="feature-card" data-search="admin overview mrr revenue clinics ai calls uptime chart platform" data-roles="admin all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--electric-dim)">📈</div>
+            <span class="card-badge" style="background:var(--electric-dim);color:var(--electric)">OVERVIEW</span>
+          </div>
+          <div class="card-title">Platform Overview</div>
+          <div class="card-desc">Live MRR (£48.2K), active clinic count, AI calls today, system uptime %, MRR growth bar chart, AI call volume trend, and plan distribution donut chart.</div>
+          <div class="card-tags">
+            <span class="card-tag">MRR</span>
+            <span class="card-tag">Metrics</span>
+            <span class="card-tag">System Health</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/admin/index.html#overview" target="_blank" class="btn-open">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/admin/index.html#overview','Admin — Platform Overview')">⊙ Preview</button>
+          </div>
+        </div>
+
+        <div class="feature-card" data-search="all clinics table search filter impersonate suspend plan status" data-roles="admin all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--gold-dim)">🏢</div>
+            <span class="card-badge" style="background:var(--gold-dim);color:var(--gold)">CLINICS</span>
+          </div>
+          <div class="card-title">All Clinics</div>
+          <div class="card-desc">Searchable, filterable table of all 24 clinics — plan tier, status, MRR, AI call count, last active. Click any row to open a detail panel with actions: impersonate, email, suspend.</div>
+          <div class="card-tags">
+            <span class="card-tag">Multi-tenant</span>
+            <span class="card-tag">Impersonate</span>
+            <span class="card-tag">Manage</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/admin/index.html#clinics" target="_blank" class="btn-open">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/admin/index.html#clinics','Admin — All Clinics')">⊙ Preview</button>
+          </div>
+        </div>
+
+        <div class="feature-card" data-search="revenue mrr waterfall chart top clinics growth events" data-roles="admin all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--green-dim)">💰</div>
+            <span class="card-badge" style="background:var(--green-dim);color:var(--green)">REVENUE</span>
+          </div>
+          <div class="card-title">Revenue & MRR</div>
+          <div class="card-desc">MRR waterfall chart showing month-over-month changes, top 5 clinics by revenue with sparklines, and an MRR event timeline (new signups, upgrades, churn, expansions).</div>
+          <div class="card-tags">
+            <span class="card-tag">MRR Waterfall</span>
+            <span class="card-tag">Top Clinics</span>
+            <span class="card-tag">Events</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/admin/index.html#revenue" target="_blank" class="btn-open">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/admin/index.html#revenue','Admin — Revenue & MRR')">⊙ Preview</button>
+          </div>
+        </div>
+
+        <div class="feature-card" data-search="alerts critical warning system errors notifications downtime" data-roles="admin all">
+          <div class="card-top">
+            <div class="card-icon" style="background:rgba(248,113,113,0.1)">⚠️</div>
+            <span class="card-badge" style="background:rgba(248,113,113,0.1);color:var(--red)">ALERTS</span>
+          </div>
+          <div class="card-title">System Alerts</div>
+          <div class="card-desc">Critical, warning, and info alerts grouped by severity. Each alert links to the affected clinic with a resolve/escalate action button and timestamp.</div>
+          <div class="card-tags">
+            <span class="card-tag">Critical</span>
+            <span class="card-tag">Warning</span>
+            <span class="card-tag">Resolve</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/admin/index.html#alerts" target="_blank" class="btn-open">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/admin/index.html#alerts','Admin — System Alerts')">⊙ Preview</button>
+          </div>
+        </div>
+
+        <div class="feature-card" data-search="voice agent health booking rate response time latency per clinic" data-roles="admin all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--teal-dim)">🎤</div>
+            <span class="card-badge" style="background:var(--teal-dim);color:var(--teal)">VOICE</span>
+          </div>
+          <div class="card-title">Voice Agent Health</div>
+          <div class="card-desc">Per-clinic AI agent status (live/paused), booking conversion rate, average response latency, calls today, and a quick-toggle to pause/resume any clinic's AI agent remotely.</div>
+          <div class="card-tags">
+            <span class="card-tag">Per-clinic</span>
+            <span class="card-tag">Latency</span>
+            <span class="card-tag">Conversion</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/admin/index.html#voice" target="_blank" class="btn-open">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/admin/index.html#voice','Admin — Voice Agent Health')">⊙ Preview</button>
+          </div>
+        </div>
+
+        <div class="feature-card" data-search="trials churn at risk countdown retention upgrade cancel" data-roles="admin all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--purple-dim)">⏳</div>
+            <span class="card-badge" style="background:var(--purple-dim);color:var(--purple)">TRIALS</span>
+          </div>
+          <div class="card-title">Trials & Churn</div>
+          <div class="card-desc">Active trial countdown timers, trial-to-paid conversion rate, at-risk clinic detection based on engagement signals, and one-click actions to extend trial or trigger a retention email.</div>
+          <div class="card-tags">
+            <span class="card-tag">Trials</span>
+            <span class="card-tag">Retention</span>
+            <span class="card-tag">At-risk</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/admin/index.html#trials" target="_blank" class="btn-open">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/admin/index.html#trials','Admin — Trials & Churn')">⊙ Preview</button>
+          </div>
+        </div>
+
+        <div class="feature-card" data-search="api keys openai elevenlabs deepgram twilio stripe resend postgresql database integrations" data-roles="admin all">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--electric-dim)">🔑</div>
+            <span class="card-badge" style="background:var(--electric-dim);color:var(--electric)">API KEYS</span>
+          </div>
+          <div class="card-title">API Integrations</div>
+          <div class="card-desc">Configure and test-connect all 7 platform integrations: OpenAI GPT-4o, ElevenLabs TTS, Deepgram STT, Twilio, Stripe, Resend email, and PostgreSQL. Masked key inputs with live status.</div>
+          <div class="card-tags">
+            <span class="card-tag">OpenAI</span>
+            <span class="card-tag">Twilio</span>
+            <span class="card-tag">Stripe</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/admin/index.html#integrations" target="_blank" class="btn-open">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/admin/index.html#integrations','Admin — API Integrations')">⊙ Preview</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── SHOWCASE ── -->
+    <div class="feature-section" id="section-showcase" data-roles="all visitor clinic admin">
+      <div class="section-header">
+        <div class="section-icon" style="background:var(--rose-dim)">🎥</div>
+        <div>
+          <div class="section-title">Platform Showcase</div>
+          <div class="section-sub">Full carousel preview of all views</div>
+        </div>
+        <div class="section-count">1 page</div>
+      </div>
+      <div class="cards-grid">
+
+        <div class="feature-card" data-search="preview carousel showcase all pages slides" data-roles="all visitor clinic admin">
+          <div class="card-top">
+            <div class="card-icon" style="background:var(--rose-dim)">🎠</div>
+            <span class="card-badge" style="background:var(--rose-dim);color:var(--rose)">SHOWCASE</span>
+          </div>
+          <div class="card-title">Full Preview Carousel</div>
+          <div class="card-desc">Browser-chrome carousel cycling through all 7 platform views — Landing, Onboarding, Dashboard, AI Voice Agent, Agent Settings, Super Admin, Billing — with keyboard navigation and URL bar.</div>
+          <div class="card-tags">
+            <span class="card-tag">7 Slides</span>
+            <span class="card-tag">Keyboard Nav</span>
+            <span class="card-tag">Demo</span>
+          </div>
+          <div class="card-actions">
+            <a href="pages/preview.html" target="_blank" class="btn-open">Open ↗</a>
+            <button class="btn-preview" onclick="previewUrl('pages/preview.html','Platform Showcase Carousel')">⊙ Preview</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- No results -->
+    <div id="noResults" class="no-results" style="display:none">
+      <div class="no-results-icon">🔍</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px">No features found</div>
+      <div style="color:var(--muted);font-size:12px">Try a different search term or clear the filter</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── PREVIEW OVERLAY ─────────────────────────────────────── -->
+<div class="preview-overlay" id="previewOverlay" onclick="handleOverlayClick(event)">
+  <div class="preview-chrome" onclick="event.stopPropagation()">
+    <div class="preview-bar">
+      <div class="preview-dots">
+        <div class="pd r" onclick="closePreview()" style="cursor:pointer" title="Close"></div>
+        <div class="pd y"></div>
+        <div class="pd g" onclick="openCurrentInTab()" style="cursor:pointer" title="Open in new tab"></div>
+      </div>
+      <div class="preview-url-bar">
+        <span style="color:var(--muted2)">🔒</span>
+        <span class="preview-url-text" id="previewUrlText">medibook.io</span>
+      </div>
+      <div class="preview-actions-bar">
+        <button class="preview-action-btn" onclick="openCurrentInTab()">Open in Tab ↗</button>
+        <button class="preview-action-btn close" onclick="closePreview()">✕ Close</button>
+      </div>
+    </div>
+    <iframe class="preview-frame" id="previewFrame" src="" frameborder="0" allow="same-origin"></iframe>
+  </div>
+</div>
+
+<script>
+let currentPreviewUrl = '';
+
+// ── PREVIEW ──────────────────────────────────────────────────
+function previewUrl(url, label) {
+  currentPreviewUrl = url;
+  document.getElementById('previewUrlText').textContent = 'medibook.io / ' + url.replace('pages/','').replace('.html','').replace('#','?view=');
+  document.getElementById('previewFrame').src = url;
+  document.getElementById('previewOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePreview() {
+  document.getElementById('previewOverlay').classList.remove('open');
+  setTimeout(() => { document.getElementById('previewFrame').src = ''; }, 300);
+  document.body.style.overflow = '';
+}
+
+function openCurrentInTab() {
+  if (currentPreviewUrl) window.open(currentPreviewUrl, '_blank');
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('previewOverlay')) closePreview();
+}
+
+// Close preview on Escape key
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
+
+// ── SEARCH ───────────────────────────────────────────────────
+function filterFeatures(q) {
+  const query = q.toLowerCase().trim();
+  let anyVisible = false;
+
+  document.querySelectorAll('.feature-card').forEach(card => {
+    const searchData = (card.dataset.search || '') + ' ' + card.querySelector('.card-title').textContent.toLowerCase() + ' ' + card.querySelector('.card-desc').textContent.toLowerCase();
+    const match = !query || searchData.includes(query);
+    card.classList.toggle('hidden', !match);
+    if (match) anyVisible = true;
+  });
+
+  // Hide sections that have no visible cards
+  document.querySelectorAll('.feature-section').forEach(section => {
+    if (section.id === 'section-showcase') return;
+    const visibleCards = [...section.querySelectorAll('.feature-card')].filter(c => !c.classList.contains('hidden'));
+    section.classList.toggle('hidden', visibleCards.length === 0);
+    if (visibleCards.length > 0) anyVisible = true;
+  });
+
+  document.getElementById('noResults').style.display = anyVisible ? 'none' : 'block';
+}
+
+// ── ROLE FILTER ──────────────────────────────────────────────
+function setRole(role, btn) {
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  document.querySelectorAll('.feature-section').forEach(section => {
+    const roles = section.dataset.roles || 'all';
+    section.classList.toggle('hidden', role !== 'all' && !roles.includes(role));
+  });
+
+  // Clear search when changing role
+  document.getElementById('searchInput').value = '';
+  document.querySelectorAll('.feature-card').forEach(c => c.classList.remove('hidden'));
+  document.getElementById('noResults').style.display = 'none';
+}
+
+// ── SIDEBAR HIGHLIGHT ────────────────────────────────────────
+function highlightSection(id) {
+  document.querySelectorAll('.sb-link').forEach(l => l.classList.remove('active'));
+}
+
+// Highlight sidebar links on scroll
+const content = document.querySelector('.content');
+const sections = ['public','clinic','agent','admin','showcase'];
+content.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(id => {
+    const el = document.getElementById('section-' + id);
+    if (el && content.scrollTop + 80 >= el.offsetTop) current = id;
+  });
+});
+</script>
 </body>
 </html>
