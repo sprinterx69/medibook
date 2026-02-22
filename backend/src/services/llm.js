@@ -16,7 +16,7 @@
 import OpenAI from 'openai';
 import { checkAvailability } from './calendar.js';
 import { bookAppointment, cancelAppointment, rescheduleAppointment } from './booking.js';
-import { getClinicInfo } from './tenant.js';
+import { getClinicInfo } from './tenant-and-utils.js';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 

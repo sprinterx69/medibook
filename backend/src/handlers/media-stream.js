@@ -22,7 +22,7 @@ import { getCallSession, updateCallSession, deleteCallSession } from '../service
 import { createDeepgramConnection } from '../services/deepgram.js';
 import { runLLMTurn } from '../services/llm.js';
 import { synthesizeSpeech, streamAudioToTwilio } from '../services/tts.js';
-import { getTenantContext } from '../services/tenant.js';
+import { getTenantContext } from '../services/tenant-and-utils.js';
 import { saveCallTranscript } from '../services/transcript.js';
 
 export async function mediaStreamHandler(connection, request) {

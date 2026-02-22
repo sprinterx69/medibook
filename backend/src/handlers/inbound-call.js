@@ -7,7 +7,7 @@
 //   2. Opens a Media Stream WebSocket to our server
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { getTenantByPhoneNumber } from '../services/tenant.js';
+import { getTenantByPhoneNumber } from '../services/tenant-and-utils.js';
 import { createCallSession } from '../services/session-store.js';
 
 /**
