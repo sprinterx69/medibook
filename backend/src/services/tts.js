@@ -126,27 +126,29 @@ export async function synthesizeSpeech(text) {
  * @param {string}    options.markName   - Name for the completion mark event
  */
 export async function streamAudioToTwilio({ socket, streamSid, audioChunks, markName }) {
-  if (!audioChunks.length || socket.readyState !== 1 /* OPEN */) return;
+  if (!audioChunks.length || socket.readyState !== 1 /* OPEN */) {
+    console.log('SKIP:', { chunks: audioChunks.length, state: socket.readyState });
+    return;
+  }
+  console.log('STREAMING:', audioChunks.length, 'chunks');
 
-  // Send each audio chunk as a Twilio media event
   for (const chunk of audioChunks) {
     if (socket.readyState !== 1) break;
-
     socket.send(JSON.stringify({
       event: 'media',
       streamSid,
-      media: {
-        payload: chunk.toString('base64'),
-      },
+      media: { payload: chunk.toString('base64'), },
     }));
   }
 
-  // Send mark event — Twilio echoes this back when the audio finishes playing
   if (socket.readyState === 1) {
     socket.send(JSON.stringify({
       event: 'mark',
       streamSid,
       mark: { name: markName },
     }));
+    console.log('MARK sent');
+  }
+}
   }
 }
