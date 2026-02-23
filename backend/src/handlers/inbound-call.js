@@ -38,7 +38,7 @@ export async function inboundCallHandler(request, reply) {
 
   try {
     // ── 1. Identify tenant from the called number ─────────────────────────
-    const tenant = await getTenantByPhoneNumber(To);
+    const tenant = await getTenantByPhoneNumber(To.trim());
     if (!tenant) {
       request.log.warn({ To }, 'No tenant found for phone number');
       // Fall back to a generic rejection message
