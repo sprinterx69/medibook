@@ -13,6 +13,7 @@ import { inboundCallHandler } from './handlers/inbound-call.js';
 import { mediaStreamHandler } from './handlers/media-stream.js';
 import { statusCallbackHandler } from './handlers/status-callback.js';
 import agentRoutes from './routes/agent-routes.js';
+import phoneRoutes from './routes/phone-routes.js';
 
 const server = Fastify({
   logger: {
@@ -44,6 +45,7 @@ server.addContentTypeParser('application/json', { parseAs: 'string' }, (req, bod
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
 await server.register(agentRoutes);
+await server.register(phoneRoutes);
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 server.get('/health', async () => ({
