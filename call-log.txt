@@ -1,0 +1,81 @@
+Starting Container
+npm warn config production Use `--omit=dev` instead.
+
+> medibook-backend@1.0.0 start
+> node src/server.js
+
+2026-02-23T05:09:36.382096402Z [INFO] Server listening at http://0.0.0.0:3001 time=1771823376127 pid=25 hostname="fd710d42c1c7"
+2026-02-23T05:09:36.382102052Z [INFO] 🎙️  MediBook Voice Agent listening on 0.0.0.0:3001 time=1771823376128 pid=25 hostname="fd710d42c1c7"
+2026-02-23T05:09:36.382107042Z [INFO] 📞  Twilio webhook: https://medibook-backend-production-dfb2.up.railway.app/voice/inbound time=1771823376128 pid=25 hostname="fd710d42c1c7"
+2026-02-23T05:09:36.382111982Z [INFO] 🔌  Media Stream:   wss://medibook-backend-production-dfb2.up.railway.app/voice/stream time=1771823376128 pid=25 hostname="fd710d42c1c7"
+2026-02-23T05:10:16.131002933Z [INFO] incoming request time=1771823408332 pid=25 hostname="fd710d42c1c7" reqId="req-1" req={"method":"POST","url":"/voice/inbound","hostname":"medibook-backend-production-dfb2.up.railway.app","remoteAddress":"100.64.0.2","remotePort":37760}
+2026-02-23T05:10:16.131008334Z [INFO] Inbound call received time=1771823408334 pid=25 hostname="fd710d42c1c7" reqId="req-1" CallSid="test123" From=" 1234567890" To=" 12184768736"
+2026-02-23T05:10:16.131011613Z [INFO] No tenant found for phone number time=1771823408401 pid=25 hostname="fd710d42c1c7" reqId="req-1" To=" 12184768736"
+2026-02-23T05:10:16.131015333Z [INFO] request completed time=1771823408404 pid=25 hostname="fd710d42c1c7" reqId="req-1" res={"statusCode":200} responseTime=71.49631929397583
+2026-02-23T05:12:16.298514935Z [INFO] incoming request time=1771823528283 pid=25 hostname="fd710d42c1c7" reqId="req-2" req={"method":"POST","url":"/voice/inbound","hostname":"medibook-backend-production-dfb2.up.railway.app","remoteAddress":"100.64.0.3","remotePort":49094}
+2026-02-23T05:12:16.298519605Z [INFO] Inbound call received time=1771823528284 pid=25 hostname="fd710d42c1c7" reqId="req-2" CallSid="test123" From=" 1234567890" To=" 12184768736"
+2026-02-23T05:12:16.298524725Z [INFO] No tenant found for phone number time=1771823528287 pid=25 hostname="fd710d42c1c7" reqId="req-2" To=" 12184768736"
+2026-02-23T05:12:16.298529735Z [INFO] request completed time=1771823528287 pid=25 hostname="fd710d42c1c7" reqId="req-2" res={"statusCode":200} responseTime=3.767557144165039
+2026-02-23T05:19:37.151857609Z [INFO] incoming request time=1771823967990 pid=25 hostname="fd710d42c1c7" reqId="req-3" req={"method":"POST","url":"/voice/inbound","hostname":"medibook-backend-production-dfb2.up.railway.app","remoteAddress":"100.64.0.4","remotePort":22344}
+2026-02-23T05:19:37.151860419Z [INFO] Inbound call received time=1771823967991 pid=25 hostname="fd710d42c1c7" reqId="req-3" CallSid="test123" From=" 1234567890" To="+12184768736"
+2026-02-23T05:19:37.151863349Z [INFO] No tenant found for phone number time=1771823968065 pid=25 hostname="fd710d42c1c7" reqId="req-3" To="+12184768736"
+2026-02-23T05:19:37.151865839Z [INFO] request completed time=1771823968066 pid=25 hostname="fd710d42c1c7" reqId="req-3" res={"statusCode":200} responseTime=76.10731220245361
+2026-02-23T05:20:17.247567241Z [INFO] incoming request time=1771824008932 pid=25 hostname="fd710d42c1c7" reqId="req-4" req={"method":"POST","url":"/voice/inbound","hostname":"medibook-backend-production-dfb2.up.railway.app","remoteAddress":"100.64.0.5","remotePort":12628}
+2026-02-23T05:20:17.247570971Z [INFO] Inbound call received time=1771824008933 pid=25 hostname="fd710d42c1c7" reqId="req-4" CallSid="test123" From=" 1234567890" To=" 12184768736"
+2026-02-23T05:20:17.247574931Z [INFO] No tenant found for phone number time=1771824008936 pid=25 hostname="fd710d42c1c7" reqId="req-4" To=" 12184768736"
+2026-02-23T05:20:17.247578191Z [INFO] request completed time=1771824008936 pid=25 hostname="fd710d42c1c7" reqId="req-4" res={"statusCode":200} responseTime=3.536729335784912
+2026-02-23T05:21:17.031916244Z [INFO] incoming request time=1771824074535 pid=25 hostname="fd710d42c1c7" reqId="req-5" req={"method":"POST","url":"/voice/inbound","hostname":"medibook-backend-production-dfb2.up.railway.app","remoteAddress":"100.64.0.6","remotePort":34322}
+2026-02-23T05:21:17.031920584Z [INFO] Inbound call received time=1771824074536 pid=25 hostname="fd710d42c1c7" reqId="req-5" CallSid="test123" From=" 1234567890" To="+12184768736"
+2026-02-23T05:21:17.031924123Z [INFO] Call session created time=1771824074539 pid=25 hostname="fd710d42c1c7" reqId="req-5" callSid="test123" tenant="ElanAesthetic"
+2026-02-23T05:21:17.031927903Z [INFO] request completed time=1771824074539 pid=25 hostname="fd710d42c1c7" reqId="req-5" res={"statusCode":200} responseTime=3.9928369522094727
+2026-02-23T06:03:37.279995407Z [INFO] incoming request time=1771826607723 pid=25 hostname="fd710d42c1c7" reqId="req-6" req={"method":"POST","url":"/voice/inbound","hostname":"medibook-backend-production-dfb2.up.railway.app","remoteAddress":"100.64.0.7","remotePort":24396}
+2026-02-23T06:03:37.279998937Z [INFO] Inbound call received time=1771826607724 pid=25 hostname="fd710d42c1c7" reqId="req-6" CallSid="CAd5c2f7bc90dc629c67939b405cb6c064" From="+12132750523" To="+12184768736" CallStatus="ringing"
+2026-02-23T06:03:37.280002617Z [INFO] Call session created time=1771826607793 pid=25 hostname="fd710d42c1c7" reqId="req-6" callSid="CAd5c2f7bc90dc629c67939b405cb6c064" tenant="ElanAesthetic"
+2026-02-23T06:03:37.280006357Z [INFO] request completed time=1771826607793 pid=25 hostname="fd710d42c1c7" reqId="req-6" res={"statusCode":200} responseTime=70.02905368804932
+2026-02-23T06:03:37.280009607Z [INFO] incoming request time=1771826607972 pid=25 hostname="fd710d42c1c7" reqId="req-7" req={"method":"GET","url":"/voice/stream","hostname":"medibook-backend-production-dfb2.up.railway.app","remoteAddress":"100.64.0.7","remotePort":24412}
+2026-02-23T06:03:37.280012987Z [INFO] Media stream WebSocket opened time=1771826607975 pid=25 hostname="fd710d42c1c7" reqId="req-7"
+2026-02-23T06:03:37.280016217Z [INFO] Twilio stream connected time=1771826608044 pid=25 hostname="fd710d42c1c7" reqId="req-7" protocol="Call"
+2026-02-23T06:03:37.280019227Z [INFO] Stream started time=1771826608044 pid=25 hostname="fd710d42c1c7" reqId="req-7" callSid="CAd5c2f7bc90dc629c67939b405cb6c064" tenantId="b3912778-bd20-41e1-a8e7-9f772a9099a1" streamSid="MZbcdbe68bb3c54e9c1d717f9ad14d3de8"
+2026-02-23T06:03:37.280022377Z [INFO] Sending greeting time=1771826608682 pid=25 hostname="fd710d42c1c7" reqId="req-7" businessName="ElanAesthetic"
+file:///app/backend/src/services/tts.js:96
+    throw new Error(`ElevenLabs TTS error ${response.status}: ${err}`);
+          ^
+
+Error: ElevenLabs TTS error 401: {"detail":{"status":"detected_unusual_activity","message":"Unusual activity detected. Free Tier usage disabled. If you are using a proxy/VPN you might need to purchase a Paid Plan to not trigger our abuse detectors. Free Tier only works if users do not abuse it, for example by creating multiple free accounts. If we notice that many people try to abuse it, we will need to reconsider Free Tier altogether. \nPlease play fair and purchase any Paid Subscription to continue."}}
+    at synthesizeSpeech (file:///app/backend/src/services/tts.js:96:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async greetCaller (file:///app/backend/src/handlers/media-stream.js:236:25)
+
+Node.js v18.20.8
+npm error Lifecycle script `start` failed with error:
+npm error code 1
+npm error path /app/backend
+npm error workspace medibook-backend@1.0.0
+npm error location /app/backend
+npm error command failed
+npm error command sh -c node src/server.js
+npm warn config production Use `--omit=dev` instead.
+
+> medibook-backend@1.0.0 start
+> node src/server.js
+
+2026-02-23T06:03:37.281777057Z [INFO] Server listening at http://0.0.0.0:3001 time=1771826611121 pid=25 hostname="fd710d42c1c7"
+2026-02-23T06:03:37.281780626Z [INFO] 🎙️  MediBook Voice Agent listening on 0.0.0.0:3001 time=1771826611121 pid=25 hostname="fd710d42c1c7"
+2026-02-23T06:03:37.281784596Z [INFO] 📞  Twilio webhook: https://medibook-backend-production-dfb2.up.railway.app/voice/inbound time=1771826611121 pid=25 hostname="fd710d42c1c7"
+2026-02-23T06:03:37.281788516Z [INFO] 🔌  Media Stream:   wss://medibook-backend-production-dfb2.up.railway.app/voice/stream time=1771826611121 pid=25 hostname="fd710d42c1c7"
+2026-02-23T06:10:38.103473517Z [INFO] incoming request time=1771827036311 pid=25 hostname="fd710d42c1c7" reqId="req-1" req={"method":"POST","url":"/voice/inbound","hostname":"medibook-backend-production-dfb2.up.railway.app","remoteAddress":"100.64.0.2","remotePort":23286}
+2026-02-23T06:10:38.103490436Z [INFO] Inbound call received time=1771827036313 pid=25 hostname="fd710d42c1c7" reqId="req-1" CallSid="CA965c4d284e06e7587e105ffbf55c1b1c" From="+12132750523" To="+12184768736" CallStatus="ringing"
+2026-02-23T06:10:38.103494876Z [INFO] Call session created time=1771827036383 pid=25 hostname="fd710d42c1c7" reqId="req-1" callSid="CA965c4d284e06e7587e105ffbf55c1b1c" tenant="ElanAesthetic"
+2026-02-23T06:10:38.103499316Z [INFO] request completed time=1771827036385 pid=25 hostname="fd710d42c1c7" reqId="req-1" res={"statusCode":200} responseTime=73.84478282928467
+2026-02-23T06:10:38.103516386Z [INFO] incoming request time=1771827036623 pid=25 hostname="fd710d42c1c7" reqId="req-2" req={"method":"GET","url":"/voice/stream","hostname":"medibook-backend-production-dfb2.up.railway.app","remoteAddress":"100.64.0.3","remotePort":32296}
+2026-02-23T06:10:38.103520696Z [INFO] Media stream WebSocket opened time=1771827036625 pid=25 hostname="fd710d42c1c7" reqId="req-2"
+2026-02-23T06:10:38.103540916Z [INFO] Twilio stream connected time=1771827036696 pid=25 hostname="fd710d42c1c7" reqId="req-2" protocol="Call"
+2026-02-23T06:10:38.103559816Z [INFO] Stream started time=1771827036696 pid=25 hostname="fd710d42c1c7" reqId="req-2" callSid="CA965c4d284e06e7587e105ffbf55c1b1c" tenantId="b3912778-bd20-41e1-a8e7-9f772a9099a1" streamSid="MZa963d8fe72bb21625bac62e353f42eab"
+2026-02-23T06:10:38.103587586Z [INFO] Sending greeting time=1771827037325 pid=25 hostname="fd710d42c1c7" reqId="req-2" businessName="ElanAesthetic"
+2026-02-23T06:10:57.833564257Z [INFO] Processing user utterance time=1771827049149 pid=25 hostname="fd710d42c1c7" reqId="req-2" utterance="Hello?"
+2026-02-23T06:10:57.833567967Z [INFO] Agent response time=1771827050072 pid=25 hostname="fd710d42c1c7" reqId="req-2" responseText="Hello! Thank you for calling ElanAesthetic. How can I help you today?..."
+2026-02-23T06:10:57.833571267Z [INFO] Processing user utterance time=1771827052613 pid=25 hostname="fd710d42c1c7" reqId="req-2" utterance="Hello?"
+2026-02-23T06:10:57.833574057Z [INFO] Agent response time=1771827053867 pid=25 hostname="fd710d42c1c7" reqId="req-2" responseText="Hello! Thank you for calling ElanAesthetic. How can I help you today?..."
+2026-02-23T06:10:59.260800754Z [INFO] Stream stopped — call ended time=1771827059240 pid=25 hostname="fd710d42c1c7" reqId="req-2" callSid="CA965c4d284e06e7587e105ffbf55c1b1c"
+2026-02-23T06:10:59.260803594Z [INFO] Saving call transcript and deleting session time=1771827059240 pid=25 hostname="fd710d42c1c7" reqId="req-2" callSid="CA965c4d284e06e7587e105ffbf55c1b1c"
+2026-02-23T06:11:00.316916176Z [INFO] WebSocket closed time=1771827060311 pid=25 hostname="fd710d42c1c7" reqId="req-2" callSid="CA965c4d284e06e7587e105ffbf55c1b1c"
