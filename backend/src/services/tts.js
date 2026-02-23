@@ -75,7 +75,7 @@ export async function synthesizeSpeech(text) {
       headers: {
         'xi-api-key': process.env.ELEVENLABS_API_KEY,
         'Content-Type': 'application/json',
-        Accept: 'audio/*',
+        Accept: 'audio/wav',
       },
       body: JSON.stringify({
         text,
@@ -86,7 +86,7 @@ export async function synthesizeSpeech(text) {
           style: 0.0,
           use_speaker_boost: true,
         },
-        output_format: 'pcm_24000',    // Raw PCM at 24kHz for easy conversion
+        output_format: 'ulaw_8000',    // Raw PCM at 24kHz for easy conversion
       }),
     }
   );
