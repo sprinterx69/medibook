@@ -69,7 +69,7 @@ export async function synthesizeSpeech(text) {
   const voiceId = process.env.ELEVENLABS_VOICE_ID ?? '21m00Tcm4TlvDq8ikWAM';
 
   const response = await fetch(
-    `${ELEVENLABS_BASE}/text-to-speech/${voiceId}/stream`,
+    `${ELEVENLABS_BASE}/text-to-speech/${voiceId}`,
     {
       method: 'POST',
       headers: {
