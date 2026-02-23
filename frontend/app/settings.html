@@ -23,6 +23,9 @@
 .plan-price span { font-size: 14px; font-weight: 400; color: var(--text-muted); }
 .plan-feature { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-2); margin-top: 8px; }
 .check-icon { color: var(--green); font-size: 13px; }
+.btn-danger { background: #ef4444 !important; color: #fff !important; border-color: #ef4444 !important; }
+.btn-danger:hover { background: #dc2626 !important; }
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -76,6 +79,7 @@
         <button class="settings-nav-item" onclick="switchPanel('notifications',this)">🔔 Notifications</button>
         <div style="height:1px;background:var(--border);margin:10px 12px"></div>
         <div style="font-size:11px;font-weight:700;color:var(--text-light);letter-spacing:0.07em;text-transform:uppercase;padding:0 12px 8px">Account</div>
+        <button class="settings-nav-item" onclick="switchPanel('phones',this)">📞 Phone Numbers</button>
         <button class="settings-nav-item" onclick="switchPanel('plan',this)">💳 Plan & Billing</button>
         <button class="settings-nav-item" onclick="switchPanel('integrations',this)">🔌 Integrations</button>
         <button class="settings-nav-item" onclick="switchPanel('team',this)">👥 Team Access</button>
@@ -146,18 +150,37 @@
             </div>
           </div>
 
-          <div class="card card-body">
-            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:18px">AI Voice Receptionist Phone Number</div>
-            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:14px">
-              <div style="width:40px;height:40px;border-radius:10px;background:var(--brand-dim);display:flex;align-items:center;justify-content:center;font-size:20px">📞</div>
-              <div>
-                <div style="font-size:15px;font-weight:700;color:var(--text)">+44 20 7946 0042</div>
-                <div style="font-size:12px;color:var(--text-muted)">Twilio number · AI agent active · Marylebone, London</div>
-              </div>
-              <span class="badge badge-green badge-dot" style="margin-left:auto">Active</span>
+          <div class="card card-body" style="display:flex;align-items:center;gap:14px;cursor:pointer" onclick="switchPanel('phones', document.querySelector('[onclick*=phones]'))">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--brand-dim);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📞</div>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:600;color:var(--text)">AI Voice Receptionist Number</div>
+              <div style="font-size:12px;color:var(--text-muted)">Manage your Twilio phone number in Phone Numbers settings</div>
             </div>
-            <div style="font-size:12.5px;color:var(--text-muted)">This number routes to your AI voice agent. Callers will hear your configured greeting. <a href="agent.html" style="color:var(--brand)">Configure agent →</a></div>
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:16px;height:16px;color:var(--text-muted)"><path d="M9 18l6-6-6-6"/></svg>
           </div>
+        </div>
+
+        <!-- Phone Numbers -->
+        <div class="settings-panel" id="panel-phones">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Phone Numbers</div>
+                <div class="card-subtitle">Twilio numbers that route calls to your AI voice agent</div>
+              </div>
+              <button class="btn btn-primary btn-sm" id="btnGetNumber" onclick="openGetNumberModal()">+ Get a Number</button>
+            </div>
+            <div class="card-body" id="phoneNumbersList">
+              <!-- Rendered by JS -->
+              <div style="display:flex;align-items:center;justify-content:center;padding:32px;color:var(--text-muted)">
+                <div style="width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin 0.7s linear infinite;margin-right:10px"></div>
+                Loading…
+              </div>
+            </div>
+          </div>
+
+          <!-- Plan context banner -->
+          <div id="phonePlanBanner" style="display:none;margin-top:12px"></div>
         </div>
 
         <!-- Services -->
@@ -294,6 +317,60 @@
   </div>
 </div>
 
+<!-- Get a Number Modal -->
+<div class="modal-overlay" id="modalGetNumber" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center">
+  <div class="card card-body" style="width:480px;max-width:calc(100vw - 32px);max-height:80vh;overflow-y:auto;position:relative">
+    <button onclick="closeGetNumberModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1">✕</button>
+    <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px">Get a Phone Number</div>
+    <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:20px">Search for an available Twilio number. It will be automatically configured to route calls to your AI voice agent.</div>
+
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Country</label>
+        <select class="select" id="numCountry">
+          <option value="GB">🇬🇧 United Kingdom</option>
+          <option value="US">🇺🇸 United States</option>
+          <option value="CA">🇨🇦 Canada</option>
+          <option value="AU">🇦🇺 Australia</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Area Code <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+        <input class="input" type="text" id="numAreaCode" placeholder="e.g. 20 for London">
+      </div>
+    </div>
+
+    <button class="btn btn-secondary" style="width:100%;margin-bottom:20px" onclick="searchNumbers()" id="btnSearch">Search Available Numbers</button>
+
+    <div id="numResults" style="display:none">
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px">Available Numbers</div>
+      <div id="numList" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div style="font-size:11.5px;color:var(--text-muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">Number includes voice calls and SMS. Billed monthly by Twilio at standard rates.</div>
+    </div>
+
+    <div id="numEmpty" style="display:none;text-align:center;padding:20px 0;color:var(--text-muted);font-size:13.5px">
+      No numbers found for that area code. Try a different one or leave it blank.
+    </div>
+
+    <div id="numSearching" style="display:none;text-align:center;padding:20px 0;color:var(--text-muted);font-size:13.5px">
+      <div style="width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 10px"></div>
+      Searching Twilio…
+    </div>
+  </div>
+</div>
+
+<!-- Release confirm modal -->
+<div class="modal-overlay" id="modalRelease" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center">
+  <div class="card card-body" style="width:400px;max-width:calc(100vw - 32px)">
+    <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">Release Phone Number?</div>
+    <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:20px">This will permanently release <strong id="releaseNumDisplay"></strong> from your account. Your AI voice agent will stop receiving calls immediately. This cannot be undone.</div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeReleaseModal()">Cancel</button>
+      <button class="btn btn-danger" id="btnConfirmRelease" onclick="confirmRelease()">Release Number</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast-wrap"><div class="toast" id="toast"><span class="toast-icon" id="toastIcon">✓</span><div class="toast-content"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div></div>
 
@@ -362,6 +439,223 @@ function showToast(type, title, msg='') {
 }
 
 document.addEventListener('DOMContentLoaded', () => { buildServicesTable(); buildIntegrations(); });
+
+// ─── Phone Number Provisioning ─────────────────────────────────────────────────
+// Config — swap TENANT_ID with your real tenant ID or read from auth context
+const TENANT_ID = localStorage.getItem('medibook_tenant_id') || 'demo-tenant';
+const API_BASE  = (typeof window.MEDIBOOK_API_URL !== 'undefined' ? window.MEDIBOOK_API_URL : '');
+
+let phoneState = { numbers: [], plan: 'PRO', limit: 1, canAdd: true };
+let pendingReleaseNumber = null;
+
+// ── Load numbers from API ────────────────────────────────────────────────────
+async function loadPhoneNumbers() {
+  try {
+    const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/phone-numbers`);
+    if (!res.ok) throw new Error('API error');
+    phoneState = await res.json();
+  } catch (_) {
+    // Fallback demo state so the UI is always usable
+    phoneState = { numbers: [], plan: 'PRO', limit: 1, canAdd: true };
+  }
+  renderPhonePanel();
+}
+
+// ── Render the phone numbers panel ──────────────────────────────────────────
+function renderPhonePanel() {
+  const list   = document.getElementById('phoneNumbersList');
+  const banner = document.getElementById('phonePlanBanner');
+  const btnGet = document.getElementById('btnGetNumber');
+
+  const { numbers, plan, limit, canAdd } = phoneState;
+
+  // Hide/show the top "Get a Number" button
+  btnGet.style.display = canAdd ? '' : 'none';
+
+  // ── Number cards ────────────────────────────────────────────────────────
+  if (numbers.length === 0) {
+    const isStarter = plan === 'STARTER';
+    list.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center">
+        <div style="width:56px;height:56px;border-radius:14px;background:var(--brand-dim);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px">📞</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">No phone number assigned</div>
+        <div style="font-size:13px;color:var(--text-muted);max-width:320px;margin-bottom:20px">
+          ${isStarter
+            ? 'Phone numbers require the Pro plan. Upgrade to enable your AI voice agent.'
+            : 'Get a Twilio number and your AI voice agent will start taking calls immediately.'}
+        </div>
+        ${isStarter
+          ? `<button class="btn btn-primary" onclick="switchPanel('plan', document.querySelector('[onclick*=plan]'))">Upgrade to Pro →</button>`
+          : `<button class="btn btn-primary" onclick="openGetNumberModal()">Get a Number</button>`}
+      </div>`;
+  } else {
+    list.innerHTML = numbers.map(n => `
+      <div style="display:flex;align-items:center;gap:14px;padding:16px;border-bottom:1px solid var(--border)">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--brand-dim);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📞</div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700;color:var(--text)">${n.phoneNumber}</div>
+          <div style="font-size:12px;color:var(--text-muted)">Twilio · AI voice agent · Routes to your agent greeting</div>
+        </div>
+        <span class="badge badge-green badge-dot">Active</span>
+        <button class="btn btn-ghost btn-sm" onclick="openReleaseModal('${n.phoneNumber}')" style="color:var(--red,#ef4444)">Release</button>
+      </div>`).join('');
+  }
+
+  // ── Plan / limit banner ──────────────────────────────────────────────────
+  if (plan === 'STARTER') {
+    banner.style.display = '';
+    banner.innerHTML = `
+      <div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:var(--radius-lg);padding:14px 16px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:18px">⚡</span>
+        <div style="flex:1">
+          <div style="font-size:13.5px;font-weight:600;color:#92400e">Phone numbers require Pro or above</div>
+          <div style="font-size:12px;color:#b45309">Your Starter plan doesn't include the AI voice agent or Twilio numbers.</div>
+        </div>
+        <button class="btn btn-sm" style="background:#f59e0b;color:#fff;border:none" onclick="switchPanel('plan', document.querySelector('[onclick*=plan]'))">Upgrade</button>
+      </div>`;
+  } else if (!canAdd && numbers.length >= (limit === -1 ? Infinity : limit)) {
+    banner.style.display = '';
+    banner.innerHTML = `
+      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:18px">📊</span>
+        <div style="flex:1">
+          <div style="font-size:13.5px;font-weight:600;color:var(--text)">Phone number limit reached</div>
+          <div style="font-size:12px;color:var(--text-muted)">Your ${plan === 'PRO' ? 'Pro' : 'current'} plan allows ${limit} number. Release it first or upgrade to Enterprise for unlimited.</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="switchPanel('plan', document.querySelector('[onclick*=plan]'))">Upgrade Plan</button>
+      </div>`;
+  } else {
+    banner.style.display = 'none';
+    banner.innerHTML = '';
+  }
+}
+
+// ── "Get a Number" modal ─────────────────────────────────────────────────────
+function openGetNumberModal() {
+  document.getElementById('modalGetNumber').style.display = 'flex';
+  document.getElementById('numResults').style.display    = 'none';
+  document.getElementById('numEmpty').style.display      = 'none';
+  document.getElementById('numSearching').style.display  = 'none';
+  document.getElementById('numAreaCode').value           = '';
+}
+
+function closeGetNumberModal() {
+  document.getElementById('modalGetNumber').style.display = 'none';
+}
+
+async function searchNumbers() {
+  const country  = document.getElementById('numCountry').value;
+  const areaCode = document.getElementById('numAreaCode').value.trim();
+
+  document.getElementById('numResults').style.display   = 'none';
+  document.getElementById('numEmpty').style.display     = 'none';
+  document.getElementById('numSearching').style.display = 'block';
+
+  try {
+    const qs  = new URLSearchParams({ country, ...(areaCode && { areaCode }) });
+    const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/available-numbers?${qs}`);
+    const data = await res.json();
+    const nums = data.numbers ?? [];
+
+    document.getElementById('numSearching').style.display = 'none';
+
+    if (nums.length === 0) {
+      document.getElementById('numEmpty').style.display = 'block';
+    } else {
+      document.getElementById('numResults').style.display = 'block';
+      document.getElementById('numList').innerHTML = nums.map(n => `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface-2)">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:var(--text)">${n.friendlyName || n.phoneNumber}</div>
+            <div style="font-size:12px;color:var(--text-muted)">${[n.locality, n.region, n.country].filter(Boolean).join(', ')}</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="buyNumber('${n.phoneNumber}', this)">Buy</button>
+        </div>`).join('');
+    }
+  } catch (err) {
+    document.getElementById('numSearching').style.display = 'none';
+    document.getElementById('numEmpty').style.display = 'block';
+    document.getElementById('numEmpty').textContent = 'Search failed. Please try again.';
+  }
+}
+
+async function buyNumber(phoneNumber, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Buying…';
+
+  try {
+    const res  = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/buy-number`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ phoneNumber }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showToast('error', 'Purchase failed', data.error || 'Something went wrong.');
+      btn.disabled = false;
+      btn.textContent = 'Buy';
+      return;
+    }
+
+    closeGetNumberModal();
+    showToast('success', 'Number purchased!', `${data.phoneNumber} is now active on your account.`);
+    await loadPhoneNumbers();
+  } catch (err) {
+    showToast('error', 'Network error', 'Could not reach the server. Please try again.');
+    btn.disabled = false;
+    btn.textContent = 'Buy';
+  }
+}
+
+// ── Release modal ────────────────────────────────────────────────────────────
+function openReleaseModal(phoneNumber) {
+  pendingReleaseNumber = phoneNumber;
+  document.getElementById('releaseNumDisplay').textContent = phoneNumber;
+  document.getElementById('modalRelease').style.display = 'flex';
+}
+
+function closeReleaseModal() {
+  pendingReleaseNumber = null;
+  document.getElementById('modalRelease').style.display = 'none';
+}
+
+async function confirmRelease() {
+  if (!pendingReleaseNumber) return;
+  const btn = document.getElementById('btnConfirmRelease');
+  btn.disabled = true;
+  btn.textContent = 'Releasing…';
+
+  try {
+    const encoded = encodeURIComponent(pendingReleaseNumber);
+    const res     = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/phone-numbers/${encoded}`, { method: 'DELETE' });
+    const data    = await res.json();
+
+    if (!res.ok) {
+      showToast('error', 'Release failed', data.error || 'Something went wrong.');
+    } else {
+      closeReleaseModal();
+      showToast('success', 'Number released', `${data.phoneNumber} has been removed from your account.`);
+      await loadPhoneNumbers();
+    }
+  } catch (err) {
+    showToast('error', 'Network error', 'Could not reach the server. Please try again.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Release Number';
+  }
+}
+
+// Close modals on overlay click
+document.getElementById('modalGetNumber').addEventListener('click', e => { if (e.target === e.currentTarget) closeGetNumberModal(); });
+document.getElementById('modalRelease').addEventListener('click',    e => { if (e.target === e.currentTarget) closeReleaseModal(); });
+
+// Load numbers when the phone panel is first shown
+const _origSwitch = window.switchPanel;
+window.switchPanel = function(id, btn) {
+  _origSwitch(id, btn);
+  if (id === 'phones') loadPhoneNumbers();
+};
 </script>
 </body>
 </html>
