@@ -7,6 +7,7 @@
     "backend"
   ],
   "scripts": {
+    "postinstall": "cd backend && npx prisma generate",
     "dev": "npm run dev --workspace=backend",
     "start": "npm run start --workspace=backend",
     "build": "npm run build --workspace=backend",
