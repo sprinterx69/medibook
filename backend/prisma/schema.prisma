@@ -34,6 +34,7 @@ model Tenant {
   locations    Location[]
   callLogs     CallLog[]
   subscriptions Subscription[]
+  activityLogs  ActivityLog[]
 
   @@map("tenants")
 }
@@ -52,7 +53,10 @@ model User {
   username        String    @unique @db.VarChar(63)
   passwordHash    String    @db.VarChar(255)
   fullName        String    @db.VarChar(255)
+  title           String?   @db.VarChar(50)   // e.g. "Dr.", "Ms."
   phone           String?   @db.VarChar(30)
+  avatarUrl       String?   @db.VarChar(500)
+  isAvailable     Boolean   @default(true)
   role            UserRole  @default(OWNER)
   emailVerifiedAt DateTime?
   createdAt       DateTime  @default(now())
@@ -111,17 +115,19 @@ model Location {
 
 // ─── STAFF ────────────────────────────────────────────────────────────────────
 model Staff {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   tenantId    String
   locationId  String?
   email       String
   name        String
+  title       String?   @db.VarChar(50)   // e.g. "Dr.", "Nurse"
   role        StaffRole @default(STAFF)
-  color       String   @default("#60a5fa") // Calendar color
+  color       String    @default("#60a5fa") // Calendar color
   avatarUrl   String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isAvailable Boolean   @default(true)    // currently accepting bookings today
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   location     Location?     @relation(fields: [locationId], references: [id])
@@ -341,4 +347,25 @@ model CallLog {
 
   @@index([tenantId])
   @@map("call_logs")
+}
+
+// ─── ACTIVITY LOG ──────────────────────────────────────────────────────────────
+// Audit trail of things that happen in the clinic (bookings, calls, payments…).
+model ActivityLog {
+  id          String   @id @default(uuid())
+  tenantId    String
+  type        String   @db.VarChar(60)   // e.g. "appointment_created"
+  description String   @db.Text          // HTML-safe string shown in the feed
+  icon        String?  @db.VarChar(8)    // emoji
+  bgColor     String?  @db.VarChar(20)   // hex background for icon
+  entityType  String?  @db.VarChar(50)   // "appointment" | "client" | "call" …
+  entityId    String?  @db.VarChar(36)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, createdAt(sort: Desc)])
+  @@map("activity_logs")
 }

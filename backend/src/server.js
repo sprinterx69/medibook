@@ -17,6 +17,9 @@ import agentRoutes from './routes/agent-routes.js';
 import phoneRoutes from './routes/phone-routes.js';
 import authRoutes from './routes/auth-routes.js';
 import { billingRoutes } from './routes/billing-routes.js';
+import appointmentRoutes from './routes/appointment-routes.js';
+import staffRoutes from './routes/staff-routes.js';
+import activityRoutes from './routes/activity-routes.js';
 
 const server = Fastify({
   logger: {
@@ -65,6 +68,9 @@ await server.register(authRoutes);
 await server.register(agentRoutes);
 await server.register(phoneRoutes);
 await server.register(billingRoutes, { prefix: '/billing' });
+await server.register(appointmentRoutes);
+await server.register(staffRoutes);
+await server.register(activityRoutes);
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 server.get('/health', async () => ({
