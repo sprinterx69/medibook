@@ -6,9 +6,7 @@
 //                     and whether each is currently with a patient
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../config/prisma.js';
 
 export async function getStaffOnDuty(tenantId) {
   const todayStart = new Date();

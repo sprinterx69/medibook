@@ -6,9 +6,7 @@
 //   getRecentActivity — returns the N most recent entries with relative timestamps
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../config/prisma.js';
 
 // ─── Icon + colour map per activity type ──────────────────────────────────────
 const TYPE_META = {
