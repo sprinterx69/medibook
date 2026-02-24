@@ -1,4 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
+import { prisma } from '../config/prisma.js';
 // services/phone-numbers.js
 //
 // Twilio phone number provisioning for MediBook tenants.
@@ -13,10 +14,10 @@
 //   ENTERPRISE → unlimited (-1)
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PrismaClient } from '@prisma/client';
+
 import twilio from 'twilio';
 
-const prisma = new PrismaClient();
+
 const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN

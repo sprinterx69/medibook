@@ -6,6 +6,7 @@
 // Registration flow:
 //   1. startRegistration   — validates, hashes pw, creates PendingRegistration,
 //                            sends 6-digit verification email
+import { prisma } from '../config/prisma.js';
 //   2. verifyEmailAndActivate — verifies code, creates Tenant + User + Staff
 //                            in a transaction, returns JWT payload + Stripe URL
 //
@@ -17,13 +18,13 @@
 // Password hashing uses Node's built-in crypto.scrypt (no bcrypt dep needed).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PrismaClient } from '@prisma/client';
+
 import crypto from 'crypto';
 import { promisify } from 'util';
 import { sendVerificationEmail, sendWelcomeEmail } from './email.js';
 import { createCheckoutSession } from './billing.js';
 
-const prisma = new PrismaClient();
+
 const scryptAsync = promisify(crypto.scrypt);
 
 // ─── Password helpers ──────────────────────────────────────────────────────────

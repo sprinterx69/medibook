@@ -1,4 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
+import { prisma } from '../config/prisma.js';
 // stripe/feature-gates.js
 //
 // Middleware and helpers to enforce subscription plan limits.
@@ -10,10 +11,10 @@
 //   const within = await checkLimit(tenantId, 'staff', currentCount);
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PrismaClient } from '@prisma/client';
+
 import { PLANS } from './billing.js';
 
-const prisma = new PrismaClient();
+
 
 const PLAN_HIERARCHY = { STARTER: 0, PRO: 1, ENTERPRISE: 2 };
 

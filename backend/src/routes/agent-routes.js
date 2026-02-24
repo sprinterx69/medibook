@@ -1,4 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
+import { prisma } from '../config/prisma.js';
 // routes/agent-routes.js
 //
 // REST API for AI voice agent settings.
@@ -9,8 +10,8 @@
 // GET  /api/tenants/:tenantId/agent-prompt    — preview generated system prompt
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+
+
 
 const DEFAULT_BUSINESS_HOURS = {
   monday:    { open: true,  from: '09:00', to: '19:00' },

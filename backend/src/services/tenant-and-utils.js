@@ -1,9 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
+import { prisma } from '../config/prisma.js';
 // services/tenant.js  —  Tenant lookup and context builder
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+
+
 
 /**
  * Finds a tenant by the phone number they have registered.

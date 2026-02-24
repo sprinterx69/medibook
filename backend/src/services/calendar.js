@@ -1,4 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
+import { prisma } from '../config/prisma.js';
 // services/calendar.js
 //
 // Real-time availability engine.
@@ -14,13 +15,13 @@
 //   7. Return the first N open slots with slot IDs
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PrismaClient } from '@prisma/client';
+
 import {
   parseISO, format, addMinutes, isAfter, isBefore,
   startOfDay, endOfDay, setHours, setMinutes, parse,
 } from 'date-fns';
 
-const prisma = new PrismaClient();
+
 
 const SLOT_INTERVAL_MINS = 15;   // Offer slots every 15 minutes
 const MAX_SLOTS_TO_RETURN = 5;   // Return up to 5 options to the caller

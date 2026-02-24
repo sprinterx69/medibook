@@ -1,4 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
+import { prisma } from '../config/prisma.js';
 // stripe/billing.js
 // MediBook — Complete Stripe Subscription & Billing Backend
 //
@@ -14,14 +15,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Stripe from 'stripe';
-import { PrismaClient } from '@prisma/client';
+
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2024-04-10',
   typescript: false,
 });
 
-const prisma = new PrismaClient();
+
 
 // ─── Plan Configuration ───────────────────────────────────────────────────────
 // Map internal plan names to Stripe Price IDs.

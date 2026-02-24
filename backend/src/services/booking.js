@@ -1,4 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
+import { prisma } from '../config/prisma.js';
 // services/booking.js
 //
 // Booking operations called by LLM tool executor:
@@ -7,11 +8,11 @@
 //   rescheduleAppointment — moves a booking to a new slot
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PrismaClient } from '@prisma/client';
+
 import { format, parseISO } from 'date-fns';
 import twilio from 'twilio';
 
-const prisma = new PrismaClient();
+
 const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN

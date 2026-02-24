@@ -6,9 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { getCallSession, updateCallSession, deleteCallSession } from '../services/session-store.js';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../config/prisma.js';
 
 export async function statusCallbackHandler(request, reply) {
   const {

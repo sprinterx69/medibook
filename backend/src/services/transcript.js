@@ -4,9 +4,7 @@
 // Handles saving call transcripts and conversation history to the database.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../config/prisma.js';
 
 /**
  * Saves or updates a call transcript in the database.
