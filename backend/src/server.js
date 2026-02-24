@@ -57,12 +57,6 @@ server.decorate('authenticate', async (request, reply) => {
   }
 });
 
-// ─── API Content-Type ─────────────────────────────────────────────────────────
-// Parse JSON bodies for API routes
-server.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => {
-  try { done(null, JSON.parse(body)); } catch (err) { done(err); }
-});
-
 // ─── API Routes ───────────────────────────────────────────────────────────────
 await server.register(authRoutes);
 await server.register(agentRoutes);

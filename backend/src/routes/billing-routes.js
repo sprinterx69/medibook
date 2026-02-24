@@ -21,6 +21,7 @@ export async function billingRoutes(fastify) {
   // Create a Stripe Checkout Session for new subscription signup.
   // Returns { sessionId, url } — redirect user to `url` or use Stripe.js.
   fastify.post('/checkout', {
+    preHandler: [fastify.authenticate],
     schema: {
       body: {
         type: 'object',
@@ -33,7 +34,7 @@ export async function billingRoutes(fastify) {
       },
     },
   }, async (request, reply) => {
-    const tenantId = request.user.tenantId; // Injected by auth middleware
+    const tenantId = request.user.tenantId;
     const { planKey, successUrl, cancelUrl } = request.body;
 
     const result = await createCheckoutSession({
@@ -48,7 +49,9 @@ export async function billingRoutes(fastify) {
 
   // ── POST /billing/portal ───────────────────────────────────────────────────
   // Opens Stripe Customer Portal (manage payment method, view invoices, cancel).
-  fastify.post('/portal', async (request, reply) => {
+  fastify.post('/portal', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
     const tenantId = request.user.tenantId;
     const result = await createPortalSession({
       tenantId,
@@ -59,7 +62,9 @@ export async function billingRoutes(fastify) {
 
   // ── GET /billing/subscription ──────────────────────────────────────────────
   // Returns current subscription status, plan, trial info, features.
-  fastify.get('/subscription', async (request, reply) => {
+  fastify.get('/subscription', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
     const tenantId = request.user.tenantId;
     const status = await getSubscriptionStatus(tenantId);
     return reply.send(status);
@@ -68,6 +73,7 @@ export async function billingRoutes(fastify) {
   // ── POST /billing/upgrade ──────────────────────────────────────────────────
   // Immediately change plan (proration applied by Stripe).
   fastify.post('/upgrade', {
+    preHandler: [fastify.authenticate],
     schema: {
       body: {
         type: 'object',
@@ -83,7 +89,9 @@ export async function billingRoutes(fastify) {
 
   // ── POST /billing/cancel ───────────────────────────────────────────────────
   // Schedule subscription cancellation at end of current period.
-  fastify.post('/cancel', async (request, reply) => {
+  fastify.post('/cancel', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
     const tenantId = request.user.tenantId;
     const result = await cancelSubscription(tenantId);
     return reply.send(result);
@@ -91,7 +99,9 @@ export async function billingRoutes(fastify) {
 
   // ── POST /billing/reactivate ───────────────────────────────────────────────
   // Undo a scheduled cancellation.
-  fastify.post('/reactivate', async (request, reply) => {
+  fastify.post('/reactivate', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
     const tenantId = request.user.tenantId;
     const result = await reactivateSubscription(tenantId);
     return reply.send(result);
@@ -99,7 +109,9 @@ export async function billingRoutes(fastify) {
 
   // ── GET /billing/invoices ──────────────────────────────────────────────────
   // List past invoices with download links.
-  fastify.get('/invoices', async (request, reply) => {
+  fastify.get('/invoices', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
     const tenantId = request.user.tenantId;
     const limit = parseInt(request.query.limit ?? '12');
     const result = await listInvoices(tenantId, limit);
@@ -108,23 +120,27 @@ export async function billingRoutes(fastify) {
 
   // ── POST /billing/webhooks ─────────────────────────────────────────────────
   // Stripe sends events here. Must use raw body (not parsed JSON).
-  // Fastify: exclude this route from body parsing middleware, use addContentTypeParser.
-  fastify.addContentTypeParser(
-    'application/json',
-    { parseAs: 'buffer', bodyLimit: 1024 * 1024 },
-    async (req, body) => body  // Return raw buffer for webhook verification
-  );
+  // Use onRequest hook to capture raw body before Fastify parses it.
+  fastify.addHook('onRequest', async (request, reply) => {
+    if (request.url === '/billing/webhooks') {
+      // Raw body capture for Stripe signature verification
+      const chunks = [];
+      request.rawBody = await new Promise((resolve, reject) => {
+        request.raw.on('data', chunk => chunks.push(chunk));
+        request.raw.on('end', () => resolve(Buffer.concat(chunks)));
+        request.raw.on('error', reject);
+      });
+    }
+  });
 
-  fastify.post('/webhooks', {
-    config: { rawBody: true },
-  }, async (request, reply) => {
+  fastify.post('/webhooks', async (request, reply) => {
     const signature = request.headers['stripe-signature'];
     if (!signature) {
       return reply.code(400).send({ error: 'Missing stripe-signature header' });
     }
 
     try {
-      const result = await handleStripeWebhook(request.body, signature);
+      const result = await handleStripeWebhook(request.rawBody, signature);
       return reply.code(200).send(result);
     } catch (err) {
       request.log.error({ err }, 'Webhook error');
