@@ -108,7 +108,10 @@ export async function billingRoutes(fastify) {
 
   // ── POST /billing/webhooks ─────────────────────────────────────────────────
   // Stripe sends events here. Must use raw body (not parsed JSON).
-  // Fastify: exclude this route from body parsing middleware, use addContentTypeParser.
+  // Remove existing JSON parser and add raw buffer parser for webhooks.
+  if (fastify.hasContentTypeParser && fastify.hasContentTypeParser('application/json')) {
+    fastify.removeContentTypeParser('application/json');
+  }
   fastify.addContentTypeParser(
     'application/json',
     { parseAs: 'buffer', bodyLimit: 1024 * 1024 },
