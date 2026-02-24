@@ -358,7 +358,7 @@
     : 'https://medibook-backend-production-dfb2.up.railway.app';
 
   /* ── Auth Guard ── */
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('medibook_token');
   if (!token) {
     window.location.href = '/pages/login.html';
     throw new Error('Not authenticated');
@@ -418,7 +418,11 @@
 
   /* ── Logout ── */
   function logout() {
-    localStorage.removeItem('token');
+    localStorage.removeItem('medibook_token');
+    localStorage.removeItem('medibook_tenant_id');
+    localStorage.removeItem('medibook_user_id');
+    localStorage.removeItem('medibook_user_name');
+    localStorage.removeItem('medibook_tenant_name');
     window.location.href = '/pages/login.html';
   }
 
