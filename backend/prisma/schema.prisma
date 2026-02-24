@@ -26,6 +26,7 @@ model Tenant {
   updatedAt        DateTime @updatedAt
 
   // Relations
+  users        User[]
   staff        Staff[]
   clients      Client[]
   services     Service[]
@@ -41,6 +42,52 @@ enum Plan {
   STARTER
   PRO
   ENTERPRISE
+}
+
+// ─── USERS (authentication) ───────────────────────────────────────────────────
+model User {
+  id              String    @id @default(uuid())
+  tenantId        String
+  email           String    @unique @db.VarChar(255)
+  username        String    @unique @db.VarChar(63)
+  passwordHash    String    @db.VarChar(255)
+  fullName        String    @db.VarChar(255)
+  phone           String?   @db.VarChar(30)
+  role            UserRole  @default(OWNER)
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("users")
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+// ─── PENDING REGISTRATIONS ────────────────────────────────────────────────────
+// Holds signup state between form submission and email verification.
+// Deleted once the account is fully created.
+model PendingRegistration {
+  id           String   @id @default(uuid())
+  planKey      String   @db.VarChar(20)
+  businessName String   @db.VarChar(255)
+  slug         String   @unique @db.VarChar(63)
+  fullName     String   @db.VarChar(255)
+  email        String   @unique @db.VarChar(255)
+  username     String   @unique @db.VarChar(63)
+  phone        String?  @db.VarChar(30)
+  passwordHash String   @db.VarChar(255)
+  verifyCode   String   @db.VarChar(6)
+  verifyExpiry DateTime
+  createdAt    DateTime @default(now())
+
+  @@map("pending_registrations")
 }
 
 // ─── LOCATIONS ────────────────────────────────────────────────────────────────

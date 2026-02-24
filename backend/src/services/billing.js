@@ -47,7 +47,7 @@ export const PLANS = {
   },
 };
 
-const TRIAL_DAYS = 14;
+const TRIAL_DAYS = 30;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. CREATE CHECKOUT SESSION
@@ -96,7 +96,7 @@ export async function createCheckoutSession({ tenantId, planKey, successUrl, can
     metadata: { tenantId, planKey },
     // Customise Stripe-hosted page
     custom_text: {
-      submit: { message: 'Your 14-day free trial starts today. No charge until the trial ends.' },
+      submit: { message: 'Your 30-day free trial starts today. No charge until the trial ends.' },
     },
   });
 

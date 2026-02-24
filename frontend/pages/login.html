@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediBook — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f9f7f4;
+  --white:#ffffff;
+  --ink:#0f1419;
+  --ink2:#2d3748;
+  --muted:#8896a8;
+  --muted2:#c4cdd8;
+  --border:#e8edf2;
+  --border2:#d1dae4;
+  --gold:#c9903a;
+  --gold-light:#f5e6cc;
+  --gold-pale:#fdf8f0;
+  --teal:#0d9488;
+  --red:#e53e3e;
+  --red-light:#fff5f5;
+  --radius:10px;
+  --shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 16px rgba(0,0,0,0.04);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.1),0 2px 8px rgba(0,0,0,0.06);
+}
+html{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:'Geist',sans-serif;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+
+/* ── CARD ────────────────────────────────────────────────────────────────── */
+.login-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:40px;width:100%;max-width:440px;box-shadow:var(--shadow-lg)}
+.login-logo{font-family:'Instrument Serif',serif;font-size:26px;color:var(--ink);letter-spacing:0.01em;text-align:center;margin-bottom:28px;text-decoration:none;display:block}
+.login-logo span{color:var(--gold)}
+.login-title{font-family:'Instrument Serif',serif;font-size:28px;color:var(--ink);margin-bottom:6px;text-align:center}
+.login-title em{font-style:italic;color:var(--gold)}
+.login-sub{font-size:14px;color:var(--muted);text-align:center;margin-bottom:32px;line-height:1.6}
+
+/* ── FORM ────────────────────────────────────────────────────────────────── */
+.field{margin-bottom:18px}
+.field-label{display:block;font-size:12px;font-weight:600;letter-spacing:0.04em;color:var(--ink2);margin-bottom:7px;text-transform:uppercase}
+.field-error{font-size:11px;color:var(--red);margin-top:4px;display:none}
+.field.has-error .field-error{display:block}
+.field.has-error input{border-color:var(--red);background:var(--red-light)}
+input{
+  width:100%;padding:12px 14px;border:1.5px solid var(--border2);border-radius:var(--radius);
+  font-family:'Geist',sans-serif;font-size:14px;color:var(--ink);background:var(--white);
+  outline:none;transition:border-color 0.2s,box-shadow 0.2s;
+}
+input::placeholder{color:var(--muted2)}
+input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,144,58,0.12)}
+
+.forgot-link{display:block;text-align:right;font-size:12px;color:var(--muted);text-decoration:none;margin-top:-12px;margin-bottom:20px}
+.forgot-link:hover{color:var(--gold)}
+
+.btn-login{width:100%;padding:13px;border-radius:var(--radius);background:var(--gold);color:white;border:none;font-family:'Geist',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-login:hover{background:#b8802f;transform:translateY(-1px);box-shadow:0 8px 24px rgba(201,144,58,0.3)}
+.btn-login:active{transform:translateY(0)}
+.btn-login:disabled{opacity:0.6;pointer-events:none}
+
+.divider{display:flex;align-items:center;gap:12px;margin:24px 0;color:var(--muted);font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.signup-cta{text-align:center;font-size:13px;color:var(--muted)}
+.signup-cta a{color:var(--gold);text-decoration:none;font-weight:600}
+.signup-cta a:hover{text-decoration:underline}
+
+/* ── ALERT ───────────────────────────────────────────────────────────────── */
+.alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:20px;display:none}
+.alert-error{background:var(--red-light);border:1px solid rgba(229,62,62,0.25);color:#c53030}
+.alert.show{display:block}
+
+/* ── TOAST ───────────────────────────────────────────────────────────────── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:white;padding:12px 20px;border-radius:8px;font-size:13px;z-index:9999;transition:transform 0.3s ease;white-space:nowrap;box-shadow:var(--shadow-lg)}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <a href="/pages/landing.html" class="login-logo">Medi<span>Book</span></a>
+  <h1 class="login-title">Welcome <em>back</em></h1>
+  <p class="login-sub">Sign in to your MediBook account</p>
+
+  <div class="alert alert-error" id="loginAlert"></div>
+
+  <div class="field">
+    <label class="field-label">Email Address</label>
+    <input type="email" id="loginEmail" placeholder="you@yourclinic.com" autocomplete="email"
+      onkeydown="if(event.key==='Enter')submitLogin()">
+    <div class="field-error"></div>
+  </div>
+
+  <div class="field">
+    <label class="field-label">Password</label>
+    <input type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')submitLogin()">
+    <div class="field-error"></div>
+  </div>
+
+  <a href="#" class="forgot-link">Forgot your password?</a>
+
+  <button class="btn-login" id="btnLogin" onclick="submitLogin()">
+    Sign in
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  </button>
+
+  <div class="divider">or</div>
+
+  <div class="signup-cta">
+    Don't have an account?
+    <a href="/pages/onboarding.html">Start your 30-day free trial</a>
+  </div>
+</div>
+
+<div id="toast">Done ✓</div>
+
+<script>
+const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:3001'
+  : '';
+
+async function submitLogin() {
+  const email    = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  document.getElementById('loginAlert').classList.remove('show');
+
+  let ok = true;
+  clearFieldError('loginEmail');
+  clearFieldError('loginPassword');
+  if (!email || !email.includes('@')) { setFieldError('loginEmail', 'Enter a valid email address'); ok = false; }
+  if (!password)                      { setFieldError('loginPassword', 'Password is required'); ok = false; }
+  if (!ok) return;
+
+  const btn = document.getElementById('btnLogin');
+  btn.disabled = true;
+  btn.innerHTML = '<div style="width:18px;height:18px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite"></div>';
+
+  try {
+    const res  = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showAlert(data.message || data.error || 'Invalid email or password');
+      return;
+    }
+    localStorage.setItem('medibook_token',       data.token);
+    localStorage.setItem('medibook_tenant_id',   data.tenantId);
+    localStorage.setItem('medibook_user_id',     data.userId);
+    localStorage.setItem('medibook_user_name',   data.fullName);
+    localStorage.setItem('medibook_tenant_name', data.tenantName);
+    window.location.href = '/app/dashboard.html';
+  } catch {
+    showAlert('Network error — please try again');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `Sign in <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+  }
+}
+
+function showAlert(msg) {
+  const el = document.getElementById('loginAlert');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function setFieldError(id, msg) {
+  const input = document.getElementById(id);
+  if (!input) return;
+  const field = input.closest('.field');
+  if (!field) return;
+  field.classList.add('has-error');
+  const err = field.querySelector('.field-error');
+  if (err) { err.style.display = 'block'; err.textContent = msg; }
+}
+
+function clearFieldError(id) {
+  const input = document.getElementById(id);
+  if (!input) return;
+  const field = input.closest('.field');
+  if (!field) return;
+  field.classList.remove('has-error');
+  const err = field.querySelector('.field-error');
+  if (err) err.style.display = 'none';
+}
+
+// Redirect if already logged in
+if (localStorage.getItem('medibook_token')) {
+  window.location.href = '/app/dashboard.html';
+}
+</script>
+</body>
+</html>
