@@ -1,5 +1,4 @@
 // ─────────────────────────────────────────────────────────────────────────────
-import { prisma } from '../config/prisma.js';
 // services/booking.js
 //
 // Booking operations called by LLM tool executor:
@@ -8,15 +7,21 @@ import { prisma } from '../config/prisma.js';
 //   rescheduleAppointment — moves a booking to a new slot
 // ─────────────────────────────────────────────────────────────────────────────
 
-
+import { prisma } from '../config/prisma.js';
 import { format, parseISO } from 'date-fns';
 import twilio from 'twilio';
 
-
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+// Lazy-load Twilio client to ensure env vars are loaded
+let twilioClient;
+function getTwilio() {
+  if (!twilioClient) {
+    twilioClient = twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    );
+  }
+  return twilioClient;
+}
 
 // ─── Book Appointment ─────────────────────────────────────────────────────────
 /**
@@ -28,241 +33,225 @@ const twilioClient = twilio(
  *   - Queues a reminder job (handled by BullMQ worker, not this service)
  */
 export async function bookAppointment({
-  tenantId, serviceName, slotId, clientName, clientPhone, notes,
+  tenantId,
+  callerNumber,
+  callerName,
+  serviceName,
+  slotId,
+  notes = '',
 }) {
-  try {
-    // ── 1. Parse slot ID ───────────────────────────────────────────────
-    const [staffId, isoTime] = slotId.split('_');
-    if (!staffId || !isoTime) {
-      return { success: false, message: 'Invalid slot ID. Please try checking availability again.' };
-    }
-    const startsAt = parseISO(isoTime);
+  // Parse slot ID
+  const [staffId, isoDatetime] = slotId.split('_');
+  if (!staffId || !isoDatetime) {
+    throw new Error('Invalid slot ID format. Expected: {staffId}_{isoDatetime}');
+  }
 
-    // ── 2. Find the service ────────────────────────────────────────────
-    const service = await prisma.service.findFirst({
-      where: { tenantId, name: { contains: serviceName, mode: 'insensitive' }, isActive: true },
-    });
-    if (!service) {
-      return { success: false, message: `Service "${serviceName}" not found.` };
-    }
+  const startsAt = new Date(isoDatetime);
+  if (isNaN(startsAt.getTime())) {
+    throw new Error('Invalid datetime in slot ID');
+  }
 
-    // ── 3. Find or create client ───────────────────────────────────────
-    let client = await prisma.client.findFirst({
-      where: { tenantId, phone: clientPhone },
-    });
+  // Fetch service to get duration
+  const service = await prisma.service.findFirst({
+    where: { tenantId, name: serviceName, isActive: true },
+    select: { id: true, durationMins: true, priceCents: true },
+  });
 
-    if (!client) {
-      client = await prisma.client.create({
-        data: {
-          tenantId,
-          fullName: clientName,
-          phone: clientPhone,
-          source: 'voice_agent',
-        },
-      });
-    }
+  if (!service) {
+    throw new Error(`Service "${serviceName}" not found`);
+  }
 
-    // ── 4. Find staff ──────────────────────────────────────────────────
-    const staff = await prisma.staff.findUnique({ where: { id: staffId } });
-    if (!staff) {
-      return { success: false, message: 'Selected staff member not found.' };
-    }
+  // Calculate end time
+  const endsAt = new Date(startsAt.getTime() + service.durationMins * 60 * 1000);
 
-    // ── 5. Create appointment (with optimistic lock to prevent double-booking) ──
-    const endsAt = new Date(startsAt.getTime() + service.durationMins * 60_000);
+  // Find or create client
+  let client = await prisma.client.findFirst({
+    where: { tenantId, phone: callerNumber },
+    select: { id: true },
+  });
 
-    // Check one final time that the slot is still free
-    const conflict = await prisma.appointment.findFirst({
-      where: {
-        tenantId,
-        staffId,
-        status: { notIn: ['cancelled'] },
-        OR: [
-          { startsAt: { gte: startsAt, lt: endsAt } },
-          { endsAt:   { gt: startsAt, lte: endsAt } },
-          { startsAt: { lte: startsAt }, endsAt: { gte: endsAt } },
-        ],
-      },
-    });
-
-    if (conflict) {
-      return {
-        success: false,
-        message: `That slot was just taken. Let me find another available time for you.`,
-      };
-    }
-
-    const appointment = await prisma.appointment.create({
+  if (!client) {
+    client = await prisma.client.create({
       data: {
         tenantId,
-        clientId: client.id,
-        staffId,
-        serviceId: service.id,
-        startsAt,
-        endsAt,
-        status: 'confirmed',
-        source: 'voice_agent',
-        notes: notes ?? null,
-        depositRequired: service.depositCents > 0,
+        phone: callerNumber,
+        fullName: callerName || 'Unknown',
       },
+      select: { id: true },
     });
-
-    // ── 6. Send confirmation SMS ───────────────────────────────────────
-    const dateLabel = format(startsAt, "EEEE do MMMM 'at' h:mm a");
-    const smsBody =
-      `✅ Booking confirmed at MediBook!\n` +
-      `${service.name} on ${dateLabel}\n` +
-      `with ${staff.name}.\n` +
-      `Reply CANCEL to cancel or call us to reschedule.`;
-
-    try {
-      await twilioClient.messages.create({
-        body: smsBody,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: clientPhone,
-      });
-    } catch (smsErr) {
-      // Don't fail the booking if SMS fails
-      console.error('SMS confirmation failed:', smsErr.message);
-    }
-
-    return {
-      success: true,
-      appointmentId: appointment.id,
-      message: `Booked! ${clientName} is confirmed for ${service.name} on ${dateLabel} with ${staff.name}. A confirmation text has been sent to ${clientPhone}.`,
-      details: {
-        service: service.name,
-        staff: staff.name,
-        date: dateLabel,
-        duration: `${service.durationMins} minutes`,
-        price: `£${(service.priceCents / 100).toFixed(2)}`,
-      },
-    };
-
-  } catch (err) {
-    console.error('bookAppointment error:', err);
-    return {
-      success: false,
-      message: 'I was unable to complete the booking due to a technical issue. Please try again.',
-    };
   }
+
+  // Check for double-booking
+  const existing = await prisma.appointment.findFirst({
+    where: {
+      tenantId,
+      staffId,
+      startsAt,
+      status: { not: 'CANCELLED' },
+    },
+  });
+
+  if (existing) {
+    throw new Error('Slot no longer available');
+  }
+
+  // Create appointment
+  const appointment = await prisma.appointment.create({
+    data: {
+      tenantId,
+      clientId: client.id,
+      staffId,
+      serviceId: service.id,
+      startsAt,
+      endsAt,
+      status: 'CONFIRMED',
+      source: 'VOICE',
+      notes,
+    },
+    include: {
+      client: { select: { fullName: true, phone: true } },
+      staff: { select: { name: true } },
+      service: { select: { name: true, durationMins: true } },
+    },
+  });
+
+  // Send confirmation SMS
+  try {
+    await getTwilio().messages.create({
+      body: `Hi ${appointment.client.fullName}, your ${appointment.service.name} appointment with ${appointment.staff.name} is confirmed for ${format(startsAt, 'MMM d')} at ${format(startsAt, 'h:mm a')}. Reply CANCEL to cancel.`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: appointment.client.phone,
+    });
+  } catch (smsErr) {
+    console.error('Failed to send confirmation SMS:', smsErr.message);
+    // Don't fail the booking if SMS fails
+  }
+
+  return {
+    success: true,
+    appointmentId: appointment.id,
+    startsAt,
+    endsAt,
+    message: `Confirmed! Your appointment is on ${format(startsAt, 'MMMM do')} at ${format(startsAt, 'h:mm a')}.`,
+  };
 }
 
 // ─── Cancel Appointment ───────────────────────────────────────────────────────
-export async function cancelAppointment({ tenantId, clientPhone, appointmentId, reason }) {
-  try {
-    // Find the appointment (by ID or by client phone → latest upcoming)
-    let appointment;
+/**
+ * Cancels an appointment by ID.
+ */
+export async function cancelAppointment({ tenantId, appointmentId, reason = '' }) {
+  const appointment = await prisma.appointment.findFirst({
+    where: { id: appointmentId, tenantId },
+    include: {
+      client: { select: { fullName: true, phone: true } },
+      staff: { select: { name: true } },
+      service: { select: { name: true } },
+    },
+  });
 
-    if (appointmentId) {
-      appointment = await prisma.appointment.findFirst({
-        where: { id: appointmentId, tenantId, status: { notIn: ['cancelled'] } },
-        include: { service: true, staff: true, client: true },
-      });
-    } else {
-      const client = await prisma.client.findFirst({ where: { tenantId, phone: clientPhone } });
-      if (!client) {
-        return { success: false, message: `I couldn't find any bookings for the number ${clientPhone}.` };
-      }
-      appointment = await prisma.appointment.findFirst({
-        where: {
-          tenantId,
-          clientId: client.id,
-          status: { notIn: ['cancelled', 'completed'] },
-          startsAt: { gte: new Date() },
-        },
-        orderBy: { startsAt: 'asc' },
-        include: { service: true, staff: true, client: true },
-      });
-    }
-
-    if (!appointment) {
-      return { success: false, message: `No upcoming appointments found. If you think this is an error, please call back during business hours.` };
-    }
-
-    await prisma.appointment.update({
-      where: { id: appointment.id },
-      data: { status: 'cancelled', cancelledAt: new Date(), cancellationReason: reason ?? null },
-    });
-
-    const dateLabel = format(new Date(appointment.startsAt), "EEEE do MMMM 'at' h:mm a");
-
-    // Send cancellation SMS
-    try {
-      await twilioClient.messages.create({
-        body: `Your ${appointment.service.name} appointment on ${dateLabel} has been cancelled. Call us to rebook.`,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: clientPhone,
-      });
-    } catch {}
-
-    return {
-      success: true,
-      message: `Done — your ${appointment.service.name} on ${dateLabel} with ${appointment.staff.name} has been cancelled. Is there anything else I can help you with?`,
-    };
-
-  } catch (err) {
-    console.error('cancelAppointment error:', err);
-    return { success: false, message: 'Unable to process the cancellation. Please call back during business hours.' };
+  if (!appointment) {
+    throw new Error('Appointment not found');
   }
+
+  if (appointment.status === 'CANCELLED') {
+    throw new Error('Appointment already cancelled');
+  }
+
+  await prisma.appointment.update({
+    where: { id: appointmentId },
+    data: { status: 'CANCELLED', notes: `${appointment.notes}\n\nCancelled: ${reason}`.trim() },
+  });
+
+  // Send cancellation SMS
+  try {
+    await getTwilio().messages.create({
+      body: `Hi ${appointment.client.fullName}, your ${appointment.service.name} appointment on ${format(appointment.startsAt, 'MMM d')} at ${format(appointment.startsAt, 'h:mm a')} has been cancelled.`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: appointment.client.phone,
+    });
+  } catch (smsErr) {
+    console.error('Failed to send cancellation SMS:', smsErr.message);
+  }
+
+  return { success: true, message: 'Appointment cancelled' };
 }
 
 // ─── Reschedule Appointment ───────────────────────────────────────────────────
-export async function rescheduleAppointment({ tenantId, clientPhone, appointmentId, newSlotId }) {
-  try {
-    // Find the existing appointment
-    let existing;
-    if (appointmentId) {
-      existing = await prisma.appointment.findFirst({
-        where: { id: appointmentId, tenantId },
-        include: { service: true, staff: true },
-      });
-    } else {
-      const client = await prisma.client.findFirst({ where: { tenantId, phone: clientPhone } });
-      if (!client) return { success: false, message: 'No bookings found for that number.' };
-      existing = await prisma.appointment.findFirst({
-        where: { tenantId, clientId: client.id, status: 'confirmed', startsAt: { gte: new Date() } },
-        orderBy: { startsAt: 'asc' },
-        include: { service: true, staff: true },
-      });
-    }
+/**
+ * Moves an existing appointment to a new slot.
+ */
+export async function rescheduleAppointment({
+  tenantId,
+  appointmentId,
+  newSlotId,
+  reason = '',
+}) {
+  const appointment = await prisma.appointment.findFirst({
+    where: { id: appointmentId, tenantId },
+    include: {
+      client: { select: { fullName: true, phone: true } },
+      staff: { select: { name: true } },
+      service: { select: { name: true, durationMins: true } },
+    },
+  });
 
-    if (!existing) return { success: false, message: 'No upcoming appointment found to reschedule.' };
-
-    // Parse the new slot
-    const [newStaffId, newIsoTime] = newSlotId.split('_');
-    const newStartsAt = parseISO(newIsoTime);
-    const newEndsAt = new Date(newStartsAt.getTime() + existing.service.durationMins * 60_000);
-
-    // Update the appointment
-    const updated = await prisma.appointment.update({
-      where: { id: existing.id },
-      data: {
-        staffId: newStaffId,
-        startsAt: newStartsAt,
-        endsAt: newEndsAt,
-        status: 'confirmed',
-      },
-      include: { staff: true },
-    });
-
-    const newDateLabel = format(newStartsAt, "EEEE do MMMM 'at' h:mm a");
-
-    try {
-      await twilioClient.messages.create({
-        body: `Your ${existing.service.name} has been rescheduled to ${newDateLabel} with ${updated.staff.name}. See you then!`,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: clientPhone,
-      });
-    } catch {}
-
-    return {
-      success: true,
-      message: `Done! Your ${existing.service.name} has been moved to ${newDateLabel} with ${updated.staff.name}. A confirmation text has been sent.`,
-    };
-
-  } catch (err) {
-    console.error('rescheduleAppointment error:', err);
-    return { success: false, message: 'Unable to reschedule. Please call back during business hours.' };
+  if (!appointment) {
+    throw new Error('Appointment not found');
   }
+
+  // Parse new slot
+  const [newStaffId, newIsoDatetime] = newSlotId.split('_');
+  if (!newStaffId || !newIsoDatetime) {
+    throw new Error('Invalid new slot ID format');
+  }
+
+  const newStartsAt = new Date(newIsoDatetime);
+  if (isNaN(newStartsAt.getTime())) {
+    throw new Error('Invalid datetime in new slot ID');
+  }
+
+  const newEndsAt = new Date(newStartsAt.getTime() + appointment.service.durationMins * 60 * 1000);
+
+  // Check for double-booking
+  const existing = await prisma.appointment.findFirst({
+    where: {
+      tenantId,
+      staffId: newStaffId,
+      startsAt: newStartsAt,
+      status: { not: 'CANCELLED' },
+      id: { not: appointmentId },
+    },
+  });
+
+  if (existing) {
+    throw new Error('New slot no longer available');
+  }
+
+  // Update appointment
+  await prisma.appointment.update({
+    where: { id: appointmentId },
+    data: {
+      staffId: newStaffId,
+      startsAt: newStartsAt,
+      endsAt: newEndsAt,
+      notes: `${appointment.notes}\n\nRescheduled: ${reason}`.trim(),
+    },
+  });
+
+  // Send rescheduling SMS
+  try {
+    await getTwilio().messages.create({
+      body: `Hi ${appointment.client.fullName}, your ${appointment.service.name} appointment has been rescheduled to ${format(newStartsAt, 'MMM d')} at ${format(newStartsAt, 'h:mm a')}.`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: appointment.client.phone,
+    });
+  } catch (smsErr) {
+    console.error('Failed to send rescheduling SMS:', smsErr.message);
+  }
+
+  return {
+    success: true,
+    message: `Rescheduled to ${format(newStartsAt, 'MMMM do')} at ${format(newStartsAt, 'h:mm a')}.`,
+  };
 }
