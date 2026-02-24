@@ -152,7 +152,7 @@
           <div class="user-role">Clinic Owner</div>
         </div>
       </div>
-      <a href="#" style="display:block;text-align:center;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 0;margin-top:2px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">Sign out</a>
+      <a href="#" onclick="logout(); return false;" style="display:block;text-align:center;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 0;margin-top:2px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">Sign out</a>
     </div>
   </aside>
 
@@ -352,6 +352,76 @@
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
+  /* ── API Config ── */
+  const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:3001'
+    : 'https://medibook-backend-production-dfb2.up.railway.app';
+
+  /* ── Auth Guard ── */
+  const token = localStorage.getItem('token');
+  if (!token) {
+    window.location.href = '/pages/login.html';
+    throw new Error('Not authenticated');
+  }
+
+  /* ── User State ── */
+  let userData = null;
+
+  /* ── Fetch User Data ── */
+  async function loadUserData() {
+    try {
+      const res = await fetch(`${API}/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!res.ok) {
+        // Token expired or invalid
+        localStorage.removeItem('token');
+        window.location.href = '/pages/login.html';
+        return;
+      }
+      
+      userData = await res.json();
+      updateUIWithUserData();
+    } catch (err) {
+      console.error('Failed to load user data:', err);
+      showToast('Error loading account data', '⚠️', 'error');
+    }
+  }
+
+  /* ── Update UI with Real Data ── */
+  function updateUIWithUserData() {
+    if (!userData) return;
+    
+    // Update clinic name in sidebar
+    const clinicNameEl = document.querySelector('.user-name');
+    if (clinicNameEl) {
+      clinicNameEl.textContent = userData.tenant?.name || 'My Clinic';
+    }
+    
+    // Update user role
+    const roleEl = document.querySelector('.user-role');
+    if (roleEl) {
+      roleEl.textContent = userData.role || 'Clinic Owner';
+    }
+    
+    // Update avatar initials
+    const avatarEl = document.querySelector('.user-av');
+    if (avatarEl && userData.fullName) {
+      const initials = userData.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+      avatarEl.textContent = initials;
+    }
+    
+    // Update page title
+    document.title = `${userData.tenant?.name || 'Dashboard'} — MediBook`;
+  }
+
+  /* ── Logout ── */
+  function logout() {
+    localStorage.removeItem('token');
+    window.location.href = '/pages/login.html';
+  }
+
   /* ── Data ── */
   const appointments = [
     { time: '09:00', patient: 'Sophie Laurent',  service: 'Hydrafacial',      staff: 'Dr. Carter',  status: 'completed'   },
@@ -464,6 +534,7 @@
   document.getElementById('bookingModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 
   /* ── Init ── */
+  loadUserData(); // Load real user data first
   renderSchedule();
   renderStaff();
   renderActivity();
