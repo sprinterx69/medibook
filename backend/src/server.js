@@ -54,6 +54,26 @@ server.decorate('authenticate', async (request, reply) => {
   }
 });
 
+// ─── Stripe Webhook (raw body) ────────────────────────────────────────────────
+// Must be registered BEFORE global JSON parser
+import { handleStripeWebhook } from './services/billing.js';
+server.addContentTypeParser(
+  'application/json',
+  { parseAs: 'buffer', bodyLimit: 1024 * 1024 },
+  async (req, body) => body
+);
+server.post('/billing/webhooks', async (request, reply) => {
+  const signature = request.headers['stripe-signature'];
+  if (!signature) return reply.code(400).send({ error: 'Missing stripe-signature' });
+  try {
+    const result = await handleStripeWebhook(request.body, signature);
+    return reply.code(200).send(result);
+  } catch (err) {
+    request.log.error({ err }, 'Webhook error');
+    return reply.code(400).send({ error: err.message });
+  }
+});
+
 // ─── API Content-Type ─────────────────────────────────────────────────────────
 // Parse JSON bodies for API routes
 server.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => {

@@ -12,7 +12,6 @@ import {
   cancelSubscription,
   reactivateSubscription,
   listInvoices,
-  handleStripeWebhook,
 } from '../services/billing.js';
 
 export async function billingRoutes(fastify) {
@@ -106,32 +105,5 @@ export async function billingRoutes(fastify) {
     return reply.send(result);
   });
 
-  // ── POST /billing/webhooks ─────────────────────────────────────────────────
-  // Stripe sends events here. Must use raw body (not parsed JSON).
-  // Remove existing JSON parser and add raw buffer parser for webhooks.
-  if (fastify.hasContentTypeParser && fastify.hasContentTypeParser('application/json')) {
-    fastify.removeContentTypeParser('application/json');
-  }
-  fastify.addContentTypeParser(
-    'application/json',
-    { parseAs: 'buffer', bodyLimit: 1024 * 1024 },
-    async (req, body) => body  // Return raw buffer for webhook verification
-  );
-
-  fastify.post('/webhooks', {
-    config: { rawBody: true },
-  }, async (request, reply) => {
-    const signature = request.headers['stripe-signature'];
-    if (!signature) {
-      return reply.code(400).send({ error: 'Missing stripe-signature header' });
-    }
-
-    try {
-      const result = await handleStripeWebhook(request.body, signature);
-      return reply.code(200).send(result);
-    } catch (err) {
-      request.log.error({ err }, 'Webhook error');
-      return reply.code(400).send({ error: err.message });
-    }
-  });
+  // Note: /billing/webhooks is registered in server.js before JSON parser
 }
