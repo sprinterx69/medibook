@@ -17,6 +17,9 @@ import agentRoutes from './routes/agent-routes.js';
 import phoneRoutes from './routes/phone-routes.js';
 import authRoutes from './routes/auth-routes.js';
 import { billingRoutes } from './routes/billing-routes.js';
+import appointmentRoutes from './routes/appointment-routes.js';
+import staffRoutes from './routes/staff-routes.js';
+import activityRoutes from './routes/activity-routes.js';
 
 const server = Fastify({
   logger: {
@@ -54,30 +57,10 @@ server.decorate('authenticate', async (request, reply) => {
   }
 });
 
-// ─── Stripe Webhook (raw body) ────────────────────────────────────────────────
-// Use preParsing hook to capture raw body for Stripe signature verification
-import { handleStripeWebhook } from './services/billing.js';
-server.addHook('preParsing', async (request, reply, payload) => {
-  if (request.url === '/billing/webhooks') {
-    const chunks = [];
-    for await (const chunk of payload) {
-      chunks.push(chunk);
-    }
-    request.rawBody = Buffer.concat(chunks);
-    // Return empty payload since we'll use rawBody
-    return null;
-  }
-});
-server.post('/billing/webhooks', async (request, reply) => {
-  const signature = request.headers['stripe-signature'];
-  if (!signature) return reply.code(400).send({ error: 'Missing stripe-signature' });
-  try {
-    const result = await handleStripeWebhook(request.rawBody, signature);
-    return reply.code(200).send(result);
-  } catch (err) {
-    request.log.error({ err }, 'Webhook error');
-    return reply.code(400).send({ error: err.message });
-  }
+// ─── API Content-Type ─────────────────────────────────────────────────────────
+// Parse JSON bodies for API routes
+server.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => {
+  try { done(null, JSON.parse(body)); } catch (err) { done(err); }
 });
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
@@ -85,6 +68,9 @@ await server.register(authRoutes);
 await server.register(agentRoutes);
 await server.register(phoneRoutes);
 await server.register(billingRoutes, { prefix: '/billing' });
+await server.register(appointmentRoutes);
+await server.register(staffRoutes);
+await server.register(activityRoutes);
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 server.get('/health', async () => ({

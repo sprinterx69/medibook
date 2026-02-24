@@ -81,6 +81,29 @@
 
     /* Topbar date */
     .topbar-date { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+    /* ── Loading skeleton ── */
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    .skeleton-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+    }
+    .skeleton-row:last-child { border-bottom: none; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 40px 20px; gap: 8px;
+    }
+    .empty-state-icon { font-size: 32px; }
+    .empty-state-title { font-size: 14px; font-weight: 600; color: var(--text-2); }
+    .empty-state-sub { font-size: 13px; color: var(--text-muted); }
   </style>
 </head>
 <body>
@@ -146,13 +169,13 @@
     </div>
     <div class="sidebar-footer">
       <div class="user-card">
-        <div class="user-av">LC</div>
+        <div class="user-av" id="userAv">--</div>
         <div>
-          <div class="user-name">Lumière Clinic</div>
-          <div class="user-role">Clinic Owner</div>
+          <div class="user-name" id="userName">Loading…</div>
+          <div class="user-role" id="userRole">Clinic Owner</div>
         </div>
       </div>
-      <a href="#" onclick="logout(); return false;" style="display:block;text-align:center;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 0;margin-top:2px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">Sign out</a>
+      <a href="#" id="signOutBtn" style="display:block;text-align:center;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 0;margin-top:2px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">Sign out</a>
     </div>
   </aside>
 
@@ -186,32 +209,32 @@
             <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#0d9488" stroke-width="1.7"><path d="M8 2v12M5 5h4.5a2 2 0 010 4H5m0-4v4m0 0H9"/></svg>
           </div>
           <div class="stat-label">Today's Revenue</div>
-          <div class="stat-value">£1,240</div>
-          <div class="stat-meta"><span class="stat-up">↑ 18%</span> vs yesterday</div>
+          <div class="stat-value" id="statRevenue">—</div>
+          <div class="stat-meta" id="statRevenueMeta"><span class="stat-skeleton skeleton" style="width:80px;height:12px;display:inline-block;"></span></div>
         </div>
         <div class="stat-card">
           <div class="stat-icon" style="background:#eff6ff;">
             <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#2563eb" stroke-width="1.7"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M5 1v3M11 1v3M1.5 6.5h13"/></svg>
           </div>
           <div class="stat-label">Appointments Today</div>
-          <div class="stat-value">8</div>
-          <div class="stat-meta"><span style="color:var(--text-muted)">2 remaining</span></div>
+          <div class="stat-value" id="statAppts">—</div>
+          <div class="stat-meta" id="statApptsMeta"><span class="skeleton" style="width:80px;height:12px;display:inline-block;border-radius:4px;"></span></div>
         </div>
         <div class="stat-card">
           <div class="stat-icon" style="background:#f5f3ff;">
             <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#7c3aed" stroke-width="1.7"><circle cx="6" cy="5" r="2.5"/><path d="M1 13.5c0-2.485 2.239-4.5 5-4.5s5 2.015 5 4.5"/><circle cx="12" cy="5" r="2"/><path d="M14.5 13c0-1.8-1.12-3.34-2.75-4"/></svg>
           </div>
           <div class="stat-label">New Clients This Month</div>
-          <div class="stat-value">14</div>
-          <div class="stat-meta"><span class="stat-up">↑ 3</span> this week</div>
+          <div class="stat-value" id="statClients">—</div>
+          <div class="stat-meta" id="statClientsMeta"><span class="skeleton" style="width:80px;height:12px;display:inline-block;border-radius:4px;"></span></div>
         </div>
         <div class="stat-card">
           <div class="stat-icon" style="background:#fff7ed;">
             <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#ea580c" stroke-width="1.7"><path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/></svg>
           </div>
-          <div class="stat-label">AI Calls Handled</div>
-          <div class="stat-value">23</div>
-          <div class="stat-meta"><span class="stat-up">100%</span> booking rate</div>
+          <div class="stat-label">AI Calls Today</div>
+          <div class="stat-value" id="statCalls">—</div>
+          <div class="stat-meta" id="statCallsMeta"><span class="skeleton" style="width:80px;height:12px;display:inline-block;border-radius:4px;"></span></div>
         </div>
       </div>
 
@@ -222,11 +245,16 @@
           <div class="card-header">
             <div>
               <div class="card-title">Today's Schedule</div>
-              <div class="card-subtitle">Sunday, 22 Feb 2026</div>
+              <div class="card-subtitle" id="scheduleSubtitle">Loading…</div>
             </div>
-            <span class="badge badge-blue">8 appointments</span>
+            <span class="badge badge-blue" id="scheduleCount">—</span>
           </div>
-          <div class="schedule-list" id="scheduleList"></div>
+          <div class="schedule-list" id="scheduleList">
+            <!-- skeleton rows -->
+            <div class="skeleton-row"><div class="skeleton" style="width:44px;height:14px;"></div><div style="flex:1"><div class="skeleton" style="width:130px;height:14px;margin-bottom:5px;"></div><div class="skeleton" style="width:90px;height:11px;"></div></div><div class="skeleton" style="width:70px;height:11px;"></div><div class="skeleton" style="width:70px;height:22px;border-radius:20px;"></div></div>
+            <div class="skeleton-row"><div class="skeleton" style="width:44px;height:14px;"></div><div style="flex:1"><div class="skeleton" style="width:110px;height:14px;margin-bottom:5px;"></div><div class="skeleton" style="width:80px;height:11px;"></div></div><div class="skeleton" style="width:70px;height:11px;"></div><div class="skeleton" style="width:70px;height:22px;border-radius:20px;"></div></div>
+            <div class="skeleton-row"><div class="skeleton" style="width:44px;height:14px;"></div><div style="flex:1"><div class="skeleton" style="width:120px;height:14px;margin-bottom:5px;"></div><div class="skeleton" style="width:85px;height:11px;"></div></div><div class="skeleton" style="width:70px;height:11px;"></div><div class="skeleton" style="width:70px;height:22px;border-radius:20px;"></div></div>
+          </div>
           <div class="card-footer">
             <a href="calendar.html" style="font-size:13px;color:var(--brand-text);font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
               <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
@@ -241,9 +269,12 @@
           <div class="card">
             <div class="card-header">
               <div class="card-title">Staff on Duty</div>
-              <span class="badge badge-green badge-dot">3 online</span>
+              <span class="badge badge-green badge-dot" id="staffOnlineCount">— online</span>
             </div>
-            <div class="staff-list" id="staffList"></div>
+            <div class="staff-list" id="staffList">
+              <div class="skeleton-row"><div class="skeleton" style="width:8px;height:8px;border-radius:50%;"></div><div class="skeleton" style="width:32px;height:32px;border-radius:8px;flex-shrink:0;"></div><div style="flex:1"><div class="skeleton" style="width:110px;height:13px;margin-bottom:5px;"></div><div class="skeleton" style="width:80px;height:11px;"></div></div></div>
+              <div class="skeleton-row"><div class="skeleton" style="width:8px;height:8px;border-radius:50%;"></div><div class="skeleton" style="width:32px;height:32px;border-radius:8px;flex-shrink:0;"></div><div style="flex:1"><div class="skeleton" style="width:100px;height:13px;margin-bottom:5px;"></div><div class="skeleton" style="width:75px;height:11px;"></div></div></div>
+            </div>
           </div>
 
           <!-- AI Voice Agent -->
@@ -255,19 +286,19 @@
             <div class="card-body" style="padding-top:12px;">
               <div class="agent-stats">
                 <div class="agent-stat-item">
-                  <div class="agent-stat-val">23</div>
+                  <div class="agent-stat-val" id="agentCalls">—</div>
                   <div class="agent-stat-lbl">Calls today</div>
                 </div>
                 <div class="agent-stat-item">
-                  <div class="agent-stat-val">12 min</div>
+                  <div class="agent-stat-val" id="agentAvgLen">—</div>
                   <div class="agent-stat-lbl">Avg call length</div>
                 </div>
                 <div class="agent-stat-item">
-                  <div class="agent-stat-val">3</div>
+                  <div class="agent-stat-val" id="agentBookings">—</div>
                   <div class="agent-stat-lbl">Bookings made</div>
                 </div>
                 <div class="agent-stat-item">
-                  <div class="agent-stat-val">100%</div>
+                  <div class="agent-stat-val" id="agentRate">—</div>
                   <div class="agent-stat-lbl">Booking rate</div>
                 </div>
               </div>
@@ -285,7 +316,11 @@
           <div class="card-title">Recent Activity</div>
           <a href="#" style="font-size:12.5px;color:var(--brand-text);font-weight:600;text-decoration:none;">View all</a>
         </div>
-        <div class="activity-list" id="activityList"></div>
+        <div class="activity-list" id="activityList">
+          <div class="skeleton-row" style="padding:13px 20px;"><div class="skeleton" style="width:34px;height:34px;border-radius:9px;flex-shrink:0;"></div><div style="flex:1;padding-left:2px;"><div class="skeleton" style="width:260px;height:13px;margin-bottom:6px;"></div><div class="skeleton" style="width:70px;height:11px;"></div></div></div>
+          <div class="skeleton-row" style="padding:13px 20px;"><div class="skeleton" style="width:34px;height:34px;border-radius:9px;flex-shrink:0;"></div><div style="flex:1;padding-left:2px;"><div class="skeleton" style="width:220px;height:13px;margin-bottom:6px;"></div><div class="skeleton" style="width:60px;height:11px;"></div></div></div>
+          <div class="skeleton-row" style="padding:13px 20px;"><div class="skeleton" style="width:34px;height:34px;border-radius:9px;flex-shrink:0;"></div><div style="flex:1;padding-left:2px;"><div class="skeleton" style="width:240px;height:13px;margin-bottom:6px;"></div><div class="skeleton" style="width:55px;height:11px;"></div></div></div>
+        </div>
       </div>
 
     </main>
@@ -305,45 +340,45 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Date</label>
-          <input type="date" class="input" value="2026-02-22" />
+          <input type="date" class="input" id="bookDate" />
         </div>
         <div class="form-group">
           <label class="form-label">Time</label>
-          <input type="time" class="input" value="10:00" />
+          <input type="time" class="input" id="bookTime" value="10:00" />
         </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Client</label>
-        <input type="text" class="input" placeholder="Search client name or email…" />
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Service</label>
-          <select class="select">
-            <option>Hydrafacial</option>
-            <option>Botox</option>
-            <option>Dermal Filler</option>
-            <option>Laser Treatment</option>
-            <option>Chemical Peel</option>
+          <label class="form-label">Client Name <span style="color:var(--red)">*</span></label>
+          <input type="text" class="input" id="bookClientName" placeholder="Full name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Client Phone</label>
+          <input type="tel" class="input" id="bookClientPhone" placeholder="+44 7700 900000" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Service <span style="color:var(--red)">*</span></label>
+          <select class="select" id="bookService">
+            <option value="">Loading services…</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Staff</label>
-          <select class="select">
-            <option>Dr. Emily Carter</option>
-            <option>Dr. Priya Nair</option>
-            <option>Nina Ross</option>
+          <label class="form-label">Staff <span style="color:var(--red)">*</span></label>
+          <select class="select" id="bookStaff">
+            <option value="">Loading staff…</option>
           </select>
         </div>
       </div>
       <div class="form-group" style="margin-bottom:0;">
         <label class="form-label">Notes</label>
-        <textarea class="textarea" placeholder="Optional notes for this appointment…"></textarea>
+        <textarea class="textarea" id="bookNotes" placeholder="Optional notes for this appointment…"></textarea>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="bookAppointment()">Book Appointment</button>
+      <button class="btn btn-primary" id="bookBtn" onclick="bookAppointment()">Book Appointment</button>
     </div>
   </div>
 </div>
@@ -352,200 +387,322 @@
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-  /* ── API Config ── */
-  const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:3001'
-    : 'https://medibook-backend-production-dfb2.up.railway.app';
+// ─── Config ──────────────────────────────────────────────────────────────────
+const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:3001'
+  : '';
 
-  /* ── Auth Guard ── */
-  const token = localStorage.getItem('medibook_token');
-  if (!token) {
-    window.location.href = '/pages/login.html';
-    throw new Error('Not authenticated');
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+const token    = localStorage.getItem('medibook_token');
+const tenantId = localStorage.getItem('medibook_tenant_id');
+const userName = localStorage.getItem('medibook_user_name')    || 'Clinic Owner';
+const tenantName = localStorage.getItem('medibook_tenant_name') || 'My Clinic';
+
+if (!token || !tenantId) {
+  window.location.href = '/pages/login.html';
+}
+
+// Sidebar user info
+document.getElementById('userName').textContent = tenantName;
+document.getElementById('userAv').textContent   = tenantName.slice(0, 2).toUpperCase();
+document.getElementById('signOutBtn').addEventListener('click', e => {
+  e.preventDefault();
+  localStorage.clear();
+  window.location.href = '/pages/login.html';
+});
+
+// ─── API helper ───────────────────────────────────────────────────────────────
+async function apiFetch(path) {
+  const res = await fetch(`${API}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `HTTP ${res.status}`);
   }
+  return res.json();
+}
 
-  /* ── User State ── */
-  let userData = null;
+async function apiPost(path, body) {
+  const res = await fetch(`${API}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
 
-  /* ── Fetch User Data ── */
-  async function loadUserData() {
-    try {
-      const res = await fetch(`${API}/auth/me`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (!res.ok) {
-        // Token expired or invalid
-        localStorage.removeItem('token');
-        window.location.href = '/pages/login.html';
-        return;
-      }
-      
-      userData = await res.json();
-      updateUIWithUserData();
-    } catch (err) {
-      console.error('Failed to load user data:', err);
-      showToast('Error loading account data', '⚠️', 'error');
-    }
-  }
+// ─── Date helpers ─────────────────────────────────────────────────────────────
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 
-  /* ── Update UI with Real Data ── */
-  function updateUIWithUserData() {
-    if (!userData) return;
-    
-    // Update clinic name in sidebar
-    const clinicNameEl = document.querySelector('.user-name');
-    if (clinicNameEl) {
-      clinicNameEl.textContent = userData.tenant?.name || 'My Clinic';
-    }
-    
-    // Update user role
-    const roleEl = document.querySelector('.user-role');
-    if (roleEl) {
-      roleEl.textContent = userData.role || 'Clinic Owner';
-    }
-    
-    // Update avatar initials
-    const avatarEl = document.querySelector('.user-av');
-    if (avatarEl && userData.fullName) {
-      const initials = userData.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-      avatarEl.textContent = initials;
-    }
-    
-    // Update page title
-    document.title = `${userData.tenant?.name || 'Dashboard'} — MediBook`;
-  }
+function setTopbarDate() {
+  const d = new Date();
+  document.getElementById('topbarDate').textContent =
+    d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+}
 
-  /* ── Logout ── */
-  function logout() {
-    localStorage.removeItem('medibook_token');
-    localStorage.removeItem('medibook_tenant_id');
-    localStorage.removeItem('medibook_user_id');
-    localStorage.removeItem('medibook_user_name');
-    localStorage.removeItem('medibook_tenant_name');
-    window.location.href = '/pages/login.html';
-  }
+// ─── Status badge ─────────────────────────────────────────────────────────────
+const statusBadge = s => ({
+  'completed':   '<span class="badge badge-green">Completed</span>',
+  'in-progress': '<span class="badge badge-blue">In Progress</span>',
+  'confirmed':   '<span class="badge badge-brand">Confirmed</span>',
+  'cancelled':   '<span class="badge badge-gray">Cancelled</span>',
+  'no-show':     '<span class="badge badge-orange">No Show</span>',
+  'pending':     '<span class="badge badge-gray">Pending</span>',
+}[s] || `<span class="badge badge-gray">${s}</span>`);
 
-  /* ── Data ── */
-  const appointments = [
-    { time: '09:00', patient: 'Sophie Laurent',  service: 'Hydrafacial',      staff: 'Dr. Carter',  status: 'completed'   },
-    { time: '10:00', patient: 'James Mitchell',  service: 'Laser Treatment',  staff: 'Dr. Nair',    status: 'completed'   },
-    { time: '11:30', patient: 'Amara Kim',       service: 'Botox',            staff: 'Dr. Carter',  status: 'in-progress' },
-    { time: '14:00', patient: 'Oliver Webb',     service: 'Dermal Filler',    staff: 'Dr. Nair',    status: 'confirmed'   },
-    { time: '15:30', patient: 'Isabelle Dumont', service: 'Chemical Peel',    staff: 'Nina Ross',   status: 'confirmed'   },
-    { time: '17:00', patient: 'Mei Zhang',       service: 'Hydrafacial',      staff: 'Dr. Carter',  status: 'cancelled'   },
-  ];
+// ─── Render schedule ──────────────────────────────────────────────────────────
+function renderSchedule(appointments, stats) {
+  const el = document.getElementById('scheduleList');
+  const subtitle = document.getElementById('scheduleSubtitle');
+  const countBadge = document.getElementById('scheduleCount');
 
-  const staffOnDuty = [
-    { name: 'Dr. Emily Carter', role: 'Aesthetic Doctor',  status: 'busy',      color: '#0d9488' },
-    { name: 'Dr. Priya Nair',   role: 'Dermatologist',     status: 'available', color: '#16a34a' },
-    { name: 'Nina Ross',        role: 'Beauty Therapist',  status: 'available', color: '#16a34a' },
-  ];
+  const d = new Date();
+  subtitle.textContent = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  countBadge.textContent = `${stats.total} appointment${stats.total !== 1 ? 's' : ''}`;
 
-  const activity = [
-    { icon: '📅', desc: '<strong>Sophie Laurent</strong> booked a Hydrafacial for Mon 23 Feb',        time: '2 min ago',  bg: '#f0fdfa' },
-    { icon: '👤', desc: '<strong>Mei Zhang</strong> was added as a new client',                        time: '18 min ago', bg: '#eff6ff' },
-    { icon: '💳', desc: 'Payment of <strong>£280</strong> received from Amara Kim',                    time: '34 min ago', bg: '#f0fdf4' },
-    { icon: '📞', desc: 'AI Agent handled a call — booking made for <strong>Oliver Webb</strong>',     time: '51 min ago', bg: '#fff7ed' },
-    { icon: '✅', desc: '<strong>Laser Treatment</strong> completed for James Mitchell (10:00)',        time: '1 hr ago',   bg: '#f5f3ff' },
-  ];
-
-  /* ── Status badge helper ── */
-  const statusBadge = s => ({
-    'completed':   '<span class="badge badge-green">Completed</span>',
-    'in-progress': '<span class="badge badge-blue">In Progress</span>',
-    'confirmed':   '<span class="badge badge-brand">Confirmed</span>',
-    'cancelled':   '<span class="badge badge-gray">Cancelled</span>',
-  }[s] || s);
-
-  /* ── Render schedule ── */
-  function renderSchedule() {
-    const el = document.getElementById('scheduleList');
-    let html = '';
-    appointments.forEach((a, i) => {
-      if (i === 3) {
-        html += `<div class="schedule-break">
-          <div class="schedule-break-line"></div>
-          <span>Lunch Break 12:30–13:00</span>
-          <div class="schedule-break-line"></div>
-        </div>`;
-      }
-      html += `<div class="schedule-row">
-        <div class="schedule-time">${a.time}</div>
-        <div>
-          <div class="schedule-patient">${a.patient}</div>
-          <div class="schedule-service">${a.service}</div>
-        </div>
-        <div class="schedule-staff-name">${a.staff}</div>
-        <div>${statusBadge(a.status)}</div>
+  if (!appointments.length) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📅</div>
+        <div class="empty-state-title">No appointments today</div>
+        <div class="empty-state-sub">Click "New Booking" to add one</div>
       </div>`;
+    return;
+  }
+
+  let html = '';
+  let lunchInserted = false;
+  appointments.forEach((a, i) => {
+    // Insert lunch break marker between morning and afternoon appointments
+    if (!lunchInserted && a.time >= '13:00') {
+      lunchInserted = true;
+      html += `<div class="schedule-break">
+        <div class="schedule-break-line"></div>
+        <span>Lunch Break</span>
+        <div class="schedule-break-line"></div>
+      </div>`;
+    }
+    html += `<div class="schedule-row">
+      <div class="schedule-time">${a.time}</div>
+      <div>
+        <div class="schedule-patient">${escHtml(a.client.name)}</div>
+        <div class="schedule-service">${escHtml(a.service.name)}</div>
+      </div>
+      <div class="schedule-staff-name">${escHtml(a.staff.name)}</div>
+      <div>${statusBadge(a.status)}</div>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+// ─── Render stat cards ────────────────────────────────────────────────────────
+function renderStats(stats, ds) {
+  document.getElementById('statRevenue').textContent   = ds.todayRevenueFormatted;
+  document.getElementById('statRevenueMeta').innerHTML = `<span style="color:var(--text-muted)">${ds.appointmentsToday} completed</span>`;
+
+  document.getElementById('statAppts').textContent   = stats.total;
+  const remaining = stats.confirmed + stats.pending;
+  document.getElementById('statApptsMeta').innerHTML = `<span style="color:var(--text-muted)">${remaining} remaining</span>`;
+
+  document.getElementById('statClients').textContent   = ds.newClientsMonth;
+  document.getElementById('statClientsMeta').innerHTML = `<span style="color:var(--text-muted)">this month</span>`;
+
+  document.getElementById('statCalls').textContent   = ds.aiCallsToday;
+  document.getElementById('statCallsMeta').innerHTML = `<span style="color:var(--text-muted)">via AI agent</span>`;
+}
+
+// ─── Render staff ─────────────────────────────────────────────────────────────
+function renderStaff(staff, onlineCount) {
+  document.getElementById('staffOnlineCount').textContent = `${onlineCount} online`;
+
+  const el = document.getElementById('staffList');
+  if (!staff.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-title">No staff added yet</div></div>`;
+    return;
+  }
+
+  el.innerHTML = staff.map(s => {
+    const statusColor = s.isAvailable ? '#16a34a' : '#ea580c';
+    const initials = s.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const badge = s.currentlyWith
+      ? `<span class="badge badge-orange">With client</span>`
+      : s.isAvailable
+        ? `<span class="badge badge-green">Available</span>`
+        : `<span class="badge badge-gray">Off duty</span>`;
+    return `<div class="staff-row">
+      <div class="staff-dot" style="background:${statusColor};"></div>
+      <div style="width:32px;height:32px;border-radius:8px;background:${s.color}22;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${s.color};">
+        ${s.avatarUrl ? `<img src="${s.avatarUrl}" style="width:32px;height:32px;border-radius:8px;object-fit:cover;">` : initials}
+      </div>
+      <div class="staff-info">
+        <div class="staff-name">${escHtml(s.name)}</div>
+        <div class="staff-role-label">${s.currentlyWith ? `With ${escHtml(s.currentlyWith)}` : s.role}</div>
+      </div>
+      ${badge}
+    </div>`;
+  }).join('');
+}
+
+// ─── Render activity ──────────────────────────────────────────────────────────
+function renderActivity(activity) {
+  const el = document.getElementById('activityList');
+  if (!activity.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-title">No recent activity</div><div class="empty-state-sub">Activity will appear here as your clinic gets busy</div></div>`;
+    return;
+  }
+  el.innerHTML = activity.map(a => `
+    <div class="activity-row">
+      <div class="activity-icon" style="background:${a.bgColor ?? '#f9f7f4'};">${a.icon ?? '📌'}</div>
+      <div class="activity-body">
+        <div class="activity-desc">${a.description}</div>
+        <div class="activity-time">${a.timeAgo}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ─── Agent stats ──────────────────────────────────────────────────────────────
+function renderAgentStats(aiCallsToday) {
+  document.getElementById('agentCalls').textContent    = aiCallsToday;
+  document.getElementById('agentAvgLen').textContent   = '—';
+  document.getElementById('agentBookings').textContent = '—';
+  document.getElementById('agentRate').textContent     = aiCallsToday > 0 ? '—' : '0%';
+}
+
+// ─── Load all dashboard data ──────────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const [scheduleData, staffData, activityData] = await Promise.all([
+      apiFetch(`/api/tenants/${tenantId}/appointments/today`),
+      apiFetch(`/api/tenants/${tenantId}/staff/on-duty`),
+      apiFetch(`/api/tenants/${tenantId}/activity?limit=20`),
+    ]);
+
+    renderStats(scheduleData.stats, scheduleData.dashboardStats);
+    renderSchedule(scheduleData.appointments, scheduleData.stats);
+    renderStaff(staffData.staff, staffData.onlineCount);
+    renderActivity(activityData.activity);
+    renderAgentStats(scheduleData.dashboardStats.aiCallsToday);
+  } catch (err) {
+    console.error('Dashboard load error:', err);
+    showToast('Failed to load dashboard data. Please refresh.', '⚠️', 'error');
+    // Show empty states on error
+    renderSchedule([], { total: 0, confirmed: 0, pending: 0 });
+    renderStaff([], 0);
+    renderActivity([]);
+  }
+}
+
+// ─── Modal + booking ──────────────────────────────────────────────────────────
+let modalDataLoaded = false;
+
+async function openModal() {
+  document.getElementById('bookingModal').classList.add('open');
+  // Set date to today
+  document.getElementById('bookDate').value = todayISO();
+
+  if (!modalDataLoaded) {
+    try {
+      const { services, staff } = await apiFetch(`/api/tenants/${tenantId}/modal-data`);
+
+      const svcSel = document.getElementById('bookService');
+      if (services.length) {
+        svcSel.innerHTML = services.map(s =>
+          `<option value="${s.id}">${escHtml(s.name)} (${s.durationMins} min · £${(s.priceCents/100).toFixed(0)})</option>`
+        ).join('');
+      } else {
+        svcSel.innerHTML = '<option value="">No services configured</option>';
+      }
+
+      const staffSel = document.getElementById('bookStaff');
+      if (staff.length) {
+        staffSel.innerHTML = staff.map(s =>
+          `<option value="${s.id}">${escHtml(s.name)}</option>`
+        ).join('');
+      } else {
+        staffSel.innerHTML = '<option value="">No staff configured</option>';
+      }
+
+      modalDataLoaded = true;
+    } catch {
+      showToast('Could not load services/staff. Check your settings.', '⚠️', 'error');
+    }
+  }
+}
+
+function closeModal() {
+  document.getElementById('bookingModal').classList.remove('open');
+}
+
+async function bookAppointment() {
+  const clientName  = document.getElementById('bookClientName').value.trim();
+  const clientPhone = document.getElementById('bookClientPhone').value.trim();
+  const serviceId   = document.getElementById('bookService').value;
+  const staffId     = document.getElementById('bookStaff').value;
+  const date        = document.getElementById('bookDate').value;
+  const time        = document.getElementById('bookTime').value;
+  const notes       = document.getElementById('bookNotes').value.trim();
+
+  if (!clientName) { showToast('Please enter the client name.', '⚠️', 'error'); return; }
+  if (!serviceId)  { showToast('Please select a service.', '⚠️', 'error'); return; }
+  if (!staffId)    { showToast('Please select a staff member.', '⚠️', 'error'); return; }
+  if (!date)       { showToast('Please select a date.', '⚠️', 'error'); return; }
+
+  const btn = document.getElementById('bookBtn');
+  btn.disabled = true;
+  btn.textContent = 'Booking…';
+
+  try {
+    await apiPost(`/api/tenants/${tenantId}/appointments`, {
+      clientName, clientPhone, serviceId, staffId, date, time, notes,
     });
-    el.innerHTML = html;
-  }
-
-  /* ── Render staff ── */
-  function renderStaff() {
-    const el = document.getElementById('staffList');
-    el.innerHTML = staffOnDuty.map(s => `
-      <div class="staff-row">
-        <div class="staff-dot" style="background:${s.color};"></div>
-        <div style="width:32px;height:32px;border-radius:8px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-muted);">${s.name.split(' ').map(w=>w[0]).join('')}</div>
-        <div class="staff-info">
-          <div class="staff-name">${s.name}</div>
-          <div class="staff-role-label">${s.role}</div>
-        </div>
-        <span class="badge ${s.status === 'busy' ? 'badge-orange' : 'badge-green'}">${s.status === 'busy' ? 'Busy' : 'Available'}</span>
-      </div>`).join('');
-  }
-
-  /* ── Render activity ── */
-  function renderActivity() {
-    const el = document.getElementById('activityList');
-    el.innerHTML = activity.map(a => `
-      <div class="activity-row">
-        <div class="activity-icon" style="background:${a.bg};">${a.icon}</div>
-        <div class="activity-body">
-          <div class="activity-desc">${a.desc}</div>
-          <div class="activity-time">${a.time}</div>
-        </div>
-      </div>`).join('');
-  }
-
-  /* ── Date in topbar ── */
-  function setDate() {
-    const d = new Date(2026, 1, 22);
-    document.getElementById('topbarDate').textContent = d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'short', year:'numeric' });
-  }
-
-  /* ── Toast ── */
-  function showToast(msg, icon='✅', type='') {
-    const wrap = document.getElementById('toastWrap');
-    const t = document.createElement('div');
-    t.className = `toast ${type}`;
-    t.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-content"><div class="toast-title">${msg}</div></div>`;
-    wrap.appendChild(t);
-    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
-    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }, 3500);
-  }
-
-  /* ── Modal ── */
-  function openModal() { document.getElementById('bookingModal').classList.add('open'); }
-  function closeModal() { document.getElementById('bookingModal').classList.remove('open'); }
-  function bookAppointment() {
     closeModal();
     showToast('Appointment booked successfully!', '📅', 'success');
+    // Clear form
+    ['bookClientName','bookClientPhone','bookNotes'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    // Reload data to reflect new booking
+    loadDashboard();
+  } catch (err) {
+    showToast(err.message || 'Failed to book appointment.', '❌', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Book Appointment';
   }
-  document.getElementById('bookingModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+}
 
-  /* ── Init ── */
-  loadUserData(); // Load real user data first
-  renderSchedule();
-  renderStaff();
-  renderActivity();
-  setDate();
+document.getElementById('bookingModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function showToast(msg, icon = '✅', type = '') {
+  const wrap = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-content"><div class="toast-title">${msg}</div></div>`;
+  wrap.appendChild(t);
+  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }, 3500);
+}
+
+// ─── Security helper ──────────────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+setTopbarDate();
+loadDashboard();
 </script>
 </body>
 </html>
-// Deploy trigger: Mon Feb 23 18:17:35 PST 2026
-<!-- Deploy: Mon Feb 23 21:15:41 PST 2026 -->
-<!-- Deploy: Mon Feb 23 21:21:11 PST 2026 -->

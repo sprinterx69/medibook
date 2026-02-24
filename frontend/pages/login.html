@@ -119,7 +119,7 @@ input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,144,58,0.12)}
 <script>
 const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   ? 'http://localhost:3001'
-  : 'https://medibook-backend-production-dfb2.up.railway.app';
+  : '';
 
 async function submitLogin() {
   const email    = document.getElementById('loginEmail').value.trim();
