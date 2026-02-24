@@ -1,5 +1,4 @@
 // ─────────────────────────────────────────────────────────────────────────────
-import { prisma } from '../config/prisma.js';
 // services/phone-numbers.js
 //
 // Twilio phone number provisioning for MediBook tenants.
@@ -14,14 +13,20 @@ import { prisma } from '../config/prisma.js';
 //   ENTERPRISE → unlimited (-1)
 // ─────────────────────────────────────────────────────────────────────────────
 
-
+import { prisma } from '../config/prisma.js';
 import twilio from 'twilio';
 
-
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+// Lazy-load Twilio client to ensure env vars are loaded
+let twilioClient;
+function getTwilio() {
+  if (!twilioClient) {
+    twilioClient = twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    );
+  }
+  return twilioClient;
+}
 
 const PHONE_LIMITS = { STARTER: 0, PRO: 1, ENTERPRISE: -1 };
 
@@ -59,7 +64,7 @@ export async function searchAvailableNumbers(country = 'GB', areaCode = null) {
   if (areaCode) params.areaCode = areaCode;
 
   try {
-    const results = await twilioClient
+    const results = await getTwilio()
       .availablePhoneNumbers(country)
       .local
       .list(params);
@@ -107,7 +112,7 @@ export async function purchaseNumber(tenantId, phoneNumber) {
   // Buy from Twilio and configure webhooks
   let purchased;
   try {
-    purchased = await twilioClient.incomingPhoneNumbers.create({
+    purchased = await getTwilio().incomingPhoneNumbers.create({
       phoneNumber,
       voiceUrl:              `${process.env.PUBLIC_URL}/voice/inbound`,
       voiceMethod:           'POST',
@@ -149,7 +154,7 @@ export async function releaseNumber(tenantId, phoneNumber) {
   // Remove from Twilio (best-effort — may already be released)
   if (settings.voiceAgentPhoneSid) {
     try {
-      await twilioClient.incomingPhoneNumbers(settings.voiceAgentPhoneSid).remove();
+      await getTwilio().incomingPhoneNumbers(settings.voiceAgentPhoneSid).remove();
     } catch (err) {
       console.error('Twilio release warning:', err.message);
     }
