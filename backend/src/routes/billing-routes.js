@@ -13,7 +13,7 @@ import {
   reactivateSubscription,
   listInvoices,
   handleStripeWebhook,
-} from './billing.js';
+} from '../services/billing.js';
 
 export async function billingRoutes(fastify) {
 

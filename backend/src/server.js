@@ -12,8 +12,11 @@ import corsPlugin from '@fastify/cors';
 import { inboundCallHandler } from './handlers/inbound-call.js';
 import { mediaStreamHandler } from './handlers/media-stream.js';
 import { statusCallbackHandler } from './handlers/status-callback.js';
+import jwtPlugin from '@fastify/jwt';
 import agentRoutes from './routes/agent-routes.js';
 import phoneRoutes from './routes/phone-routes.js';
+import authRoutes from './routes/auth-routes.js';
+import { billingRoutes } from './routes/billing-routes.js';
 
 const server = Fastify({
   logger: {
@@ -37,6 +40,20 @@ await server.register(corsPlugin, {
   credentials: true,
 });
 
+// ─── JWT ───────────────────────────────────────────────────────────────────────
+await server.register(jwtPlugin, {
+  secret: process.env.JWT_SECRET || 'medibook-dev-secret-change-in-production',
+});
+
+// Reusable auth preHandler — call fastify.authenticate on protected routes
+server.decorate('authenticate', async (request, reply) => {
+  try {
+    await request.jwtVerify();
+  } catch {
+    reply.code(401).send({ error: 'Unauthorized' });
+  }
+});
+
 // ─── API Content-Type ─────────────────────────────────────────────────────────
 // Parse JSON bodies for API routes
 server.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => {
@@ -44,8 +61,10 @@ server.addContentTypeParser('application/json', { parseAs: 'string' }, (req, bod
 });
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
+await server.register(authRoutes);
 await server.register(agentRoutes);
 await server.register(phoneRoutes);
+await server.register(billingRoutes, { prefix: '/billing' });
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 server.get('/health', async () => ({

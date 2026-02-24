@@ -1,0 +1,74 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// services/email.js
+//
+// Thin wrapper around the Resend REST API for transactional emails.
+// Falls back to console.log if RESEND_API_KEY is not set (development).
+// ─────────────────────────────────────────────────────────────────────────────
+
+const FROM = process.env.FROM_EMAIL || 'MediBook <hello@medibook.io>';
+
+async function send({ to, subject, html }) {
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[EMAIL STUB] To: ${to} | Subject: ${subject}`);
+    console.log('[EMAIL STUB] (set RESEND_API_KEY to send real emails)');
+    return;
+  }
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ from: FROM, to, subject, html }),
+  });
+
+  if (!res.ok) {
+    const msg = await res.text();
+    console.error('[EMAIL] Resend error:', msg);
+  }
+}
+
+// ─── Verification email ────────────────────────────────────────────────────────
+export async function sendVerificationEmail({ to, fullName, code }) {
+  await send({
+    to,
+    subject: `${code} is your MediBook verification code`,
+    html: `
+      <div style="font-family:'Segoe UI',sans-serif;max-width:520px;margin:0 auto;background:#faf7f2;padding:40px 32px;border-radius:12px">
+        <div style="font-family:Georgia,serif;font-size:26px;color:#0f1419;margin-bottom:8px">Medi<span style="color:#c9903a">Book</span></div>
+        <h2 style="font-size:22px;color:#0f1419;margin:24px 0 8px">Hi ${fullName} 👋</h2>
+        <p style="color:#5a6474;font-size:15px;line-height:1.7">Thanks for signing up. Enter this code to verify your email address:</p>
+        <div style="text-align:center;margin:32px 0;padding:28px;background:#ffffff;border-radius:10px;border:1px solid #e8edf2">
+          <span style="font-size:42px;font-weight:700;letter-spacing:12px;color:#c9903a;font-family:monospace">${code}</span>
+          <div style="font-size:12px;color:#8896a8;margin-top:10px">Expires in 24 hours</div>
+        </div>
+        <p style="color:#8896a8;font-size:13px;line-height:1.6">If you didn't sign up for MediBook, you can safely ignore this email.</p>
+      </div>
+    `,
+  });
+}
+
+// ─── Welcome email (after trial starts) ───────────────────────────────────────
+export async function sendWelcomeEmail({ to, fullName, tenantName, dashboardUrl }) {
+  await send({
+    to,
+    subject: `Welcome to MediBook, ${fullName}! Your 30-day trial has started`,
+    html: `
+      <div style="font-family:'Segoe UI',sans-serif;max-width:520px;margin:0 auto;background:#faf7f2;padding:40px 32px;border-radius:12px">
+        <div style="font-family:Georgia,serif;font-size:26px;color:#0f1419;margin-bottom:8px">Medi<span style="color:#c9903a">Book</span></div>
+        <h2 style="font-size:22px;color:#0f1419;margin:24px 0 8px">Welcome, ${fullName}! 🎉</h2>
+        <p style="color:#5a6474;font-size:15px;line-height:1.7">Your <strong>${tenantName}</strong> account is live. Your 30-day free trial has started — no charges until your trial ends.</p>
+        <p style="margin:28px 0">
+          <a href="${dashboardUrl}" style="background:#c9903a;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block">Open your dashboard →</a>
+        </p>
+        <ul style="color:#5a6474;font-size:14px;line-height:2;padding-left:20px">
+          <li>Add your services and team members</li>
+          <li>Set up your AI voice receptionist</li>
+          <li>Share your booking link with clients</li>
+        </ul>
+        <p style="color:#8896a8;font-size:13px;margin-top:28px;line-height:1.6">Cancel anytime during your trial and you won't be charged. Questions? Reply to this email.</p>
+      </div>
+    `,
+  });
+}
