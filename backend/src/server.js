@@ -55,29 +55,29 @@ server.decorate('authenticate', async (request, reply) => {
 });
 
 // ─── Stripe Webhook (raw body) ────────────────────────────────────────────────
-// Must be registered BEFORE global JSON parser
+// Use preParsing hook to capture raw body for Stripe signature verification
 import { handleStripeWebhook } from './services/billing.js';
-server.addContentTypeParser(
-  'application/json',
-  { parseAs: 'buffer', bodyLimit: 1024 * 1024 },
-  async (req, body) => body
-);
+server.addHook('preParsing', async (request, reply, payload) => {
+  if (request.url === '/billing/webhooks') {
+    const chunks = [];
+    for await (const chunk of payload) {
+      chunks.push(chunk);
+    }
+    request.rawBody = Buffer.concat(chunks);
+    // Return empty payload since we'll use rawBody
+    return null;
+  }
+});
 server.post('/billing/webhooks', async (request, reply) => {
   const signature = request.headers['stripe-signature'];
   if (!signature) return reply.code(400).send({ error: 'Missing stripe-signature' });
   try {
-    const result = await handleStripeWebhook(request.body, signature);
+    const result = await handleStripeWebhook(request.rawBody, signature);
     return reply.code(200).send(result);
   } catch (err) {
     request.log.error({ err }, 'Webhook error');
     return reply.code(400).send({ error: err.message });
   }
-});
-
-// ─── API Content-Type ─────────────────────────────────────────────────────────
-// Parse JSON bodies for API routes
-server.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => {
-  try { done(null, JSON.parse(body)); } catch (err) { done(err); }
 });
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
