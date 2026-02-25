@@ -3,77 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Payments — MediBook</title>
+  <title>Payments — Callora</title>
   <link rel="stylesheet" href="./styles.css" />
   <style>
-    /* ── Payments page ── */
-
-    /* Revenue chart */
-    .chart-card { margin-bottom: 24px; }
     .chart-area { padding: 24px 20px 8px; }
     .chart-bars { display: flex; align-items: flex-end; gap: 10px; height: 140px; }
     .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
     .chart-bar-inner { width: 100%; position: relative; display: flex; align-items: flex-end; }
-    .chart-bar {
-      width: 100%;
-      border-radius: 5px 5px 0 0;
-      background: var(--brand-dim);
-      border-top: 3px solid var(--brand);
-      position: relative;
-      transition: filter 0.15s;
-      cursor: pointer;
-    }
+    .chart-bar { width: 100%; border-radius: 5px 5px 0 0; background: var(--brand-dim); border-top: 3px solid var(--brand); position: relative; transition: filter 0.15s; cursor: pointer; }
     .chart-bar:hover { filter: brightness(0.94); }
     .chart-bar.highlight { background: var(--brand); border-color: var(--brand-hover); }
-    .chart-bar.highlight .bar-value { color: #fff; }
-    .bar-value {
-      position: absolute;
-      top: -20px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 10.5px;
-      font-weight: 700;
-      color: var(--text-muted);
-      white-space: nowrap;
-      opacity: 0;
-      transition: opacity 0.15s;
-    }
-    .chart-bar:hover .bar-value { opacity: 1; }
-    .chart-bar.highlight .bar-value { opacity: 1; }
+    .bar-value { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 10.5px; font-weight: 700; color: var(--text-muted); white-space: nowrap; opacity: 0; transition: opacity 0.15s; }
+    .chart-bar:hover .bar-value, .chart-bar.highlight .bar-value { opacity: 1; }
     .bar-label { font-size: 11px; color: var(--text-light); font-weight: 500; text-align: center; }
     .chart-y-axis { display: flex; flex-direction: column; justify-content: space-between; height: 140px; padding: 0 8px 6px 0; }
     .chart-y-label { font-size: 10.5px; color: var(--text-light); text-align: right; white-space: nowrap; }
     .chart-outer { display: flex; align-items: flex-end; }
-    .chart-legend { display: flex; align-items: center; gap: 16px; padding: 0 20px 16px; }
-    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
-    .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
-
-    /* Two col below chart */
     .payments-lower { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
     @media (max-width: 1000px) { .payments-lower { grid-template-columns: 1fr; } }
-
-    /* Service breakdown */
     .breakdown-row { display: grid; grid-template-columns: 1fr 90px 80px 80px; align-items: center; gap: 8px; padding: 11px 20px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
     .breakdown-row:last-child { border-bottom: none; }
     .breakdown-row:hover { background: var(--surface-2); }
     .breakdown-bar-wrap { width: 100%; height: 5px; background: var(--surface-3); border-radius: 3px; margin-top: 4px; }
     .breakdown-bar { height: 5px; border-radius: 3px; background: var(--brand); }
-
-    /* Transaction tabs */
-    .txn-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 20px; }
-    .txn-tab {
-      padding: 11px 14px; font-size: 13px; font-weight: 500;
-      color: var(--text-muted); cursor: pointer; border: none; background: none;
-      font-family: inherit; border-bottom: 2px solid transparent; margin-bottom: -1px;
-      white-space: nowrap; transition: color 0.15s, border-color 0.15s;
-      display: flex; align-items: center; gap: 6px;
-    }
+    .txn-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 20px; }
+    .txn-tab { padding: 11px 14px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; border: none; background: none; font-family: inherit; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: color 0.15s, border-color 0.15s; display: flex; align-items: center; gap: 6px; }
     .txn-tab:hover { color: var(--text-2); }
     .txn-tab.active { color: var(--brand-text); border-bottom-color: var(--brand); font-weight: 600; }
     .txn-count { font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: var(--surface-3); color: var(--text-muted); }
     .txn-tab.active .txn-count { background: var(--brand-dim); color: var(--brand-text); }
-
-    /* Recent transactions list */
     .txn-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border); transition: background 0.1s; }
     .txn-item:last-child { border-bottom: none; }
     .txn-item:hover { background: var(--surface-2); }
@@ -82,405 +40,208 @@
     .txn-client { font-size: 13.5px; font-weight: 600; color: var(--text); }
     .txn-service { font-size: 12px; color: var(--text-muted); }
     .txn-amount { font-size: 15px; font-weight: 700; color: var(--text); }
-    .txn-date { font-size: 11.5px; color: var(--text-light); }
-
-    /* Date range picker display */
-    .date-range-btn { display: flex; align-items: center; gap: 6px; padding: 0 14px; height: 36px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); font-family: inherit; font-size: 13px; font-weight: 500; color: var(--text-2); cursor: pointer; }
-    .date-range-btn:hover { background: var(--surface-2); border-color: var(--border-strong); }
-
-    /* Full transaction table */
-    .action-link { color: var(--brand-text); font-weight: 600; font-size: 12.5px; text-decoration: none; cursor: pointer; background: none; border: none; font-family: inherit; }
+    .action-link { color: var(--brand-text); font-weight: 600; font-size: 12.5px; cursor: pointer; background: none; border: none; font-family: inherit; text-decoration: none; }
     .action-link:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
 <div class="app-shell">
-
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-mark">M</div>
-      <span class="logo-text">MediBook</span>
+      <div class="logo-mark">C</div>
+      <span class="logo-text">Callora</span>
     </div>
     <div class="sidebar-scroll">
       <div class="nav-section">Main</div>
       <a href="dashboard.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <rect x="1" y="1" width="6" height="6" rx="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.2"/>
-          <rect x="1" y="9" width="6" height="6" rx="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.2"/>
-        </svg>
-        Dashboard
-      </a>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="6" height="6" rx="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.2"/><rect x="1" y="9" width="6" height="6" rx="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.2"/></svg>Dashboard</a>
       <a href="calendar.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/>
-          <path d="M5 1v3M11 1v3M1.5 6.5h13"/>
-        </svg>
-        Calendar
-      </a>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M5 1v3M11 1v3M1.5 6.5h13"/></svg>Calendar</a>
       <a href="clients.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="6" cy="5" r="2.5"/><path d="M1 13.5c0-2.485 2.239-4.5 5-4.5s5 2.015 5 4.5"/>
-          <circle cx="12" cy="5" r="2"/><path d="M14.5 13c0-1.8-1.12-3.34-2.75-4"/>
-        </svg>
-        Clients
-      </a>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="5" r="2.5"/><path d="M1 13.5c0-2.485 2.239-4.5 5-4.5s5 2.015 5 4.5"/><circle cx="12" cy="5" r="2"/><path d="M14.5 13c0-1.8-1.12-3.34-2.75-4"/></svg>Clients</a>
       <a href="payments.html" class="nav-item active">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <rect x="1" y="3.5" width="14" height="10" rx="1.5"/>
-          <path d="M1 7h14"/>
-        </svg>
-        Payments
-      </a>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="3.5" width="14" height="10" rx="1.5"/><path d="M1 7h14"/></svg>Payments</a>
       <a href="staff.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="8" cy="5.5" r="3"/><path d="M2 13.5c0-2.761 2.686-5 6-5s6 2.239 6 5"/>
-        </svg>
-        Staff
-      </a>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="5.5" r="3"/><path d="M2 13.5c0-2.761 2.686-5 6-5s6 2.239 6 5"/></svg>Staff</a>
       <div class="nav-section">Tools</div>
       <a href="agent.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/>
-        </svg>
-        AI Agent
-        <span class="nav-badge green">Live</span>
-      </a>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/></svg>AI Agent<span class="nav-badge green">Live</span></a>
       <a href="settings.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="8" cy="8" r="2.2"/>
-          <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M2.697 2.697l1.06 1.06M12.243 12.243l1.06 1.06M13.303 2.697l-1.06 1.06M3.757 12.243l-1.06 1.06"/>
-        </svg>
-        Settings
-      </a>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="2.2"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M2.697 2.697l1.06 1.06M12.243 12.243l1.06 1.06M13.303 2.697l-1.06 1.06M3.757 12.243l-1.06 1.06"/></svg>Settings</a>
     </div>
     <div class="sidebar-footer">
       <div class="user-card">
-        <div class="user-av">LC</div>
-        <div>
-          <div class="user-name">Lumière Clinic</div>
-          <div class="user-role">Clinic Owner</div>
-        </div>
+        <div class="user-av" id="sidebarAv">—</div>
+        <div><div class="user-name" id="sidebarName">Loading…</div><div class="user-role">Clinic Owner</div></div>
       </div>
-      <a href="#" style="display:block;text-align:center;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 0;margin-top:2px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">Sign out</a>
+      <a href="#" id="signOutBtn" style="display:block;text-align:center;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 0;margin-top:2px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">Sign out</a>
     </div>
   </aside>
 
-  <!-- MAIN -->
   <div class="main">
-    <!-- TOPBAR -->
     <header class="topbar">
-      <div class="topbar-left">
-        <span class="page-title">Payments</span>
-        <div style="width:1px;height:22px;background:var(--border);margin:0 4px;"></div>
-        <button class="date-range-btn" onclick="showToast('Date range picker coming soon','📅')">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M5 1v3M11 1v3M1.5 6.5h13"/></svg>
-          Feb 1–22, 2026
-          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
-        </button>
-      </div>
+      <div class="topbar-left"><span class="page-title">Payments</span></div>
       <div class="topbar-right">
         <button class="btn btn-secondary" onclick="exportCSV()">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 10v2.5A1.5 1.5 0 0112.5 14h-9A1.5 1.5 0 012 12.5V10"/><path d="M8 2v8M5 7l3 3 3-3"/></svg>
-          Export CSV
-        </button>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 10v2.5A1.5 1.5 0 0112.5 14h-9A1.5 1.5 0 012 12.5V10"/><path d="M8 2v8M5 7l3 3 3-3"/></svg>Export CSV</button>
       </div>
     </header>
 
-    <!-- CONTENT -->
     <main class="content">
+      <div class="stat-grid" id="statsGrid"></div>
 
-      <!-- STAT CARDS -->
-      <div class="stat-grid">
-        <div class="stat-card">
-          <div class="stat-icon" style="background:#f0fdfa;">
-            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#0d9488" stroke-width="1.7"><path d="M8 2v12M5 5h4.5a2 2 0 010 4H5m0-4v4m0 0H9"/></svg>
-          </div>
-          <div class="stat-label">Revenue This Month</div>
-          <div class="stat-value">£8,460</div>
-          <div class="stat-meta"><span class="stat-up">↑ 12%</span> vs Jan</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="background:#fef2f2;">
-            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#dc2626" stroke-width="1.7"><path d="M8 2v4M8 10v4M2 8h4M10 8h4"/></svg>
-          </div>
-          <div class="stat-label">Outstanding Balance</div>
-          <div class="stat-value">£420</div>
-          <div class="stat-meta"><span style="color:var(--red);">2 invoices</span> pending</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="background:#eff6ff;">
-            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#2563eb" stroke-width="1.7"><rect x="1" y="3.5" width="14" height="10" rx="1.5"/><path d="M1 7h14"/></svg>
-          </div>
-          <div class="stat-label">Avg. Transaction</div>
-          <div class="stat-value">£195</div>
-          <div class="stat-meta"><span class="stat-up">↑ £12</span> vs last month</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="background:#fff7ed;">
-            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#ea580c" stroke-width="1.7"><path d="M8 3v10M3 6h10M3 10h10"/></svg>
-          </div>
-          <div class="stat-label">Refunds This Month</div>
-          <div class="stat-value">£180</div>
-          <div class="stat-meta"><span style="color:var(--text-muted);">1 refund</span></div>
-        </div>
-      </div>
-
-      <!-- REVENUE CHART -->
-      <div class="card chart-card">
+      <div class="card" style="margin-bottom:24px;">
         <div class="card-header">
-          <div>
-            <div class="card-title">Revenue — Last 8 Weeks</div>
-            <div class="card-subtitle">Weekly totals, Feb 22 is partial (current week)</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span class="badge badge-green badge-dot">+12% MTD</span>
-          </div>
+          <div><div class="card-title">Revenue — Last 8 Weeks</div><div class="card-subtitle" id="chartSub">Loading…</div></div>
+          <span class="badge badge-green" id="changeBadge"></span>
         </div>
         <div class="chart-area">
           <div class="chart-outer">
-            <div class="chart-y-axis">
-              <div class="chart-y-label">£4k</div>
-              <div class="chart-y-label">£3k</div>
-              <div class="chart-y-label">£2k</div>
-              <div class="chart-y-label">£1k</div>
-              <div class="chart-y-label">£0</div>
-            </div>
-            <div class="chart-bars" id="chartBars"></div>
+            <div class="chart-y-axis" id="yAxis"></div>
+            <div class="chart-bars" id="chartBars"><div style="color:var(--text-muted);font-size:13px;padding:20px;">Loading chart…</div></div>
           </div>
         </div>
-        <div class="chart-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:var(--brand);"></div> Weekly revenue</div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--brand-dim);border:1px solid var(--brand);"></div> Previous weeks</div>
+        <div style="display:flex;align-items:center;gap:16px;padding:0 20px 16px;font-size:12px;color:var(--text-muted);">
+          <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:3px;background:var(--brand);"></div>Current week</div>
+          <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:3px;background:var(--brand-dim);border:1px solid var(--brand);"></div>Previous weeks</div>
         </div>
       </div>
 
-      <!-- TWO COLUMNS -->
       <div class="payments-lower">
-        <!-- Service breakdown -->
         <div class="card">
-          <div class="card-header">
-            <div class="card-title">Revenue by Service</div>
-            <span style="font-size:12px;color:var(--text-muted);">Feb 2026</span>
-          </div>
-          <div id="serviceBreakdown"></div>
+          <div class="card-header"><div class="card-title">Revenue by Service</div><span style="font-size:12px;color:var(--text-muted)">This month</span></div>
+          <div id="serviceBreakdown"><div style="padding:20px;text-align:center;color:var(--text-muted)">Loading…</div></div>
         </div>
-
-        <!-- Recent transactions -->
         <div class="card">
           <div class="txn-tabs">
-            <button class="txn-tab active" onclick="filterTxnList('all',this)">All <span class="txn-count" id="cnt-all">8</span></button>
-            <button class="txn-tab" onclick="filterTxnList('paid',this)">Paid <span class="txn-count" id="cnt-paid">5</span></button>
-            <button class="txn-tab" onclick="filterTxnList('pending',this)">Pending <span class="txn-count" id="cnt-pending">2</span></button>
-            <button class="txn-tab" onclick="filterTxnList('refunded',this)">Refunded <span class="txn-count" id="cnt-refunded">1</span></button>
+            <button class="txn-tab active" onclick="filterTxns('all',this)">All <span class="txn-count" id="cnt-all">—</span></button>
+            <button class="txn-tab" onclick="filterTxns('paid',this)">Paid <span class="txn-count" id="cnt-paid">—</span></button>
+            <button class="txn-tab" onclick="filterTxns('pending',this)">Pending <span class="txn-count" id="cnt-pending">—</span></button>
+            <button class="txn-tab" onclick="filterTxns('refunded',this)">Refunded <span class="txn-count" id="cnt-refunded">—</span></button>
           </div>
-          <div id="recentTxnList"></div>
+          <div id="recentTxnList"><div style="padding:20px;text-align:center;color:var(--text-muted)">Loading…</div></div>
         </div>
       </div>
 
-      <!-- FULL TRANSACTION TABLE -->
       <div class="card">
         <div class="card-header">
           <div class="card-title">All Transactions</div>
           <div style="display:flex;align-items:center;gap:8px;">
             <div class="search-wrap" style="width:200px;">
               <svg class="search-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
-              <input class="search-input" style="height:32px;font-size:12.5px;" placeholder="Search…" oninput="filterFullTable(this.value)" />
+              <input class="search-input" style="height:32px;font-size:12.5px;" placeholder="Search…" oninput="filterTable(this.value)" />
             </div>
           </div>
         </div>
         <div class="table-wrap" style="border:none;border-radius:0 0 var(--radius-lg) var(--radius-lg);">
           <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Client</th>
-                <th>Service</th>
-                <th>Amount</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="fullTxnTableBody"></tbody>
+            <thead><tr><th>Date</th><th>Client</th><th>Service</th><th>Amount</th><th>Type</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="fullTableBody"><tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text-muted)">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
-
     </main>
   </div>
 </div>
-
-<!-- TOAST -->
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-  /* ── Chart data ── */
-  const weeklyRevenue = [
-    { label: 'Jan 5',  value: 2840 },
-    { label: 'Jan 12', value: 3120 },
-    { label: 'Jan 19', value: 2690 },
-    { label: 'Jan 26', value: 3450 },
-    { label: 'Feb 2',  value: 3800 },
-    { label: 'Feb 9',  value: 2950 },
-    { label: 'Feb 16', value: 3710 },
-    { label: 'Feb 22', value: 1240, current: true },
-  ];
+const API    = (location.hostname==='localhost'||location.hostname==='127.0.0.1')?'http://localhost:3001':'https://medibook-backend-production-dfb2.up.railway.app';
+const TOKEN  = localStorage.getItem('medibook_token');
+const TENANT = localStorage.getItem('medibook_tenant_id');
+if(!TOKEN||!TENANT){location.href='../pages/login.html';}
+document.getElementById('signOutBtn').addEventListener('click',()=>{localStorage.clear();location.href='../pages/login.html';});
+const CN=localStorage.getItem('medibook_clinic_name')??'Callora';
+document.getElementById('sidebarName').textContent=CN;
+document.getElementById('sidebarAv').textContent=CN.slice(0,2).toUpperCase();
 
-  /* ── Service breakdown ── */
-  const services = [
-    { name: 'Laser Treatment', revenue: 2800, txns: 10, avg: 280 },
-    { name: 'Dermal Filler',   revenue: 2250, txns: 5,  avg: 450 },
-    { name: 'Botox',           revenue: 1750, txns: 5,  avg: 350 },
-    { name: 'Hydrafacial',     revenue: 960,  txns: 6,  avg: 160 },
-    { name: 'Chemical Peel',   revenue: 480,  txns: 4,  avg: 120 },
-    { name: 'Consultation',    revenue: 220,  txns: 2,  avg: 80  },
-  ];
+let allPay=[],curFilter='all',tQuery='';
 
-  /* ── Transaction data ── */
-  const transactions = [
-    { date:'22 Feb', client:'Amara Kim',       service:'Botox',           amount:350, type:'Full',    status:'paid',     icon:'💳', bg:'#f0fdf4' },
-    { date:'20 Feb', client:'Mei Zhang',        service:'Hydrafacial',     amount:160, type:'Full',    status:'paid',     icon:'💳', bg:'#f0fdf4' },
-    { date:'19 Feb', client:'Sophie Laurent',   service:'Chemical Peel',   amount:120, type:'Full',    status:'paid',     icon:'💳', bg:'#f0fdf4' },
-    { date:'15 Feb', client:'James Mitchell',   service:'Laser Treatment', amount:280, type:'Full',    status:'paid',     icon:'💳', bg:'#f0fdf4' },
-    { date:'12 Feb', client:'Carlos Vega',      service:'Laser Treatment', amount:280, type:'Full',    status:'paid',     icon:'💳', bg:'#f0fdf4' },
-    { date:'10 Feb', client:'Oliver Webb',      service:'Dermal Filler',   amount:200, type:'Deposit', status:'pending',  icon:'🕐', bg:'#fffbeb' },
-    { date:'5 Feb',  client:'Raj Sharma',       service:'Consultation',    amount:220, type:'Full',    status:'pending',  icon:'🕐', bg:'#fffbeb' },
-    { date:'2 Feb',  client:'Isabelle Dumont',  service:'Hydrafacial',     amount:180, type:'Full',    status:'refunded', icon:'↩️', bg:'#fef2f2' },
-  ];
+async function apiFetch(p){const r=await fetch(API+p,{headers:{Authorization:`Bearer ${TOKEN}`}});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error??'API error');}return r.json();}
+async function apiPatch(p){const r=await fetch(API+p,{method:'PATCH',headers:{Authorization:`Bearer ${TOKEN}`}});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error??'API error');}return r.json();}
 
-  let txnFilter = 'all';
-  let tableSearchQuery = '';
+async function loadAll(){
+  try{
+    const[stats,weekly,bkdn,pay]=await Promise.all([
+      apiFetch(`/api/tenants/${TENANT}/payments/stats`),
+      apiFetch(`/api/tenants/${TENANT}/payments/weekly`),
+      apiFetch(`/api/tenants/${TENANT}/payments/by-service`),
+      apiFetch(`/api/tenants/${TENANT}/payments`),
+    ]);
+    renderStats(stats);renderChart(weekly.weeks);renderBreakdown(bkdn.breakdown);
+    allPay=pay.payments;updateCounts();renderTxnList();renderTable();
+  }catch(err){showToast('Could not load payment data');}
+}
 
-  /* ── Render chart ── */
-  function renderChart() {
-    const maxVal = Math.max(...weeklyRevenue.map(w => w.value));
-    const container = document.getElementById('chartBars');
-    container.innerHTML = weeklyRevenue.map(w => {
-      const pct = Math.round((w.value / 4000) * 100);
-      return `
-        <div class="chart-bar-wrap">
-          <div class="chart-bar-inner" style="height:${Math.round((w.value/4000)*134)}px;">
-            <div class="chart-bar ${w.current ? 'highlight' : ''}" style="height:100%;" title="£${w.value.toLocaleString()}">
-              <span class="bar-value">£${(w.value/1000).toFixed(1)}k</span>
-            </div>
-          </div>
-          <div class="bar-label">${w.label}</div>
-        </div>`;
-    }).join('');
-  }
+function renderStats(s){
+  document.getElementById('statsGrid').innerHTML=`
+    <div class="stat-card"><div class="stat-icon" style="background:#f0fdfa"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#0d9488" stroke-width="1.7"><path d="M8 2v12M5 5h4.5a2 2 0 010 4H5m0-4v4m0 0H9"/></svg></div><div class="stat-label">Revenue This Month</div><div class="stat-value">${escHtml(s.revenueThisMonth)}</div><div class="stat-meta"><span class="${s.revenueChangeVsLast>=0?'stat-up':'stat-down'}">${s.revenueChangeVsLast>=0?'↑':'↓'} ${Math.abs(s.revenueChangeVsLast)}%</span> vs last month</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fef2f2"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#dc2626" stroke-width="1.7"><path d="M8 2v4M8 10v4M2 8h4M10 8h4"/></svg></div><div class="stat-label">Outstanding Balance</div><div class="stat-value">${escHtml(s.outstanding)}</div><div class="stat-meta"><span style="color:var(--red)">${s.outstandingCount} invoice${s.outstandingCount!==1?'s':''}</span> pending</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#eff6ff"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#2563eb" stroke-width="1.7"><rect x="1" y="3.5" width="14" height="10" rx="1.5"/><path d="M1 7h14"/></svg></div><div class="stat-label">Avg. Transaction</div><div class="stat-value">${escHtml(s.avgTransaction)}</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fff7ed"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#ea580c" stroke-width="1.7"><path d="M8 3v10M3 6h10M3 10h10"/></svg></div><div class="stat-label">Refunds This Month</div><div class="stat-value">${escHtml(s.refundsThisMonth)}</div><div class="stat-meta"><span style="color:var(--text-muted)">${s.refundCount} refund${s.refundCount!==1?'s':''}</span></div></div>`;
+}
 
-  /* ── Render service breakdown ── */
-  function renderBreakdown() {
-    const maxRev = Math.max(...services.map(s => s.revenue));
-    document.getElementById('serviceBreakdown').innerHTML = services.map(s => `
-      <div class="breakdown-row">
-        <div>
-          <div style="font-size:13.5px;font-weight:600;color:var(--text);">${s.name}</div>
-          <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${Math.round((s.revenue/maxRev)*100)}%;"></div></div>
-        </div>
-        <div style="font-weight:700;color:var(--text);text-align:right;">£${s.revenue.toLocaleString()}</div>
-        <div style="color:var(--text-muted);text-align:right;">${s.txns} txns</div>
-        <div style="color:var(--text-muted);text-align:right;">£${s.avg}</div>
-      </div>`).join('');
-  }
+function renderChart(weeks){
+  if(!weeks.length)return;
+  const max=Math.max(...weeks.map(w=>w.value),1);
+  const top=Math.ceil(max/500)*500||500;
+  document.getElementById('yAxis').innerHTML=[top,top*.75,top*.5,top*.25,0].map(v=>`<div class="chart-y-label">£${v>=1000?(v/1000).toFixed(1)+'k':v}</div>`).join('');
+  document.getElementById('chartBars').innerHTML=weeks.map(w=>{
+    const h=Math.round((w.value/top)*134);
+    return`<div class="chart-bar-wrap"><div class="chart-bar-inner" style="height:${Math.max(h,2)}px;"><div class="chart-bar ${w.current?'highlight':''}" style="height:100%"><span class="bar-value">£${(w.value/1000).toFixed(1)}k</span></div></div><div class="bar-label">${escHtml(w.label)}</div></div>`;
+  }).join('');
+  document.getElementById('chartSub').textContent='Weekly totals · current week is partial';
+  const last=weeks[weeks.length-2];const cur=weeks[weeks.length-1];
+  if(last&&last.value>0){const c=Math.round(((cur.value-last.value)/last.value)*100);document.getElementById('changeBadge').textContent=`${c>=0?'+':''}${c}% vs last week`;}
+}
 
-  /* ── Status badge ── */
-  function statusBadge(s) {
-    return {
-      paid:     '<span class="badge badge-green">Paid</span>',
-      pending:  '<span class="badge badge-gold">Pending</span>',
-      refunded: '<span class="badge badge-red">Refunded</span>',
-    }[s] || s;
-  }
+function renderBreakdown(bkdn){
+  if(!bkdn.length){document.getElementById('serviceBreakdown').innerHTML='<div style="padding:20px;text-align:center;color:var(--text-muted)">No transactions this month.</div>';return;}
+  const mx=Math.max(...bkdn.map(s=>s.revenue));
+  document.getElementById('serviceBreakdown').innerHTML=bkdn.map(s=>`<div class="breakdown-row"><div><div style="font-size:13.5px;font-weight:600">${escHtml(s.name)}</div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${Math.round((s.revenue/mx)*100)}%"></div></div></div><div style="font-weight:700;text-align:right">£${s.revenue.toLocaleString()}</div><div style="color:var(--text-muted);text-align:right">${s.txns} txns</div><div style="color:var(--text-muted);text-align:right">£${s.avg}</div></div>`).join('');
+}
 
-  /* ── Render recent txn list (right card) ── */
-  function renderRecentTxns() {
-    const filtered = txnFilter === 'all' ? transactions : transactions.filter(t => t.status === txnFilter);
-    const el = document.getElementById('recentTxnList');
-    if (!filtered.length) {
-      el.innerHTML = '<div class="empty-state" style="padding:32px;"><div class="empty-title">No transactions</div><div class="empty-text">No transactions match this filter.</div></div>';
-      return;
-    }
-    el.innerHTML = filtered.map(t => `
-      <div class="txn-item">
-        <div class="txn-icon" style="background:${t.bg};">${t.icon}</div>
-        <div class="txn-body">
-          <div class="txn-client">${t.client}</div>
-          <div class="txn-service">${t.service} · ${t.date}</div>
-        </div>
-        <div style="text-align:right;">
-          <div class="txn-amount">£${t.amount}</div>
-          ${statusBadge(t.status)}
-        </div>
-      </div>`).join('');
-  }
+const SB=s=>({paid:'<span class="badge badge-green">Paid</span>',pending:'<span class="badge badge-gold">Pending</span>',refunded:'<span class="badge badge-red">Refunded</span>','partially-refunded':'<span class="badge badge-gold">Part Refund</span>'}[s]??`<span class="badge badge-gray">${s}</span>`);
 
-  /* ── Filter recent txn tabs ── */
-  function filterTxnList(f, btn) {
-    txnFilter = f;
-    document.querySelectorAll('.txn-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    renderRecentTxns();
-  }
+function updateCounts(){
+  document.getElementById('cnt-all').textContent=allPay.length;
+  document.getElementById('cnt-paid').textContent=allPay.filter(p=>p.status==='paid').length;
+  document.getElementById('cnt-pending').textContent=allPay.filter(p=>p.status==='pending').length;
+  document.getElementById('cnt-refunded').textContent=allPay.filter(p=>p.status==='refunded'||p.status==='partially-refunded').length;
+}
 
-  /* ── Render full transaction table ── */
-  function renderFullTable() {
-    const q = tableSearchQuery.toLowerCase();
-    const rows = transactions.filter(t =>
-      !q || t.client.toLowerCase().includes(q) || t.service.toLowerCase().includes(q)
-    );
-    document.getElementById('fullTxnTableBody').innerHTML = rows.map(t => `
-      <tr>
-        <td style="color:var(--text-muted);font-size:12.5px;">${t.date}</td>
-        <td><span style="font-weight:600;color:var(--text);">${t.client}</span></td>
-        <td>${t.service}</td>
-        <td style="font-weight:700;color:var(--text);">£${t.amount}</td>
-        <td><span class="badge badge-gray">${t.type}</span></td>
-        <td>${statusBadge(t.status)}</td>
-        <td>
-          <button class="action-link" onclick="viewTxn('${t.client}')">View</button>
-          ${t.status === 'pending' ? `<button class="action-link" style="color:var(--green);margin-left:8px;" onclick="markPaid('${t.client}')">Mark Paid</button>` : ''}
-        </td>
-      </tr>`).join('');
-  }
+function renderTxnList(){
+  const f=curFilter==='all'?allPay:allPay.filter(p=>curFilter==='refunded'?(p.status==='refunded'||p.status==='partially-refunded'):p.status===curFilter);
+  const el=document.getElementById('recentTxnList');
+  if(!f.length){el.innerHTML='<div class="empty-state" style="padding:24px"><div class="empty-title">No transactions</div></div>';return;}
+  el.innerHTML=f.slice(0,8).map(t=>`<div class="txn-item"><div class="txn-icon" style="background:${t.bg}">${t.icon}</div><div class="txn-body"><div class="txn-client">${escHtml(t.client)}</div><div class="txn-service">${escHtml(t.service)} · ${escHtml(t.date)}</div></div><div style="text-align:right"><div class="txn-amount">${escHtml(t.amount)}</div>${SB(t.status)}</div></div>`).join('');
+}
 
-  function filterFullTable(q) {
-    tableSearchQuery = q;
-    renderFullTable();
-  }
+function filterTxns(f,btn){curFilter=f;document.querySelectorAll('.txn-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');renderTxnList();}
 
-  function viewTxn(client) { showToast(`Viewing transaction for ${client}`, '🔍'); }
-  function markPaid(client) { showToast(`Marked payment as paid for ${client}`, '✅', 'success'); }
+function renderTable(){
+  const q=tQuery.toLowerCase();
+  const rows=allPay.filter(t=>!q||t.client.toLowerCase().includes(q)||t.service.toLowerCase().includes(q));
+  document.getElementById('fullTableBody').innerHTML=rows.length?rows.map(t=>`<tr><td style="color:var(--text-muted);font-size:12.5px">${escHtml(t.date)}</td><td><span style="font-weight:600">${escHtml(t.client)}</span></td><td>${escHtml(t.service)}</td><td style="font-weight:700">${escHtml(t.amount)}</td><td><span class="badge badge-gray">${escHtml(t.type)}</span></td><td>${SB(t.status)}</td><td>${t.status==='pending'?`<button class="action-link" style="color:var(--green)" onclick="markPaid('${t.id}')">Mark Paid</button>`:''}</td></tr>`).join(''):'<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text-muted)">No results.</td></tr>';
+}
 
-  /* ── Export ── */
-  function exportCSV() { showToast('Exporting CSV — download will start shortly', '📊'); }
+function filterTable(q){tQuery=q;renderTable();}
 
-  /* ── Toast ── */
-  function showToast(title, icon='✅', type='') {
-    const wrap = document.getElementById('toastWrap');
-    const t = document.createElement('div');
-    t.className = `toast ${type}`;
-    t.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-content"><div class="toast-title">${title}</div></div>`;
-    wrap.appendChild(t);
-    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
-    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }, 3500);
-  }
+async function markPaid(id){
+  try{await apiPatch(`/api/tenants/${TENANT}/payments/${id}/mark-paid`);showToast('Payment marked as paid');loadAll();}
+  catch(err){showToast(err.message??'Failed');}
+}
 
-  /* ── Count badges ── */
-  function updateCounts() {
-    document.getElementById('cnt-all').textContent = transactions.length;
-    document.getElementById('cnt-paid').textContent = transactions.filter(t => t.status === 'paid').length;
-    document.getElementById('cnt-pending').textContent = transactions.filter(t => t.status === 'pending').length;
-    document.getElementById('cnt-refunded').textContent = transactions.filter(t => t.status === 'refunded').length;
-  }
+function exportCSV(){
+  const rows=[['Date','Client','Service','Amount','Type','Status'],...allPay.map(t=>[t.date,t.client,t.service,t.amount,t.type,t.status])];
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='payments.csv';a.click();
+}
 
-  /* ── Init ── */
-  renderChart();
-  renderBreakdown();
-  renderRecentTxns();
-  renderFullTable();
-  updateCounts();
+function escHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function showToast(msg){const t=document.createElement('div');t.className='toast';t.innerHTML=`<div class="toast-icon">💳</div><div class="toast-content"><div class="toast-title">${escHtml(msg)}</div></div>`;document.getElementById('toastWrap').appendChild(t);requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),350);},3500);}
+
+document.addEventListener('DOMContentLoaded',loadAll);
 </script>
 </body>
 </html>

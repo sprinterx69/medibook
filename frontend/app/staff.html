@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Staff — MediBook</title>
+<title>Staff — Callora</title>
 <link rel="stylesheet" href="styles.css">
 <style>
 .staff-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
@@ -14,28 +14,23 @@
 .staff-name { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.2; }
 .staff-role { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
 .staff-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
-.metric-item { }
 .metric-val { font-size: 20px; font-weight: 700; color: var(--text); line-height: 1; }
 .metric-lbl { font-size: 11px; color: var(--text-muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
 .util-bar-wrap { height: 6px; background: var(--surface-3); border-radius: 3px; margin-top: 8px; overflow: hidden; }
 .util-bar { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
-.avail-days { display: flex; gap: 4px; margin-top: 12px; }
-.avail-day { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 700; }
-.avail-day.on { background: var(--brand-dim); color: var(--brand-text); }
-.avail-day.off { background: var(--surface-3); color: var(--text-light); }
 .staff-actions { display: flex; gap: 8px; margin-top: 14px; }
 .filter-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.role-tab { padding:5px 14px;border-radius:6px;border:none;background:none;font-family:inherit;font-size:12.5px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:all 0.15s }
+.role-tab.active { background:var(--surface);color:var(--text);border:1px solid var(--border);box-shadow:var(--shadow-xs) }
+.role-tab:hover:not(.active) { color:var(--text-2) }
+@keyframes shimmer { 0%{background-position:-200px 0} 100%{background-position:calc(200px + 100%) 0} }
+.skeleton { background: linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 50%,var(--surface-2) 75%); background-size:200px 100%; animation: shimmer 1.3s infinite; border-radius: var(--radius-lg); height: 220px; }
 </style>
 </head>
 <body>
 <div class="app-shell">
-
-<!-- Sidebar -->
 <aside class="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-mark">M</div>
-    <span class="logo-text">MediBook</span>
-  </div>
+  <div class="sidebar-logo"><div class="logo-mark">C</div><span class="logo-text">Callora</span></div>
   <div class="sidebar-scroll">
     <div class="nav-section">Clinic</div>
     <a href="dashboard.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</a>
@@ -43,33 +38,26 @@
     <a href="clients.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Clients</a>
     <a href="payments.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payments</a>
     <a href="staff.html" class="nav-item active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Staff</a>
-    <div class="nav-section">AI & Settings</div>
+    <div class="nav-section">AI &amp; Settings</div>
     <a href="agent.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.63 19a19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6.08 6.08l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>AI Agent</a>
     <a href="settings.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Settings</a>
   </div>
   <div class="sidebar-footer">
     <div class="user-card">
-      <div class="user-av">LC</div>
-      <div>
-        <div class="user-name">Lumière Clinic</div>
-        <div class="user-role">Clinic Owner</div>
-      </div>
+      <div class="user-av" id="sidebarAv">—</div>
+      <div><div class="user-name" id="sidebarName">Loading…</div><div class="user-role">Clinic Owner</div></div>
     </div>
+    <a href="#" id="signOutBtn" style="display:block;text-align:center;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 0;margin-top:2px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">Sign out</a>
   </div>
 </aside>
 
-<!-- Main -->
 <div class="main">
   <div class="topbar">
     <div class="topbar-left">
       <span class="page-title">Staff</span>
-      <span class="breadcrumb">6 team members</span>
+      <span class="breadcrumb" id="staffCount">Loading…</span>
     </div>
     <div class="topbar-right">
-      <button class="btn btn-secondary" onclick="showToast('success','Opening hours editor coming soon.')">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
-        Opening Hours
-      </button>
       <button class="btn btn-primary" onclick="openInviteModal()">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Invite Staff
@@ -78,32 +66,13 @@
   </div>
 
   <div class="content">
-
-    <!-- Summary stats -->
-    <div class="stat-grid" style="grid-template-columns: repeat(4,1fr); margin-bottom: 24px;">
-      <div class="stat-card">
-        <div class="stat-label">On Duty Today</div>
-        <div class="stat-value">4</div>
-        <div class="stat-meta">of 6 staff</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Avg. Utilisation</div>
-        <div class="stat-value">74<span style="font-size:16px;font-weight:500;color:var(--text-muted)">%</span></div>
-        <div class="stat-meta stat-up">↑ 6% this week</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Appts Today</div>
-        <div class="stat-value">18</div>
-        <div class="stat-meta">across 4 practitioners</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Avg. Rating</div>
-        <div class="stat-value">4.7 <span style="font-size:14px;color:var(--gold)">★</span></div>
-        <div class="stat-meta">from 312 reviews</div>
-      </div>
+    <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px;" id="statsRow">
+      <div class="stat-card"><div class="stat-label">On Duty Today</div><div class="stat-value">—</div></div>
+      <div class="stat-card"><div class="stat-label">Total Staff</div><div class="stat-value">—</div></div>
+      <div class="stat-card"><div class="stat-label">Appts Today</div><div class="stat-value">—</div></div>
+      <div class="stat-card"><div class="stat-label">Active Staff</div><div class="stat-value">—</div></div>
     </div>
 
-    <!-- Filter row -->
     <div class="filter-row">
       <div class="search-wrap" style="flex:1;max-width:280px">
         <svg class="search-icon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -114,11 +83,12 @@
         <button class="role-tab" onclick="setRoleFilter('online',this)">On Duty</button>
         <button class="role-tab" onclick="setRoleFilter('offline',this)">Off Today</button>
       </div>
-      <style>.role-tab{padding:5px 14px;border-radius:6px;border:none;background:none;font-family:inherit;font-size:12.5px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:all 0.15s}.role-tab.active{background:var(--surface);color:var(--text);border:1px solid var(--border);box-shadow:var(--shadow-xs)}.role-tab:hover:not(.active){color:var(--text-2)}</style>
     </div>
 
-    <!-- Staff cards grid -->
-    <div class="staff-grid" id="staffGrid"></div>
+    <div class="staff-grid" id="staffGrid">
+      <div class="skeleton"></div><div class="skeleton"></div>
+      <div class="skeleton"></div><div class="skeleton"></div>
+    </div>
   </div>
 </div>
 
@@ -132,155 +102,150 @@
       </button>
     </div>
     <div class="modal-body">
-      <div class="form-group">
-        <label class="form-label">Full Name</label>
-        <input class="input" type="text" placeholder="Dr. Jane Smith">
-      </div>
+      <div class="form-group"><label class="form-label">Full Name *</label><input class="input" type="text" id="inviteName" placeholder="Dr. Jane Smith"></div>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Email Address</label>
-          <input class="input" type="email" placeholder="jane@lumiere.co.uk">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Role / Title</label>
-          <input class="input" type="text" placeholder="Senior Aesthetician">
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Services (they can perform)</label>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;padding:12px;border:1px solid var(--border);border-radius:var(--radius)">
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" checked> Hydrafacial</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox"> Botox</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox"> Laser Treatment</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox"> Dermal Filler</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox"> Chemical Peel</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox"> Consultation</label>
-        </div>
+        <div class="form-group"><label class="form-label">Email Address *</label><input class="input" type="email" id="inviteEmail" placeholder="jane@clinic.com"></div>
+        <div class="form-group"><label class="form-label">Role / Title</label><input class="input" type="text" id="inviteTitle" placeholder="Senior Aesthetician"></div>
       </div>
       <div class="form-group" style="margin-bottom:0">
         <label class="form-label">Permission Level</label>
-        <select class="select">
-          <option>Staff — Can manage own appointments only</option>
-          <option>Manager — Can manage all appointments and clients</option>
-          <option>Admin — Full access including billing</option>
+        <select class="select" id="inviteRole">
+          <option value="MEMBER">Staff — Can manage own appointments only</option>
+          <option value="ADMIN">Admin — Full access including billing</option>
         </select>
         <div class="form-hint">An invite email will be sent with a link to set their password.</div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('inviteModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="sendInvite()">Send Invite</button>
+      <button class="btn btn-primary" onclick="sendInvite()" id="inviteBtn">Send Invite</button>
     </div>
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast-wrap"><div class="toast" id="toast"><span class="toast-icon" id="toastIcon">✓</span><div class="toast-content"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div></div>
 
 <script>
-const STAFF = [
-  { id:1, name:'Dr. Elena Chen',   role:'Senior Aesthetician',   av:'EC', bg:'#f0fdfa', col:'#115e59', online:true,  today:6, rating:4.9, util:92, services:['Hydrafacial','Botox','Dermal Filler'], days:[true,true,true,true,true,true,false] },
-  { id:2, name:'Dr. Priya Patel',  role:'Medical Director',       av:'PP', bg:'#eff6ff', col:'#1e40af', online:true,  today:5, rating:4.8, util:85, services:['Botox','Dermal Filler','Laser Treatment'], days:[true,true,true,true,true,false,false] },
-  { id:3, name:'Nurse Sarah Liu',  role:'Skincare Specialist',    av:'SL', bg:'#fdf2f8', col:'#9d174d', online:true,  today:4, rating:4.7, util:78, services:['Hydrafacial','Chemical Peel','Consultation'], days:[false,true,true,true,true,true,false] },
-  { id:4, name:'Emma Thornton',    role:'Laser Technician',       av:'ET', bg:'#f5f3ff', col:'#5b21b6', online:true,  today:3, rating:4.6, util:65, services:['Laser Treatment','Chemical Peel'], days:[true,true,false,true,true,true,false] },
-  { id:5, name:'Tom Nakamura',     role:'Front Desk Manager',     av:'TN', bg:'#fffbeb', col:'#92400e', online:false, today:0, rating:4.8, util:88, services:['Consultation'], days:[true,true,true,true,true,false,false] },
-  { id:6, name:'Dr. Aisha Osei',   role:'Aesthetic Practitioner', av:'AO', bg:'#f0fdf4', col:'#166534', online:false, today:0, rating:4.5, util:58, services:['Botox','Dermal Filler','Consultation'], days:[false,false,true,true,true,true,true] },
-];
-const DAY_LABELS = ['M','T','W','T','F','S','S'];
+const API    = (location.hostname==='localhost'||location.hostname==='127.0.0.1')?'http://localhost:3001':'https://medibook-backend-production-dfb2.up.railway.app';
+const TOKEN  = localStorage.getItem('medibook_token');
+const TENANT = localStorage.getItem('medibook_tenant_id');
+if(!TOKEN||!TENANT){location.href='../pages/login.html';}
+document.getElementById('signOutBtn').addEventListener('click',()=>{localStorage.clear();location.href='../pages/login.html';});
+const CN=localStorage.getItem('medibook_clinic_name')??'Callora';
+document.getElementById('sidebarName').textContent=CN;
+document.getElementById('sidebarAv').textContent=CN.slice(0,2).toUpperCase();
 
-let activeFilter = 'all';
+let allStaff=[],activeFilter='all';
 
-function renderStaff(list) {
-  const grid = document.getElementById('staffGrid');
-  if (!list.length) {
-    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">👤</div><div class="empty-title">No staff found</div><div class="empty-text">Try a different search term.</div></div>';
-    return;
+async function apiFetch(p){const r=await fetch(API+p,{headers:{Authorization:`Bearer ${TOKEN}`}});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error??'API error');}return r.json();}
+async function apiPost(p,body){const r=await fetch(API+p,{method:'POST',headers:{Authorization:`Bearer ${TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error??'API error');}return r.json();}
+
+async function loadStaff(){
+  try{
+    const[staffData,onDuty]=await Promise.all([
+      apiFetch(`/api/tenants/${TENANT}/staff`),
+      apiFetch(`/api/tenants/${TENANT}/staff/on-duty`),
+    ]);
+    const onDutyIds=new Set((onDuty.staff||[]).map(s=>s.id));
+    const todayCounts={};(onDuty.staff||[]).forEach(s=>{todayCounts[s.id]=s.appointmentsToday||0;});
+    allStaff=(staffData.staff||[]).map(s=>({...s,online:onDutyIds.has(s.id),today:todayCounts[s.id]??0}));
+    const totalToday=Object.values(todayCounts).reduce((a,b)=>a+b,0);
+    document.getElementById('statsRow').innerHTML=`
+      <div class="stat-card"><div class="stat-label">On Duty Today</div><div class="stat-value">${onDuty.onlineCount??0}</div><div class="stat-meta">of ${allStaff.length} staff</div></div>
+      <div class="stat-card"><div class="stat-label">Total Staff</div><div class="stat-value">${allStaff.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Appts Today</div><div class="stat-value">${totalToday}</div></div>
+      <div class="stat-card"><div class="stat-label">Active Staff</div><div class="stat-value">${allStaff.filter(s=>s.isAvailable!==false).length}</div></div>`;
+    document.getElementById('staffCount').textContent=`${allStaff.length} team members`;
+    filterStaff(document.getElementById('staffSearch').value);
+  }catch{
+    document.getElementById('staffGrid').innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">👥</div><div class="empty-title">Could not load staff</div><div class="empty-text">Check your connection.</div></div>';
   }
-  grid.innerHTML = list.map(s => {
-    const utilColor = s.util >= 80 ? 'var(--green)' : s.util >= 50 ? 'var(--gold)' : 'var(--text-muted)';
-    return `<div class="staff-card">
+}
+
+function renderStaff(list){
+  const grid=document.getElementById('staffGrid');
+  if(!list.length){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">👤</div><div class="empty-title">No staff found</div><div class="empty-text">Try a different search.</div></div>';return;}
+  grid.innerHTML=list.map(s=>{
+    const util=s.today>0?Math.min(100,s.today*20):0;
+    const utilColor=util>=80?'var(--green)':util>=50?'var(--gold)':'var(--text-muted)';
+    const ini=(s.name||'').split(' ').slice(0,2).map(w=>w[0]?.toUpperCase()??'').join('');
+    const bg=s.color?s.color+'22':'#f0fdfa';const col=s.color??'#115e59';
+    return`<div class="staff-card">
       <div class="staff-card-head">
-        <div class="staff-av" style="background:${s.bg};color:${s.col}">${s.av}</div>
+        <div class="staff-av" style="background:${bg};color:${col}">${escHtml(ini)}</div>
         <div style="flex:1;min-width:0">
-          <div class="staff-name">${s.name}</div>
-          <div class="staff-role">${s.role}</div>
-          <div style="margin-top:6px">
-            <span class="badge ${s.online?'badge-green':'badge-gray'} badge-dot">${s.online?'On Duty':'Off Today'}</span>
-          </div>
+          <div class="staff-name">${escHtml(s.name)}</div>
+          <div class="staff-role">${escHtml(s.title||s.role||'')}</div>
+          <div style="margin-top:6px"><span class="badge ${s.online?'badge-green':'badge-gray'} badge-dot">${s.online?'On Duty':'Off Today'}</span></div>
         </div>
-        <div style="font-size:13px;color:var(--gold);font-weight:600;margin-top:2px">${s.rating} ★</div>
       </div>
-
       <div class="staff-metrics">
-        <div class="metric-item">
-          <div class="metric-val">${s.today}</div>
-          <div class="metric-lbl">Today's Appts</div>
-        </div>
-        <div class="metric-item">
-          <div class="metric-val">${s.util}%</div>
-          <div class="metric-lbl">Utilisation</div>
-        </div>
+        <div class="metric-item"><div class="metric-val">${s.today}</div><div class="metric-lbl">Today's Appts</div></div>
+        <div class="metric-item"><div class="metric-val">${util}%</div><div class="metric-lbl">Utilisation</div></div>
       </div>
-      <div class="util-bar-wrap" style="margin-top:8px">
-        <div class="util-bar" style="width:${s.util}%;background:${utilColor}"></div>
-      </div>
-
-      <div style="margin-top:12px">
-        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Weekly Schedule</div>
-        <div class="avail-days">
-          ${DAY_LABELS.map((d,i) => `<div class="avail-day ${s.days[i]?'on':'off'}">${d}</div>`).join('')}
-        </div>
-      </div>
-
+      <div class="util-bar-wrap" style="margin-top:8px"><div class="util-bar" style="width:${util}%;background:${utilColor}"></div></div>
       <div style="margin-top:10px">
         <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Services</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px">
-          ${s.services.map(sv => `<span class="badge badge-gray">${sv}</span>`).join('')}
+          ${(s.services||[]).slice(0,4).map(sv=>`<span class="badge badge-gray">${escHtml(sv)}</span>`).join('')}
+          ${(s.services||[]).length>4?`<span class="badge badge-gray">+${s.services.length-4}</span>`:''}
+          ${!(s.services||[]).length?'<span style="font-size:12px;color:var(--text-muted)">No services listed</span>':''}
         </div>
       </div>
-
       <div class="staff-actions">
-        <button class="btn btn-secondary btn-sm" style="flex:1" onclick="showToast('info','Opening schedule for ${s.name}')">Schedule</button>
-        <button class="btn btn-ghost btn-sm" onclick="showToast('info','Opening ${s.name} profile')">Profile</button>
+        <button class="btn btn-secondary btn-sm" style="flex:1" onclick="showToast('info','Schedule','Coming soon')">Schedule</button>
+        <button class="btn btn-ghost btn-sm" onclick="showToast('info','Profile','Coming soon')">Profile</button>
       </div>
     </div>`;
   }).join('');
 }
 
-function filterStaff(q) {
-  let list = STAFF.filter(s => {
-    const matchQuery = !q || s.name.toLowerCase().includes(q.toLowerCase()) || s.role.toLowerCase().includes(q.toLowerCase());
-    const matchFilter = activeFilter === 'all' || (activeFilter === 'online' && s.online) || (activeFilter === 'offline' && !s.online);
-    return matchQuery && matchFilter;
+function filterStaff(q){
+  const list=allStaff.filter(s=>{
+    const mq=!q||s.name.toLowerCase().includes(q.toLowerCase())||(s.title||'').toLowerCase().includes(q.toLowerCase());
+    const mf=activeFilter==='all'||(activeFilter==='online'&&s.online)||(activeFilter==='offline'&&!s.online);
+    return mq&&mf;
   });
   renderStaff(list);
 }
 
-function setRoleFilter(f, btn) {
-  activeFilter = f;
-  document.querySelectorAll('.role-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+function setRoleFilter(f,btn){
+  activeFilter=f;document.querySelectorAll('.role-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
   filterStaff(document.getElementById('staffSearch').value);
 }
 
-function openInviteModal() { document.getElementById('inviteModal').classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function sendInvite() { closeModal('inviteModal'); showToast('success','Invite sent','An invite email has been sent to the new team member.'); }
+function openInviteModal(){document.getElementById('inviteModal').classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
 
-let toastTimer;
-function showToast(type, title, msg='') {
-  const icons = { success:'✓', error:'✕', info:'ℹ' };
-  document.getElementById('toastIcon').textContent = icons[type] || '✓';
-  document.getElementById('toastTitle').textContent = title;
-  document.getElementById('toastMsg').textContent = msg;
-  const t = document.getElementById('toast');
-  t.className = 'toast ' + type + ' show';
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+async function sendInvite(){
+  const name=document.getElementById('inviteName').value.trim();
+  const email=document.getElementById('inviteEmail').value.trim();
+  const title=document.getElementById('inviteTitle').value.trim();
+  const role=document.getElementById('inviteRole').value;
+  if(!name||!email){showToast('error','Missing fields','Name and email are required.');return;}
+  const btn=document.getElementById('inviteBtn');btn.disabled=true;btn.textContent='Sending…';
+  try{
+    await apiPost(`/api/tenants/${TENANT}/team/invite`,{fullName:name,email,title,role});
+    closeModal('inviteModal');showToast('success','Invite sent',`Sent to ${email}.`);
+    document.getElementById('inviteName').value='';document.getElementById('inviteEmail').value='';document.getElementById('inviteTitle').value='';
+    loadStaff();
+  }catch(err){showToast('error','Invite failed',err.message??'Please try again.');}
+  finally{btn.disabled=false;btn.textContent='Send Invite';}
 }
 
-// Init
-renderStaff(STAFF);
+let toastTimer;
+function showToast(type,title,msg=''){
+  const icons={success:'✓',error:'✕',info:'ℹ'};
+  document.getElementById('toastIcon').textContent=icons[type]||'✓';
+  document.getElementById('toastTitle').textContent=title;
+  document.getElementById('toastMsg').textContent=msg;
+  const t=document.getElementById('toast');t.className='toast '+type+' show';
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+function escHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+document.addEventListener('DOMContentLoaded',loadStaff);
 </script>
 </body>
 </html>

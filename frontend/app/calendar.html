@@ -3,249 +3,108 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calendar — MediBook</title>
+  <title>Calendar — Callora</title>
   <link rel="stylesheet" href="./styles.css" />
   <style>
-    /* ── Calendar layout ── */
     .cal-wrap { display: grid; grid-template-columns: 75% 25%; gap: 0; }
     .cal-grid-area { overflow-x: auto; }
-    .cal-side { border-left: 1px solid var(--border); display: flex; flex-direction: column; gap: 0; }
-
-    /* Week grid */
+    .cal-side { border-left: 1px solid var(--border); display: flex; flex-direction: column; }
     .week-grid { display: flex; flex-direction: column; min-width: 580px; }
     .week-header { display: grid; grid-template-columns: 52px repeat(6, 1fr); border-bottom: 1px solid var(--border); background: var(--surface-2); }
     .week-header-spacer { border-right: 1px solid var(--border); }
-    .day-col-header {
-      text-align: center;
-      padding: 10px 4px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
-      border-right: 1px solid var(--border);
-      cursor: pointer;
-    }
+    .day-col-header { text-align: center; padding: 10px 4px; font-size: 12px; font-weight: 600; color: var(--text-muted); border-right: 1px solid var(--border); cursor: pointer; }
     .day-col-header:last-child { border-right: none; }
     .day-col-header.today { background: var(--brand-dim); color: var(--brand-text); }
     .day-num { font-size: 18px; font-weight: 700; display: block; line-height: 1.2; color: var(--text); }
     .day-col-header.today .day-num { color: var(--brand); }
-
-    /* Time rows */
     .week-body { display: flex; position: relative; }
-    .time-col {
-      width: 52px;
-      flex-shrink: 0;
-      border-right: 1px solid var(--border);
-    }
-    .time-label {
-      height: 52px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: flex-end;
-      padding-right: 8px;
-      padding-top: 4px;
-      font-size: 11px;
-      color: var(--text-light);
-      font-variant-numeric: tabular-nums;
-      border-bottom: 1px solid var(--border);
-    }
+    .time-col { width: 52px; flex-shrink: 0; border-right: 1px solid var(--border); }
+    .time-label { height: 52px; display: flex; align-items: flex-start; justify-content: flex-end; padding-right: 8px; padding-top: 4px; font-size: 11px; color: var(--text-light); font-variant-numeric: tabular-nums; border-bottom: 1px solid var(--border); }
     .days-area { flex: 1; display: grid; grid-template-columns: repeat(6, 1fr); position: relative; }
-    .day-column {
-      border-right: 1px solid var(--border);
-      position: relative;
-    }
+    .day-column { border-right: 1px solid var(--border); position: relative; }
     .day-column:last-child { border-right: none; }
     .day-column.today { background: rgba(13,148,136,0.02); }
     .hour-cell { height: 52px; border-bottom: 1px solid var(--border); }
-    .hour-cell:last-child { border-bottom: none; }
-
-    /* Appointment blocks */
-    .appt-block {
-      position: absolute;
-      left: 4px;
-      right: 4px;
-      border-radius: 6px;
-      border-left-width: 3px;
-      border-left-style: solid;
-      padding: 5px 7px;
-      cursor: pointer;
-      overflow: hidden;
-      transition: filter 0.15s, transform 0.1s;
-      z-index: 2;
-    }
+    .appt-block { position: absolute; left: 4px; right: 4px; border-radius: 6px; border-left-width: 3px; border-left-style: solid; padding: 5px 7px; cursor: pointer; overflow: hidden; transition: filter 0.15s, transform 0.1s; z-index: 2; }
     .appt-block:hover { filter: brightness(0.96); transform: scale(1.01); }
     .appt-name { font-size: 11.5px; font-weight: 700; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .appt-service { font-size: 10.5px; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .appt-time-lbl { font-size: 10px; opacity: 0.7; margin-top: 2px; }
-
-    /* Color themes */
-    .appt-teal   { background: #f0fdfa; border-color: #0d9488; color: #115e59; }
-    .appt-blue   { background: #eff6ff; border-color: #2563eb; color: #1e40af; }
-    .appt-purple { background: #f5f3ff; border-color: #7c3aed; color: #5b21b6; }
-    .appt-pink   { background: #fdf2f8; border-color: #ec4899; color: #9d174d; }
-    .appt-orange { background: #fff7ed; border-color: #ea580c; color: #9a3412; }
-    .appt-green  { background: #f0fdf4; border-color: #16a34a; color: #166534; }
-
-    /* Sidebar panel */
     .cal-side-section { padding: 16px; border-bottom: 1px solid var(--border); }
     .cal-side-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
-
-    /* Mini calendar */
-    .mini-cal { width: 100%; }
-    .mini-cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-    .mini-cal-month { font-size: 13px; font-weight: 700; color: var(--text); }
-    .mini-cal-nav { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 2px 5px; border-radius: 4px; font-size: 14px; }
-    .mini-cal-nav:hover { background: var(--surface-2); }
     .mini-cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 1px; }
     .mini-cal-day-name { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-light); padding: 3px 0; }
-    .mini-cal-day {
-      text-align: center;
-      font-size: 11.5px;
-      padding: 4px 2px;
-      border-radius: 4px;
-      cursor: pointer;
-      color: var(--text-2);
-      transition: background 0.1s;
-    }
+    .mini-cal-day { text-align: center; font-size: 11.5px; padding: 4px 2px; border-radius: 4px; cursor: pointer; color: var(--text-2); transition: background 0.1s; }
     .mini-cal-day:hover { background: var(--surface-2); }
     .mini-cal-day.in-week { background: var(--brand-dim); color: var(--brand-text); font-weight: 600; }
     .mini-cal-day.today { background: var(--brand); color: #fff; font-weight: 700; }
     .mini-cal-day.other-month { color: var(--text-light); }
-
-    /* Open slots */
-    .slot-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 10px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      margin-bottom: 6px;
-      cursor: pointer;
-      transition: background 0.1s, border-color 0.15s;
-      font-size: 12.5px;
-      color: var(--text-2);
-    }
-    .slot-item:hover { background: var(--brand-dim); border-color: var(--brand-border); color: var(--brand-text); }
-    .slot-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
-
-    /* Toggle group */
     .toggle-group { display: flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .toggle-btn {
-      flex: 1; padding: 6px 14px; font-family: inherit; font-size: 12.5px; font-weight: 600;
-      background: var(--surface); border: none; cursor: pointer; color: var(--text-muted);
-      transition: background 0.15s, color 0.15s;
-    }
+    .toggle-btn { flex: 1; padding: 6px 14px; font-family: inherit; font-size: 12.5px; font-weight: 600; background: var(--surface); border: none; cursor: pointer; color: var(--text-muted); transition: background 0.15s, color 0.15s; }
     .toggle-btn.active { background: var(--brand); color: #fff; }
     .toggle-btn:not(:last-child) { border-right: 1px solid var(--border); }
-
-    /* Week nav */
     .week-nav { display: flex; align-items: center; gap: 8px; }
-    .week-label { font-size: 13px; font-weight: 600; color: var(--text); }
-
-    /* Upcoming table section */
+    .week-label { font-size: 13px; font-weight: 600; color: var(--text); min-width: 160px; text-align: center; }
     .upcoming-section { margin-top: 20px; }
-    .upcoming-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 20px; background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-      cursor: pointer;
-    }
-    .upcoming-header.open { border-bottom: 1px solid var(--border); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+    .upcoming-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg) var(--radius-lg) 0 0; cursor: pointer; }
     .upcoming-body { border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius-lg) var(--radius-lg); overflow: hidden; }
-
-    /* Current time indicator */
-    .now-line {
-      position: absolute;
-      left: 0; right: 0;
-      height: 2px;
-      background: var(--red);
-      z-index: 3;
-      pointer-events: none;
-    }
-    .now-line::before {
-      content: '';
-      position: absolute;
-      left: -4px; top: -4px;
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      background: var(--red);
-    }
+    .now-line { position: absolute; left: 0; right: 0; height: 2px; background: var(--red); z-index: 3; pointer-events: none; }
+    .now-line::before { content: ''; position: absolute; left: -4px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--red); }
   </style>
 </head>
 <body>
 <div class="app-shell">
-
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-mark">M</div>
-      <span class="logo-text">MediBook</span>
+      <div class="logo-mark">C</div>
+      <span class="logo-text">Callora</span>
     </div>
     <div class="sidebar-scroll">
       <div class="nav-section">Main</div>
       <a href="dashboard.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <rect x="1" y="1" width="6" height="6" rx="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.2"/>
-          <rect x="1" y="9" width="6" height="6" rx="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.2"/>
-        </svg>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="6" height="6" rx="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.2"/><rect x="1" y="9" width="6" height="6" rx="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.2"/></svg>
         Dashboard
       </a>
       <a href="calendar.html" class="nav-item active">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/>
-          <path d="M5 1v3M11 1v3M1.5 6.5h13"/>
-        </svg>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M5 1v3M11 1v3M1.5 6.5h13"/></svg>
         Calendar
       </a>
       <a href="clients.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="6" cy="5" r="2.5"/><path d="M1 13.5c0-2.485 2.239-4.5 5-4.5s5 2.015 5 4.5"/>
-          <circle cx="12" cy="5" r="2"/><path d="M14.5 13c0-1.8-1.12-3.34-2.75-4"/>
-        </svg>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="5" r="2.5"/><path d="M1 13.5c0-2.485 2.239-4.5 5-4.5s5 2.015 5 4.5"/><circle cx="12" cy="5" r="2"/><path d="M14.5 13c0-1.8-1.12-3.34-2.75-4"/></svg>
         Clients
       </a>
       <a href="payments.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <rect x="1" y="3.5" width="14" height="10" rx="1.5"/>
-          <path d="M1 7h14"/>
-        </svg>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="3.5" width="14" height="10" rx="1.5"/><path d="M1 7h14"/></svg>
         Payments
       </a>
       <a href="staff.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="8" cy="5.5" r="3"/><path d="M2 13.5c0-2.761 2.686-5 6-5s6 2.239 6 5"/>
-        </svg>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="5.5" r="3"/><path d="M2 13.5c0-2.761 2.686-5 6-5s6 2.239 6 5"/></svg>
         Staff
       </a>
       <div class="nav-section">Tools</div>
       <a href="agent.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/>
-        </svg>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/></svg>
         AI Agent
         <span class="nav-badge green">Live</span>
       </a>
       <a href="settings.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="8" cy="8" r="2.2"/>
-          <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M2.697 2.697l1.06 1.06M12.243 12.243l1.06 1.06M13.303 2.697l-1.06 1.06M3.757 12.243l-1.06 1.06"/>
-        </svg>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="2.2"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M2.697 2.697l1.06 1.06M12.243 12.243l1.06 1.06M13.303 2.697l-1.06 1.06M3.757 12.243l-1.06 1.06"/></svg>
         Settings
       </a>
     </div>
     <div class="sidebar-footer">
       <div class="user-card">
-        <div class="user-av">LC</div>
+        <div class="user-av" id="sidebarAv">—</div>
         <div>
-          <div class="user-name">Lumière Clinic</div>
+          <div class="user-name" id="sidebarName">Loading…</div>
           <div class="user-role">Clinic Owner</div>
         </div>
       </div>
-      <a href="#" style="display:block;text-align:center;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 0;margin-top:2px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">Sign out</a>
+      <a href="#" id="signOutBtn" style="display:block;text-align:center;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 0;margin-top:2px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">Sign out</a>
     </div>
   </aside>
 
-  <!-- MAIN -->
   <div class="main">
-    <!-- TOPBAR -->
     <header class="topbar">
       <div class="topbar-left">
         <span class="page-title">Calendar</span>
@@ -254,7 +113,7 @@
           <button class="btn btn-secondary btn-sm" onclick="prevWeek()">
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 3L5 8l5 5"/></svg>
           </button>
-          <span class="week-label" id="weekLabel">Week of Feb 16–22, 2026</span>
+          <span class="week-label" id="weekLabel">Loading…</span>
           <button class="btn btn-secondary btn-sm" onclick="nextWeek()">
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 3l5 5-5 5"/></svg>
           </button>
@@ -272,91 +131,62 @@
       </div>
     </header>
 
-    <!-- CONTENT -->
     <main class="content">
       <div class="card" style="overflow:hidden;margin-bottom:20px;">
         <div class="cal-wrap">
-          <!-- Calendar grid -->
           <div class="cal-grid-area">
             <div class="week-grid">
-              <!-- Day headers -->
               <div class="week-header">
                 <div class="week-header-spacer"></div>
-                <div class="day-col-header" id="dh0"><span class="day-num">16</span>Mon</div>
-                <div class="day-col-header" id="dh1"><span class="day-num">17</span>Tue</div>
-                <div class="day-col-header" id="dh2"><span class="day-num">18</span>Wed</div>
-                <div class="day-col-header" id="dh3"><span class="day-num">19</span>Thu</div>
-                <div class="day-col-header" id="dh4"><span class="day-num">20</span>Fri</div>
-                <div class="day-col-header today" id="dh5"><span class="day-num">21</span>Sat</div>
+                <div class="day-col-header" id="dh0"><span class="day-num">—</span>Mon</div>
+                <div class="day-col-header" id="dh1"><span class="day-num">—</span>Tue</div>
+                <div class="day-col-header" id="dh2"><span class="day-num">—</span>Wed</div>
+                <div class="day-col-header" id="dh3"><span class="day-num">—</span>Thu</div>
+                <div class="day-col-header" id="dh4"><span class="day-num">—</span>Fri</div>
+                <div class="day-col-header" id="dh5"><span class="day-num">—</span>Sat</div>
               </div>
-              <!-- Body -->
               <div class="week-body">
-                <!-- Time column -->
                 <div class="time-col" id="timeCol"></div>
-                <!-- Day columns -->
                 <div class="days-area" id="daysArea">
                   <div class="day-column" id="col0"></div>
                   <div class="day-column" id="col1"></div>
                   <div class="day-column" id="col2"></div>
                   <div class="day-column" id="col3"></div>
                   <div class="day-column" id="col4"></div>
-                  <div class="day-column today" id="col5"></div>
+                  <div class="day-column" id="col5"></div>
                 </div>
               </div>
             </div>
           </div>
-
-          <!-- Right side panel -->
           <div class="cal-side">
             <div class="cal-side-section">
-              <div class="cal-title" style="font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:12px;">February 2026</div>
-              <div class="mini-cal">
-                <div class="mini-cal-grid" id="miniCalGrid"></div>
-              </div>
+              <div style="font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:12px;" id="miniCalTitle">—</div>
+              <div class="mini-cal-grid" id="miniCalGrid"></div>
             </div>
             <div class="cal-side-section" style="flex:1;">
               <div class="cal-side-title">Today's Open Slots</div>
-              <div class="slot-item" onclick="openBookingModal()">
-                <div class="slot-dot"></div>
-                <span>13:00 – 14:00</span>
-              </div>
-              <div class="slot-item" onclick="openBookingModal()">
-                <div class="slot-dot"></div>
-                <span>15:30 – 16:00</span>
-              </div>
-              <div class="slot-item" onclick="openBookingModal()">
-                <div class="slot-dot"></div>
-                <span>16:30 – 18:00</span>
-              </div>
-              <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px;" onclick="openBookingModal()">
-                Quick Book
-              </button>
+              <div id="openSlots"><div style="font-size:12.5px;color:var(--text-muted)">Loading…</div></div>
+              <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px;" onclick="openBookingModal()">Quick Book</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Upcoming this week -->
       <div class="upcoming-section">
-        <div class="upcoming-header open" onclick="toggleUpcoming()">
+        <div class="upcoming-header" onclick="toggleUpcoming()">
           <div style="display:flex;align-items:center;gap:10px;">
             <span class="section-title">Upcoming This Week</span>
-            <span class="badge badge-brand">6 bookings</span>
+            <span class="badge badge-brand" id="upcomingCount">—</span>
           </div>
           <svg id="upcomingChevron" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform 0.2s;transform:rotate(180deg)"><path d="M4 6l4 4 4-4"/></svg>
         </div>
         <div class="upcoming-body" id="upcomingBody">
           <table style="width:100%;border-collapse:collapse;background:var(--surface);">
-            <thead><tr>
-              <th>Date &amp; Time</th><th>Client</th><th>Service</th><th>Staff</th><th>Duration</th><th>Status</th>
-            </tr></thead>
-            <tbody>
-              <tr><td>Mon 16, 09:00</td><td>Sophie Laurent</td><td>Hydrafacial</td><td>Dr. Carter</td><td>60 min</td><td><span class="badge badge-green">Confirmed</span></td></tr>
-              <tr><td>Tue 17, 10:30</td><td>James Mitchell</td><td>Laser Treatment</td><td>Dr. Nair</td><td>90 min</td><td><span class="badge badge-green">Confirmed</span></td></tr>
-              <tr><td>Wed 18, 09:00</td><td>Amara Kim</td><td>Botox</td><td>Dr. Carter</td><td>60 min</td><td><span class="badge badge-blue">In Progress</span></td></tr>
-              <tr><td>Thu 19, 14:00</td><td>Oliver Webb</td><td>Dermal Filler</td><td>Dr. Nair</td><td>90 min</td><td><span class="badge badge-brand">Confirmed</span></td></tr>
-              <tr><td>Fri 20, 11:00</td><td>Isabelle Dumont</td><td>Chemical Peel</td><td>Nina Ross</td><td>60 min</td><td><span class="badge badge-brand">Confirmed</span></td></tr>
-              <tr><td>Sat 21, 14:00</td><td>Mei Zhang</td><td>Hydrafacial</td><td>Dr. Carter</td><td>60 min</td><td><span class="badge badge-brand">Confirmed</span></td></tr>
+            <thead>
+              <tr><th>Date &amp; Time</th><th>Client</th><th>Service</th><th>Staff</th><th>Duration</th><th>Status</th></tr>
+            </thead>
+            <tbody id="upcomingTableBody">
+              <tr><td colspan="6" style="padding:20px;text-align:center;color:var(--text-muted)">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -365,7 +195,7 @@
   </div>
 </div>
 
-<!-- NEW BOOKING MODAL -->
+<!-- BOOKING MODAL -->
 <div class="modal-overlay" id="bookingModal">
   <div class="modal">
     <div class="modal-header">
@@ -376,192 +206,280 @@
     </div>
     <div class="modal-body">
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Date</label>
-          <input type="date" class="input" value="2026-02-22" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Time</label>
-          <input type="time" class="input" value="09:00" />
-        </div>
+        <div class="form-group"><label class="form-label">Date</label><input type="date" class="input" id="bookDate" /></div>
+        <div class="form-group"><label class="form-label">Time</label><input type="time" class="input" id="bookTime" value="09:00" /></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Client</label>
-        <input type="text" class="input" placeholder="Search by name or email…" id="clientSearch" />
-      </div>
+      <div class="form-group"><label class="form-label">Client Name</label><input type="text" class="input" id="bookClientName" placeholder="Full name" /></div>
+      <div class="form-group"><label class="form-label">Client Email</label><input type="email" class="input" id="bookClientEmail" placeholder="email@example.com" /></div>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Service</label>
-          <select class="select">
-            <option>Hydrafacial</option>
-            <option>Botox</option>
-            <option>Dermal Filler</option>
-            <option>Laser Treatment</option>
-            <option>Chemical Peel</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Staff</label>
-          <select class="select">
-            <option>Dr. Emily Carter</option>
-            <option>Dr. Priya Nair</option>
-            <option>Nina Ross</option>
-          </select>
-        </div>
+        <div class="form-group"><label class="form-label">Service</label><select class="select" id="bookService"><option value="">Loading…</option></select></div>
+        <div class="form-group"><label class="form-label">Staff</label><select class="select" id="bookStaff"><option value="">Loading…</option></select></div>
       </div>
       <div class="form-group" style="margin-bottom:0;">
         <label class="form-label">Notes</label>
-        <textarea class="textarea" placeholder="Optional notes for this appointment…"></textarea>
+        <textarea class="textarea" id="bookNotes" placeholder="Optional notes…"></textarea>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeBookingModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="confirmBooking()">Book Appointment</button>
+      <button class="btn btn-primary" onclick="confirmBooking()" id="bookBtn">Book Appointment</button>
     </div>
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-  /* ── Constants ── */
-  const START_HOUR = 8;
-  const END_HOUR   = 19;
-  const HOUR_H     = 52; // px per hour
+const API    = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:3001' : 'https://medibook-backend-production-dfb2.up.railway.app';
+const TOKEN  = localStorage.getItem('medibook_token');
+const TENANT = localStorage.getItem('medibook_tenant_id');
 
-  /* ── Appointments data ── */
-  const appts = [
-    { col: 0, start: 9,    end: 10,   color: 'teal',   name: 'Sophie Laurent',  service: 'Hydrafacial'     },
-    { col: 1, start: 10.5, end: 12,   color: 'blue',   name: 'James Mitchell',  service: 'Laser Treatment' },
-    { col: 2, start: 9,    end: 10,   color: 'purple', name: 'Amara Kim',       service: 'Botox'           },
-    { col: 3, start: 14,   end: 15.5, color: 'pink',   name: 'Oliver Webb',     service: 'Dermal Filler'   },
-    { col: 4, start: 11,   end: 12,   color: 'orange', name: 'Isabelle Dumont', service: 'Chemical Peel'   },
-    { col: 5, start: 14,   end: 15,   color: 'teal',   name: 'Mei Zhang',       service: 'Hydrafacial'     },
-  ];
+if (!TOKEN || !TENANT) { location.href = '../pages/login.html'; }
 
-  /* ── Render time labels ── */
-  function renderTimeCol() {
-    const tc = document.getElementById('timeCol');
+document.getElementById('signOutBtn').addEventListener('click', () => { localStorage.clear(); location.href = '../pages/login.html'; });
+
+const CLINIC_NAME = localStorage.getItem('medibook_clinic_name') ?? 'Callora';
+document.getElementById('sidebarName').textContent = CLINIC_NAME;
+document.getElementById('sidebarAv').textContent = CLINIC_NAME.slice(0,2).toUpperCase();
+
+const START_HR = 8, END_HR = 19, HOUR_H = 52;
+
+let currentWeekMonday = getThisMonday();
+let modalDataLoaded = false;
+
+function getThisMonday() {
+  const d = new Date(); const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() + diff);
+  mon.setHours(0,0,0,0); return mon;
+}
+function isoDate(d) { return d.toISOString().slice(0,10); }
+function prevWeek() { currentWeekMonday = new Date(currentWeekMonday.getTime() - 7*86400000); loadCalendar(); }
+function nextWeek() { currentWeekMonday = new Date(currentWeekMonday.getTime() + 7*86400000); loadCalendar(); }
+function setView(v, btn) {
+  document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (v === 'day') showToast('Day view coming soon');
+}
+
+async function apiFetch(path) {
+  const r = await fetch(API + path, { headers: { Authorization: `Bearer ${TOKEN}` } });
+  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error ?? 'API error'); }
+  return r.json();
+}
+async function apiPost(path, body) {
+  const r = await fetch(API + path, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error ?? 'API error'); }
+  return r.json();
+}
+
+function renderTimeCol() {
+  let h = '';
+  for (let hr = START_HR; hr <= END_HR; hr++)
+    h += `<div class="time-label">${String(hr).padStart(2,'0')}:00</div>`;
+  document.getElementById('timeCol').innerHTML = h;
+}
+
+function renderHourCells() {
+  for (let c = 0; c < 6; c++) {
     let h = '';
-    for (let hr = START_HOUR; hr <= END_HOUR; hr++) {
-      h += `<div class="time-label">${String(hr).padStart(2,'0')}:00</div>`;
+    for (let hr = START_HR; hr <= END_HR; hr++) h += '<div class="hour-cell"></div>';
+    document.getElementById(`col${c}`).innerHTML = h;
+  }
+}
+
+function updateDayHeaders(mon) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(mon.getTime() + i * 86400000);
+    const el = document.getElementById(`dh${i}`);
+    const dn = ['Mon','Tue','Wed','Thu','Fri','Sat'][i];
+    el.innerHTML = `<span class="day-num">${d.getDate()}</span>${dn}`;
+    el.className = 'day-col-header' + (d.getTime() === today.getTime() ? ' today' : '');
+    document.getElementById(`col${i}`).className = 'day-column' + (d.getTime() === today.getTime() ? ' today' : '');
+  }
+  const end = new Date(mon.getTime() + 5*86400000);
+  document.getElementById('weekLabel').textContent =
+    `${mon.toLocaleDateString('en-GB',{day:'numeric',month:'short'})} – ${end.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}`;
+}
+
+function renderAppointments(appts, mon) {
+  for (let c = 0; c < 6; c++)
+    document.querySelectorAll(`#col${c} .appt-block,.now-line`).forEach(e => e.remove());
+
+  appts.forEach(a => {
+    const s = new Date(a.startsAt), e = new Date(a.endsAt);
+    const idx = Math.floor((s - mon) / 86400000);
+    if (idx < 0 || idx > 5) return;
+    const sHr = s.getUTCHours() + s.getUTCMinutes()/60;
+    const eHr = e.getUTCHours() + e.getUTCMinutes()/60;
+    const top = Math.max(0,(sHr - START_HR) * HOUR_H);
+    const ht  = Math.max(20,(eHr - sHr) * HOUR_H - 4);
+    const color = a.service.color ?? '#0d9488';
+    const fmt = dt => `${String(new Date(dt).getUTCHours()).padStart(2,'0')}:${String(new Date(dt).getUTCMinutes()).padStart(2,'0')}`;
+    const b = document.createElement('div');
+    b.className = 'appt-block';
+    b.style.cssText = `top:${top+2}px;height:${ht}px;background:${color}22;border-color:${color};color:${color};`;
+    b.innerHTML = `<div class="appt-name">${escHtml(a.client.name)}</div><div class="appt-service">${escHtml(a.service.name)}</div><div class="appt-time-lbl">${fmt(a.startsAt)}–${fmt(a.endsAt)}</div>`;
+    b.onclick = () => showToast(`${a.client.name} — ${a.service.name}`);
+    document.getElementById(`col${idx}`).appendChild(b);
+  });
+
+  // Now-line
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayIdx = Math.floor((today - mon)/86400000);
+  if (todayIdx >= 0 && todayIdx <= 5) {
+    const now = new Date(); const hr = now.getHours() + now.getMinutes()/60;
+    if (hr >= START_HR && hr <= END_HR) {
+      const line = document.createElement('div'); line.className = 'now-line';
+      line.style.top = `${(hr - START_HR) * HOUR_H}px`;
+      document.getElementById(`col${todayIdx}`).appendChild(line);
     }
-    tc.innerHTML = h;
   }
+}
 
-  /* ── Render hour cells per day column ── */
-  function renderHourCells() {
-    for (let c = 0; c < 6; c++) {
-      const col = document.getElementById(`col${c}`);
-      let h = '';
-      for (let hr = START_HOUR; hr <= END_HOUR; hr++) {
-        h += `<div class="hour-cell"></div>`;
-      }
-      col.innerHTML = h;
-    }
+function renderMiniCal(mon) {
+  const yr = mon.getFullYear(), mo = mon.getMonth();
+  document.getElementById('miniCalTitle').textContent = mon.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  const first = new Date(yr,mo,1); const offset = first.getDay() === 0 ? 6 : first.getDay()-1;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const weekEnd = new Date(mon.getTime()+5*86400000);
+  let h = ['M','T','W','T','F','S','S'].map(d=>`<div class="mini-cal-day-name">${d}</div>`).join('');
+  for (let i=0;i<offset;i++) h += '<div class="mini-cal-day other-month"></div>';
+  const dm = new Date(yr,mo+1,0).getDate();
+  for (let d=1;d<=dm;d++) {
+    const dt = new Date(yr,mo,d);
+    const inW = dt>=mon && dt<=weekEnd, isT = dt.getTime()===today.getTime();
+    h += `<div class="mini-cal-day${isT?' today':inW?' in-week':''}">${d}</div>`;
   }
+  document.getElementById('miniCalGrid').innerHTML = h;
+}
 
-  /* ── Render appointment blocks ── */
-  function renderAppts() {
-    appts.forEach(a => {
-      const col = document.getElementById(`col${a.col}`);
-      const top  = (a.start - START_HOUR) * HOUR_H;
-      const height = (a.end - a.start) * HOUR_H - 4;
-      const fmtTime = h => `${String(Math.floor(h)).padStart(2,'0')}:${h%1===0.5?'30':'00'}`;
-      const block = document.createElement('div');
-      block.className = `appt-block appt-${a.color}`;
-      block.style.top = `${top + 2}px`;
-      block.style.height = `${height}px`;
-      block.innerHTML = `
-        <div class="appt-name">${a.name}</div>
-        <div class="appt-service">${a.service}</div>
-        <div class="appt-time-lbl">${fmtTime(a.start)}–${fmtTime(a.end)}</div>`;
-      block.addEventListener('click', () => {
-        showToast(`${a.name} — ${a.service}`, `${fmtTime(a.start)}–${fmtTime(a.end)}`);
-      });
-      col.appendChild(block);
-    });
-  }
+function renderOpenSlots(appts) {
+  const el = document.getElementById('openSlots');
+  // Show times with no appointment in working hours for today
+  const today = new Date().toISOString().slice(0,10);
+  const todayAppts = appts.filter(a => a.startsAt.startsWith(today));
+  const bookedSlots = new Set(todayAppts.map(a => new Date(a.startsAt).getUTCHours()));
+  const freeHours = [];
+  for (let hr = 9; hr <= 17; hr++) { if (!bookedSlots.has(hr)) freeHours.push(hr); }
+  if (!freeHours.length) { el.innerHTML = '<p style="font-size:12.5px;color:var(--text-muted)">Fully booked today.</p>'; return; }
+  el.innerHTML = freeHours.slice(0,5).map(hr =>
+    `<div onclick="prefillTime('${String(hr).padStart(2,'0')}:00')" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);margin-bottom:6px;cursor:pointer;font-size:12.5px;color:var(--text-2);" onmouseover="this.style.background='var(--brand-dim)'" onmouseout="this.style.background=''">
+      <div style="width:7px;height:7px;border-radius:50%;background:var(--green);"></div>
+      ${String(hr).padStart(2,'0')}:00 open
+    </div>`
+  ).join('') + (freeHours.length > 5 ? `<div style="font-size:12px;color:var(--text-muted)">+${freeHours.length-5} more slots</div>` : '');
+}
 
-  /* ── Mini calendar ── */
-  function renderMiniCal() {
-    const grid = document.getElementById('miniCalGrid');
-    const days = ['M','T','W','T','F','S','S'];
-    let h = days.map(d => `<div class="mini-cal-day-name">${d}</div>`).join('');
-    // Feb 2026: 1st is a Sunday (day index 6 in Mon-first)
-    const offset = 6; // Sunday = index 6 in Mon-based week
-    for (let i = 0; i < offset; i++) h += `<div class="mini-cal-day other-month"></div>`;
-    for (let d = 1; d <= 28; d++) {
-      const inWeek = d >= 16 && d <= 22;
-      const isToday = d === 22;
-      let cls = 'mini-cal-day';
-      if (isToday) cls += ' today';
-      else if (inWeek) cls += ' in-week';
-      h += `<div class="${cls}">${d}</div>`;
-    }
-    grid.innerHTML = h;
-  }
+function prefillTime(t) { document.getElementById('bookTime').value = t; openBookingModal(); }
 
-  /* ── Week nav (cosmetic) ── */
-  let weekOffset = 0;
-  const weekLabels = [
-    'Week of Feb 16–22, 2026',
-    'Week of Feb 23 – Mar 1, 2026',
-    'Week of Mar 2–8, 2026',
-    'Week of Feb 9–15, 2026',
-    'Week of Feb 2–8, 2026',
-  ];
-  function prevWeek() {
-    weekOffset = Math.max(-2, weekOffset - 1);
-    document.getElementById('weekLabel').textContent = weekLabels[Math.abs(weekOffset)] || weekLabels[0];
+function renderUpcomingTable(appts) {
+  document.getElementById('upcomingCount').textContent = `${appts.length} bookings`;
+  const tbody = document.getElementById('upcomingTableBody');
+  if (!appts.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--text-muted)">No appointments this week.</td></tr>';
+    return;
   }
-  function nextWeek() {
-    weekOffset = Math.min(2, weekOffset + 1);
-    document.getElementById('weekLabel').textContent = weekLabels[weekOffset] || weekLabels[0];
-  }
+  const statusBadge = s => ({
+    'CONFIRMED': '<span class="badge badge-green">Confirmed</span>',
+    'COMPLETED': '<span class="badge badge-gray">Completed</span>',
+    'PENDING':   '<span class="badge badge-gold">Pending</span>',
+    'NO_SHOW':   '<span class="badge badge-red">No Show</span>',
+  }[s?.toUpperCase()] ?? `<span class="badge badge-gray">${s}</span>`);
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  tbody.innerHTML = appts.map(a => {
+    const d = new Date(a.startsAt);
+    const t = `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
+    return `<tr>
+      <td>${days[d.getDay()]} ${d.getDate()}, ${t}</td>
+      <td>${escHtml(a.clientName)}</td>
+      <td>${escHtml(a.serviceName)}</td>
+      <td>${escHtml(a.staffName)}</td>
+      <td>${a.durationMins}min</td>
+      <td>${statusBadge(a.status)}</td>
+    </tr>`;
+  }).join('');
+}
 
-  /* ── View toggle ── */
-  function setView(v, btn) {
-    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    if (v === 'day') showToast('Day view', 'Showing today\'s schedule');
+async function loadCalendar() {
+  renderTimeCol(); renderHourCells();
+  updateDayHeaders(currentWeekMonday); renderMiniCal(currentWeekMonday);
+  const start = isoDate(currentWeekMonday);
+  try {
+    const [wk, up] = await Promise.all([
+      apiFetch(`/api/tenants/${TENANT}/calendar/week?start=${start}`),
+      apiFetch(`/api/tenants/${TENANT}/calendar/upcoming?start=${start}`),
+    ]);
+    renderAppointments(wk.appointments, currentWeekMonday);
+    renderOpenSlots(wk.appointments);
+    renderUpcomingTable(up.appointments);
+  } catch {
+    document.getElementById('upcomingTableBody').innerHTML =
+      '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--text-muted)">Could not load. Check connection.</td></tr>';
+    document.getElementById('openSlots').innerHTML = '<p style="font-size:12.5px;color:var(--text-muted)">Could not load.</p>';
   }
+}
 
-  /* ── Upcoming toggle ── */
-  function toggleUpcoming() {
-    const body = document.getElementById('upcomingBody');
-    const chev = document.getElementById('upcomingChevron');
-    const open = body.style.display !== 'none';
-    body.style.display = open ? 'none' : '';
-    chev.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+function toggleUpcoming() {
+  const body = document.getElementById('upcomingBody');
+  const chev = document.getElementById('upcomingChevron');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  chev.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+async function openBookingModal() {
+  document.getElementById('bookingModal').classList.add('open');
+  if (!document.getElementById('bookDate').value)
+    document.getElementById('bookDate').value = new Date().toISOString().slice(0,10);
+  if (!modalDataLoaded) {
+    try {
+      const data = await apiFetch(`/api/tenants/${TENANT}/modal-data`);
+      document.getElementById('bookService').innerHTML = data.services.map(s =>
+        `<option value="${s.id}">${escHtml(s.name)} (${s.durationMins}min · £${(s.priceCents/100).toFixed(0)})</option>`).join('');
+      document.getElementById('bookStaff').innerHTML = data.staff.map(s =>
+        `<option value="${s.id}">${escHtml(s.name)}</option>`).join('');
+      modalDataLoaded = true;
+    } catch { showToast('Could not load services/staff'); }
   }
+}
+function closeBookingModal() { document.getElementById('bookingModal').classList.remove('open'); }
+document.getElementById('bookingModal').addEventListener('click', e => { if (e.target===e.currentTarget) closeBookingModal(); });
 
-  /* ── Modal ── */
-  function openBookingModal() { document.getElementById('bookingModal').classList.add('open'); }
-  function closeBookingModal() { document.getElementById('bookingModal').classList.remove('open'); }
-  function confirmBooking() {
+async function confirmBooking() {
+  const date=document.getElementById('bookDate').value, time=document.getElementById('bookTime').value,
+        name=document.getElementById('bookClientName').value.trim(), email=document.getElementById('bookClientEmail').value.trim(),
+        svcId=document.getElementById('bookService').value, stfId=document.getElementById('bookStaff').value,
+        notes=document.getElementById('bookNotes').value;
+  if (!date||!time||!name||!svcId||!stfId) { showToast('Please fill in all required fields'); return; }
+  const btn = document.getElementById('bookBtn');
+  btn.disabled=true; btn.textContent='Booking…';
+  try {
+    await apiPost(`/api/tenants/${TENANT}/appointments`, { clientName:name, clientEmail:email||undefined, serviceId:svcId, staffId:stfId, date, time, notes });
     closeBookingModal();
-    showToast('Booking confirmed!', 'Appointment added to calendar');
-  }
-  document.getElementById('bookingModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeBookingModal(); });
+    showToast('Booking confirmed!');
+    loadCalendar();
+  } catch (err) { showToast(err.message ?? 'Booking failed'); }
+  finally { btn.disabled=false; btn.textContent='Book Appointment'; }
+}
 
-  /* ── Toast ── */
-  function showToast(title, msg) {
-    const wrap = document.getElementById('toastWrap');
-    const t = document.createElement('div');
-    t.className = 'toast';
-    t.innerHTML = `<div class="toast-icon">📅</div><div class="toast-content"><div class="toast-title">${title}</div>${msg ? `<div class="toast-msg">${msg}</div>` : ''}</div>`;
-    wrap.appendChild(t);
-    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
-    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }, 3500);
-  }
+function escHtml(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<div class="toast-icon">📅</div><div class="toast-content"><div class="toast-title">${escHtml(msg)}</div></div>`;
+  document.getElementById('toastWrap').appendChild(t);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));
+  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),350); }, 3500);
+}
 
-  /* ── Init ── */
-  renderTimeCol();
-  renderHourCells();
-  renderAppts();
-  renderMiniCal();
+document.addEventListener('DOMContentLoaded', loadCalendar);
 </script>
 </body>
 </html>

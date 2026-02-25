@@ -20,6 +20,13 @@ import { billingRoutes } from './routes/billing-routes.js';
 import appointmentRoutes from './routes/appointment-routes.js';
 import staffRoutes from './routes/staff-routes.js';
 import activityRoutes from './routes/activity-routes.js';
+import calendarRoutes from './routes/calendar-routes.js';
+import clientRoutes from './routes/client-routes.js';
+import paymentRoutes from './routes/payment-routes.js';
+import settingsRoutes from './routes/settings-routes.js';
+import servicesRoutes from './routes/services-routes.js';
+import integrationRoutes from './routes/integration-routes.js';
+import teamRoutes from './routes/team-routes.js';
 
 const server = Fastify({
   logger: {
@@ -65,6 +72,13 @@ await server.register(billingRoutes, { prefix: '/billing' });
 await server.register(appointmentRoutes);
 await server.register(staffRoutes);
 await server.register(activityRoutes);
+await server.register(calendarRoutes);
+await server.register(clientRoutes);
+await server.register(paymentRoutes);
+await server.register(settingsRoutes);
+await server.register(servicesRoutes);
+await server.register(integrationRoutes);
+await server.register(teamRoutes);
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 server.get('/health', async () => ({

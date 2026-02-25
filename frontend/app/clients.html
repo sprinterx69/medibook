@@ -3,161 +3,86 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clients — MediBook</title>
+  <title>Clients — Callora</title>
   <link rel="stylesheet" href="./styles.css" />
   <style>
-    /* ── Clients page ── */
-    .clients-layout { display: grid; grid-template-columns: 65% 1fr; gap: 20px; }
-    @media (max-width: 1100px) { .clients-layout { grid-template-columns: 1fr; } }
-
-    /* Stat row - 3 col */
-    .stat-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
-    @media (max-width: 900px) { .stat-grid-3 { grid-template-columns: 1fr 1fr; } }
-
-    /* Sortable header */
-    th.sortable { cursor: pointer; user-select: none; }
-    th.sortable:hover { color: var(--text-2); }
-    th.sortable .sort-icon { display: inline-block; margin-left: 4px; opacity: 0.4; }
-    th.sortable.sorted .sort-icon { opacity: 1; color: var(--brand); }
-
-    /* Client row */
-    .client-name-cell { font-weight: 600; color: var(--text); }
-    .client-email-cell { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
-    .row-selected { background: var(--brand-dim) !important; }
-
-    /* Avatar colors */
-    .av-teal   { background: #f0fdfa; color: #115e59; }
-    .av-blue   { background: #eff6ff; color: #1e40af; }
-    .av-purple { background: #f5f3ff; color: #5b21b6; }
-    .av-orange { background: #fff7ed; color: #9a3412; }
-    .av-pink   { background: #fdf2f8; color: #9d174d; }
-    .av-green  { background: #f0fdf4; color: #166534; }
-    .av-gold   { background: #fffbeb; color: #92400e; }
-    .av-gray   { background: var(--surface-3); color: var(--text-muted); }
-
-    /* Detail panel */
-    .detail-panel { position: sticky; top: 0; }
-    .detail-av-large {
-      width: 56px; height: 56px; border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; font-weight: 700; flex-shrink: 0;
-    }
-    .detail-section { padding: 16px 20px; border-bottom: 1px solid var(--border); }
-    .detail-section:last-child { border-bottom: none; }
-    .detail-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-light); margin-bottom: 8px; }
-
-    /* Tags */
-    .tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; background: var(--surface-3); color: var(--text-muted); border: 1px solid var(--border); margin: 2px; }
-    .tag-vip { background: var(--gold-dim); color: var(--gold-text); border-color: #fde68a; }
-    .tag-brand { background: var(--brand-dim); color: var(--brand-text); border-color: var(--brand-border); }
-
-    /* History item */
-    .history-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-    .history-item:last-child { border-bottom: none; }
-    .history-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); margin-top: 5px; flex-shrink: 0; }
-
-    /* Search row */
-    .topbar-search { width: 280px; }
-
-    /* Filter row */
-    .filter-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-    .filter-chip {
-      padding: 5px 12px; border-radius: 20px; font-size: 12.5px; font-weight: 600;
-      border: 1px solid var(--border); background: var(--surface); color: var(--text-muted);
-      cursor: pointer; transition: all 0.15s;
-    }
-    .filter-chip.active { background: var(--brand-dim); color: var(--brand-text); border-color: var(--brand-border); }
+    .client-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .client-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; box-shadow: var(--shadow-xs); transition: box-shadow 0.2s, border-color 0.2s; cursor: pointer; }
+    .client-card:hover { box-shadow: var(--shadow); border-color: var(--border-strong); }
+    .client-card-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+    .client-av { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; flex-shrink: 0; }
+    .client-name { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.2; }
+    .client-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+    .client-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .cs-val { font-size: 17px; font-weight: 700; color: var(--text); }
+    .cs-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+    .filter-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .filter-tab { padding: 5px 14px; border-radius: 6px; border: none; background: none; font-family: inherit; font-size: 12.5px; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+    .filter-tab.active { background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: var(--shadow-xs); }
+    .filter-tab:hover:not(.active) { color: var(--text-2); }
+    @keyframes shimmer { 0%{background-position:-200px 0} 100%{background-position:calc(200px + 100%) 0} }
+    .skeleton { background: linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 50%,var(--surface-2) 75%); background-size:200px 100%; animation: shimmer 1.3s infinite; border-radius: 4px; height: 140px; }
   </style>
 </head>
 <body>
 <div class="app-shell">
-
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-mark">M</div>
-      <span class="logo-text">MediBook</span>
+      <div class="logo-mark">C</div>
+      <span class="logo-text">Callora</span>
     </div>
     <div class="sidebar-scroll">
       <div class="nav-section">Main</div>
       <a href="dashboard.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <rect x="1" y="1" width="6" height="6" rx="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.2"/>
-          <rect x="1" y="9" width="6" height="6" rx="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.2"/>
-        </svg>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="6" height="6" rx="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.2"/><rect x="1" y="9" width="6" height="6" rx="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.2"/></svg>
         Dashboard
       </a>
       <a href="calendar.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/>
-          <path d="M5 1v3M11 1v3M1.5 6.5h13"/>
-        </svg>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M5 1v3M11 1v3M1.5 6.5h13"/></svg>
         Calendar
       </a>
       <a href="clients.html" class="nav-item active">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="6" cy="5" r="2.5"/><path d="M1 13.5c0-2.485 2.239-4.5 5-4.5s5 2.015 5 4.5"/>
-          <circle cx="12" cy="5" r="2"/><path d="M14.5 13c0-1.8-1.12-3.34-2.75-4"/>
-        </svg>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="5" r="2.5"/><path d="M1 13.5c0-2.485 2.239-4.5 5-4.5s5 2.015 5 4.5"/><circle cx="12" cy="5" r="2"/><path d="M14.5 13c0-1.8-1.12-3.34-2.75-4"/></svg>
         Clients
       </a>
       <a href="payments.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <rect x="1" y="3.5" width="14" height="10" rx="1.5"/><path d="M1 7h14"/>
-        </svg>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="3.5" width="14" height="10" rx="1.5"/><path d="M1 7h14"/></svg>
         Payments
       </a>
       <a href="staff.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="8" cy="5.5" r="3"/><path d="M2 13.5c0-2.761 2.686-5 6-5s6 2.239 6 5"/>
-        </svg>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="5.5" r="3"/><path d="M2 13.5c0-2.761 2.686-5 6-5s6 2.239 6 5"/></svg>
         Staff
       </a>
       <div class="nav-section">Tools</div>
       <a href="agent.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/>
-        </svg>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/></svg>
         AI Agent
         <span class="nav-badge green">Live</span>
       </a>
       <a href="settings.html" class="nav-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="8" cy="8" r="2.2"/>
-          <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M2.697 2.697l1.06 1.06M12.243 12.243l1.06 1.06M13.303 2.697l-1.06 1.06M3.757 12.243l-1.06 1.06"/>
-        </svg>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="2.2"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M2.697 2.697l1.06 1.06M12.243 12.243l1.06 1.06M13.303 2.697l-1.06 1.06M3.757 12.243l-1.06 1.06"/></svg>
         Settings
       </a>
     </div>
     <div class="sidebar-footer">
       <div class="user-card">
-        <div class="user-av">LC</div>
+        <div class="user-av" id="sidebarAv">—</div>
         <div>
-          <div class="user-name">Lumière Clinic</div>
+          <div class="user-name" id="sidebarName">Loading…</div>
           <div class="user-role">Clinic Owner</div>
         </div>
       </div>
-      <a href="#" style="display:block;text-align:center;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 0;margin-top:2px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">Sign out</a>
+      <a href="#" id="signOutBtn" style="display:block;text-align:center;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 0;margin-top:2px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">Sign out</a>
     </div>
   </aside>
 
-  <!-- MAIN -->
   <div class="main">
-    <!-- TOPBAR -->
     <header class="topbar">
-      <div class="topbar-left" style="flex:1;min-width:0;">
-        <span class="page-title" style="flex-shrink:0;">Clients</span>
-        <div style="width:1px;height:22px;background:var(--border);margin:0 4px;flex-shrink:0;"></div>
-        <div class="search-wrap" style="flex:1;max-width:340px;">
-          <svg class="search-icon" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
-          <input class="search-input" type="search" id="clientSearchInput" placeholder="Search clients by name or email…" oninput="filterClients(this.value)" />
-        </div>
+      <div class="topbar-left">
+        <span class="page-title">Clients</span>
+        <span class="breadcrumb" id="clientCount">Loading…</span>
       </div>
       <div class="topbar-right">
-        <button class="btn btn-secondary" onclick="showFilterPanel()">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 4h12M4 8h8M6 12h4"/></svg>
-          Filter
-        </button>
         <button class="btn btn-primary" onclick="openAddClientModal()">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
           Add Client
@@ -165,339 +90,246 @@
       </div>
     </header>
 
-    <!-- CONTENT -->
     <main class="content">
+      <!-- Stat row -->
+      <div class="stat-grid" style="margin-bottom:24px;" id="statsRow">
+        <div class="stat-card"><div class="stat-label">Total Clients</div><div class="stat-value skeleton" style="height:28px;width:60px;"></div></div>
+        <div class="stat-card"><div class="stat-label">Active (30d)</div><div class="stat-value skeleton" style="height:28px;width:60px;"></div></div>
+        <div class="stat-card"><div class="stat-label">Avg. Lifetime Spend</div><div class="stat-value skeleton" style="height:28px;width:80px;"></div></div>
+        <div class="stat-card"><div class="stat-label">VIP Clients</div><div class="stat-value skeleton" style="height:28px;width:40px;"></div></div>
+      </div>
 
-      <!-- STATS -->
-      <div class="stat-grid-3">
-        <div class="stat-card">
-          <div class="stat-label">Total Clients</div>
-          <div class="stat-value">247</div>
-          <div class="stat-meta">All time registrations</div>
+      <!-- Filter row -->
+      <div class="filter-row">
+        <div class="search-wrap" style="flex:1;max-width:320px">
+          <svg class="search-icon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" type="search" placeholder="Search clients…" oninput="handleSearch(this.value)" id="clientSearch">
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Active This Month</div>
-          <div class="stat-value">89</div>
-          <div class="stat-meta"><span class="stat-up">↑ 12</span> vs last month</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Avg. Lifetime Spend</div>
-          <div class="stat-value">£640</div>
-          <div class="stat-meta"><span class="stat-up">↑ £45</span> vs last month</div>
+        <div style="display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:3px">
+          <button class="filter-tab active" onclick="setFilter('all',this)">All</button>
+          <button class="filter-tab" onclick="setFilter('active',this)">Active</button>
+          <button class="filter-tab" onclick="setFilter('inactive',this)">Inactive</button>
+          <button class="filter-tab" onclick="setFilter('vip',this)">VIP</button>
         </div>
       </div>
 
-      <!-- MAIN LAYOUT -->
-      <div class="clients-layout">
-        <!-- CLIENT TABLE -->
-        <div>
-          <div class="filter-row">
-            <span style="font-size:12.5px;color:var(--text-muted);">Filter:</span>
-            <div class="filter-chip active" onclick="setFilter('all',this)">All</div>
-            <div class="filter-chip" onclick="setFilter('active',this)">Active</div>
-            <div class="filter-chip" onclick="setFilter('vip',this)">VIP</div>
-            <div class="filter-chip" onclick="setFilter('inactive',this)">Inactive</div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width:36px;"></th>
-                  <th class="sortable sorted" onclick="sortTable('name')" data-col="name">Name <span class="sort-icon">↕</span></th>
-                  <th class="sortable" onclick="sortTable('lastVisit')" data-col="lastVisit">Last Visit <span class="sort-icon">↕</span></th>
-                  <th class="sortable" onclick="sortTable('spend')" data-col="spend">Lifetime Spend <span class="sort-icon">↕</span></th>
-                  <th class="sortable" onclick="sortTable('visits')" data-col="visits">Visits <span class="sort-icon">↕</span></th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="clientsTableBody"></tbody>
-            </table>
-          </div>
-          <div style="padding:12px 4px;font-size:12.5px;color:var(--text-muted);" id="resultCount">Showing 8 clients</div>
-        </div>
-
-        <!-- DETAIL PANEL -->
-        <div class="card detail-panel" id="detailPanel">
-          <div class="detail-section" style="padding:20px;">
-            <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;">
-              <div class="detail-av-large av-teal" id="detailAvatar">SL</div>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:16px;font-weight:700;color:var(--text);" id="detailName">Sophie Laurent</div>
-                <div style="font-size:12.5px;color:var(--text-muted);margin-top:2px;" id="detailEmail">sophie@email.com</div>
-                <div style="font-size:12.5px;color:var(--text-muted);" id="detailPhone">+44 7700 900123</div>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
-              <div style="background:var(--surface-2);border-radius:var(--radius);padding:10px 12px;">
-                <div style="font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Since</div>
-                <div style="font-size:13.5px;font-weight:600;color:var(--text);margin-top:2px;" id="detailSince">Aug 2024</div>
-              </div>
-              <div style="background:var(--surface-2);border-radius:var(--radius);padding:10px 12px;">
-                <div style="font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Visits</div>
-                <div style="font-size:13.5px;font-weight:600;color:var(--text);margin-top:2px;" id="detailVisits">7 visits</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="detail-section">
-            <div class="detail-label">Tags</div>
-            <div id="detailTags">
-              <span class="tag tag-vip">VIP</span>
-              <span class="tag tag-brand">Hydrafacial Regular</span>
-            </div>
-            <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="showToast('Add tag feature coming soon','🏷️')">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
-              Add Tag
-            </button>
-          </div>
-
-          <div class="detail-section">
-            <div style="display:flex;gap:8px;">
-              <button class="btn btn-primary btn-sm" style="flex:1;justify-content:center;" onclick="showToast('Opening booking form…','📅')">New Booking</button>
-              <button class="btn btn-secondary btn-sm" style="flex:1;justify-content:center;" onclick="showToast('Message feature coming soon','💬')">Send Message</button>
-            </div>
-          </div>
-
-          <div class="detail-section">
-            <div class="detail-label">Appointment History</div>
-            <div id="detailHistory">
-              <div class="history-item">
-                <div class="history-dot"></div>
-                <div>
-                  <div style="font-size:13px;font-weight:600;color:var(--text);">Hydrafacial</div>
-                  <div style="font-size:12px;color:var(--text-muted);">18 Feb 2026 · £160</div>
-                </div>
-              </div>
-              <div class="history-item">
-                <div class="history-dot"></div>
-                <div>
-                  <div style="font-size:13px;font-weight:600;color:var(--text);">Chemical Peel</div>
-                  <div style="font-size:12px;color:var(--text-muted);">3 Feb 2026 · £120</div>
-                </div>
-              </div>
-              <div class="history-item">
-                <div class="history-dot"></div>
-                <div>
-                  <div style="font-size:13px;font-weight:600;color:var(--text);">Hydrafacial</div>
-                  <div style="font-size:12px;color:var(--text-muted);">9 Jan 2026 · £160</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="detail-section">
-            <div class="detail-label">Notes</div>
-            <textarea class="textarea" id="detailNotes" style="min-height:70px;">Prefers morning appointments. Sensitive skin — avoid retinol-based treatments.</textarea>
-            <button class="btn btn-ghost btn-sm" style="margin-top:6px;" onclick="showToast('Notes saved','✅','success')">Save notes</button>
-          </div>
-        </div>
+      <!-- Client grid -->
+      <div class="client-grid" id="clientGrid">
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
       </div>
-
     </main>
   </div>
 </div>
 
 <!-- ADD CLIENT MODAL -->
 <div class="modal-overlay" id="addClientModal">
-  <div class="modal">
+  <div class="modal" style="width:480px;">
     <div class="modal-header">
-      <span class="modal-title">Add New Client</span>
-      <button class="btn-icon" onclick="closeAddClientModal()">
+      <span class="modal-title">Add Client</span>
+      <button class="btn-icon" onclick="closeModal('addClientModal')">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l10 10M13 3L3 13"/></svg>
       </button>
     </div>
     <div class="modal-body">
+      <div class="form-group"><label class="form-label">Full Name *</label><input type="text" class="input" id="newClientName" placeholder="Jane Smith" /></div>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">First Name</label>
-          <input type="text" class="input" placeholder="e.g. Jane" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Last Name</label>
-          <input type="text" class="input" placeholder="e.g. Smith" />
-        </div>
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="input" id="newClientEmail" placeholder="jane@example.com" /></div>
+        <div class="form-group"><label class="form-label">Phone</label><input type="tel" class="input" id="newClientPhone" placeholder="+44 7700 000000" /></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input type="email" class="input" placeholder="jane@example.com" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Phone</label>
-        <input type="tel" class="input" placeholder="+44 7700 900000" />
-      </div>
-      <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label">Notes</label>
-        <textarea class="textarea" placeholder="Any initial notes about this client…"></textarea>
-      </div>
+      <div class="form-group" style="margin-bottom:0;"><label class="form-label">Notes</label><textarea class="textarea" id="newClientNotes" placeholder="Any notes or medical information…"></textarea></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeAddClientModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveNewClient()">Add Client</button>
+      <button class="btn btn-secondary" onclick="closeModal('addClientModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewClient()" id="saveClientBtn">Add Client</button>
     </div>
   </div>
 </div>
 
-<!-- TOAST -->
+<!-- CLIENT DETAIL MODAL -->
+<div class="modal-overlay" id="clientDetailModal">
+  <div class="modal" style="width:560px;max-height:80vh;overflow-y:auto;">
+    <div class="modal-header">
+      <span class="modal-title" id="detailName">Client</span>
+      <button class="btn-icon" onclick="closeModal('clientDetailModal')">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="clientDetailBody">
+      <div class="skeleton" style="height:80px;margin-bottom:16px;"></div>
+      <div class="skeleton" style="height:160px;"></div>
+    </div>
+  </div>
+</div>
+
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-  /* ── Client data ── */
-  const clients = [
-    { id: 0, initials:'SL', avClass:'av-teal',   name:'Sophie Laurent',  email:'sophie@email.com',   phone:'+44 7700 900123', lastVisit:'18 Feb', spend:1240, visits:7,  status:'active', vip:false, since:'Aug 2024',
-      tags:['Hydrafacial Regular'],
-      history:[{svc:'Hydrafacial',date:'18 Feb 2026',amt:'£160'},{svc:'Chemical Peel',date:'3 Feb 2026',amt:'£120'},{svc:'Hydrafacial',date:'9 Jan 2026',amt:'£160'}],
-      notes:'Prefers morning appointments. Sensitive skin — avoid retinol-based treatments.' },
-    { id: 1, initials:'JM', avClass:'av-blue',   name:'James Mitchell',  email:'james@email.com',    phone:'+44 7700 900234', lastVisit:'15 Feb', spend:890,  visits:4,  status:'active', vip:false, since:'Oct 2024',
-      tags:['Laser Treatment'],
-      history:[{svc:'Laser Treatment',date:'15 Feb 2026',amt:'£280'},{svc:'Laser Treatment',date:'14 Jan 2026',amt:'£280'},{svc:'Consultation',date:'5 Dec 2025',amt:'£80'}],
-      notes:'' },
-    { id: 2, initials:'AK', avClass:'av-purple', name:'Amara Kim',       email:'amara@email.com',    phone:'+44 7700 900345', lastVisit:'20 Feb', spend:2100, visits:12, status:'active', vip:true,  since:'Mar 2024',
-      tags:['VIP','Botox Regular','Monthly Client'],
-      history:[{svc:'Botox',date:'20 Feb 2026',amt:'£350'},{svc:'Dermal Filler',date:'18 Jan 2026',amt:'£450'},{svc:'Botox',date:'15 Dec 2025',amt:'£350'}],
-      notes:'VIP client. Prefers Dr. Carter. Send reminder 48 hrs before appointment.' },
-    { id: 3, initials:'OW', avClass:'av-orange', name:'Oliver Webb',     email:'oliver@email.com',   phone:'+44 7700 900456', lastVisit:'10 Feb', spend:340,  visits:2,  status:'active', vip:false, since:'Jan 2026',
-      tags:['New Client'],
-      history:[{svc:'Dermal Filler',date:'10 Feb 2026',amt:'£200'},{svc:'Consultation',date:'28 Jan 2026',amt:'£80'}],
-      notes:'' },
-    { id: 4, initials:'ID', avClass:'av-pink',   name:'Isabelle Dumont', email:'isabelle@email.com', phone:'+44 7700 900567', lastVisit:'28 Jan', spend:560,  visits:3,  status:'active', vip:false, since:'Sep 2025',
-      tags:['Chemical Peel Regular'],
-      history:[{svc:'Chemical Peel',date:'28 Jan 2026',amt:'£120'},{svc:'Hydrafacial',date:'3 Jan 2026',amt:'£160'},{svc:'Chemical Peel',date:'10 Dec 2025',amt:'£120'}],
-      notes:'French speaker — notes in French appreciated.' },
-    { id: 5, initials:'RS', avClass:'av-gray',   name:'Raj Sharma',      email:'raj@email.com',      phone:'+44 7700 900678', lastVisit:'5 Jan',  spend:180,  visits:1,  status:'inactive', vip:false, since:'Jan 2026',
-      tags:[],
-      history:[{svc:'Consultation',date:'5 Jan 2026',amt:'£80'}],
-      notes:'Booked once, no follow-up yet. Consider re-engagement outreach.' },
-    { id: 6, initials:'MZ', avClass:'av-green',  name:'Mei Zhang',       email:'mei@email.com',      phone:'+44 7700 900789', lastVisit:'19 Feb', spend:1450, visits:8,  status:'active', vip:false, since:'Jun 2024',
-      tags:['Hydrafacial Regular','Loyal Client'],
-      history:[{svc:'Hydrafacial',date:'19 Feb 2026',amt:'£160'},{svc:'Chemical Peel',date:'31 Jan 2026',amt:'£120'},{svc:'Hydrafacial',date:'12 Jan 2026',amt:'£160'}],
-      notes:'' },
-    { id: 7, initials:'CV', avClass:'av-gold',   name:'Carlos Vega',     email:'carlos@email.com',   phone:'+44 7700 900890', lastVisit:'12 Feb', spend:720,  visits:5,  status:'active', vip:false, since:'Jul 2025',
-      tags:['Laser Treatment'],
-      history:[{svc:'Laser Treatment',date:'12 Feb 2026',amt:'£280'},{svc:'Laser Treatment',date:'9 Jan 2026',amt:'£280'},{svc:'Consultation',date:'5 Jul 2025',amt:'£80'}],
-      notes:'' },
-  ];
+const API    = (location.hostname==='localhost'||location.hostname==='127.0.0.1') ? 'http://localhost:3001' : 'https://medibook-backend-production-dfb2.up.railway.app';
+const TOKEN  = localStorage.getItem('medibook_token');
+const TENANT = localStorage.getItem('medibook_tenant_id');
+if (!TOKEN||!TENANT) { location.href='../pages/login.html'; }
+document.getElementById('signOutBtn').addEventListener('click',()=>{ localStorage.clear(); location.href='../pages/login.html'; });
+const CLINIC_NAME = localStorage.getItem('medibook_clinic_name') ?? 'Callora';
+document.getElementById('sidebarName').textContent = CLINIC_NAME;
+document.getElementById('sidebarAv').textContent = CLINIC_NAME.slice(0,2).toUpperCase();
 
-  let filteredClients = [...clients];
-  let activeFilter = 'all';
-  let selectedClientId = 0;
-  let sortCol = 'name';
-  let sortAsc = true;
+let currentFilter = 'all';
+let searchQuery = '';
+let searchTimer = null;
 
-  /* ── Render table ── */
-  function renderTable() {
-    const tbody = document.getElementById('clientsTableBody');
-    tbody.innerHTML = filteredClients.map(c => `
-      <tr class="clickable ${c.id === selectedClientId ? 'row-selected' : ''}" onclick="selectClient(${c.id})">
-        <td><div class="avatar ${c.avClass}">${c.initials}</div></td>
-        <td>
-          <div class="client-name-cell">${c.name} ${c.vip ? '<span class="badge badge-gold" style="font-size:10px;padding:1px 7px;vertical-align:middle;">VIP</span>' : ''}</div>
-          <div class="client-email-cell">${c.email}</div>
-        </td>
-        <td>${c.lastVisit}</td>
-        <td style="font-weight:600;color:var(--text);">£${c.spend.toLocaleString()}</td>
-        <td>${c.visits} visit${c.visits !== 1 ? 's' : ''}</td>
-        <td><span class="badge ${c.status === 'active' ? 'badge-green' : 'badge-gray'}">${c.status === 'active' ? 'Active' : 'Inactive'}</span></td>
-      </tr>`).join('');
-    document.getElementById('resultCount').textContent = `Showing ${filteredClients.length} client${filteredClients.length !== 1 ? 's' : ''}`;
+async function apiFetch(path) {
+  const r = await fetch(API+path,{headers:{Authorization:`Bearer ${TOKEN}`}});
+  if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.error??'API error'); }
+  return r.json();
+}
+async function apiPost(path,body) {
+  const r = await fetch(API+path,{method:'POST',headers:{Authorization:`Bearer ${TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.error??'API error'); }
+  return r.json();
+}
+
+async function loadStats() {
+  try {
+    const s = await apiFetch(`/api/tenants/${TENANT}/clients/stats`);
+    document.getElementById('statsRow').innerHTML = `
+      <div class="stat-card"><div class="stat-label">Total Clients</div><div class="stat-value">${s.total}</div></div>
+      <div class="stat-card"><div class="stat-label">Active (30d)</div><div class="stat-value">${s.activeThisMonth}</div><div class="stat-meta">${s.activeThisMonthDelta>=0?'↑':'↓'} ${Math.abs(s.activeThisMonthDelta)} vs last month</div></div>
+      <div class="stat-card"><div class="stat-label">Avg. Lifetime Spend</div><div class="stat-value">${s.avgLifetimeSpend}</div></div>
+      <div class="stat-card"><div class="stat-label">VIP Clients</div><div class="stat-value" id="vipCount">—</div></div>`;
+  } catch { /* keep skeleton */ }
+}
+
+async function loadClients() {
+  const params = new URLSearchParams({ filter: currentFilter });
+  if (searchQuery) params.set('search', searchQuery);
+  try {
+    const data = await apiFetch(`/api/tenants/${TENANT}/clients?${params}`);
+    document.getElementById('clientCount').textContent = `${data.count} clients`;
+    const vipEl = document.getElementById('vipCount');
+    if (vipEl) vipEl.textContent = data.clients.filter(c=>c.isVip).length;
+    renderClients(data.clients);
+  } catch {
+    document.getElementById('clientGrid').innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">👤</div><div class="empty-title">Could not load clients</div><div class="empty-text">Check your connection and try again.</div></div>`;
   }
+}
 
-  /* ── Select client ── */
-  function selectClient(id) {
-    selectedClientId = id;
-    const c = clients.find(x => x.id === id);
-
-    // Avatar
-    const av = document.getElementById('detailAvatar');
-    av.textContent = c.initials;
-    av.className = `detail-av-large ${c.avClass}`;
-
-    document.getElementById('detailName').textContent = c.name;
-    document.getElementById('detailEmail').textContent = c.email;
-    document.getElementById('detailPhone').textContent = c.phone;
-    document.getElementById('detailSince').textContent = c.since;
-    document.getElementById('detailVisits').textContent = `${c.visits} visit${c.visits !== 1 ? 's' : ''}`;
-    document.getElementById('detailNotes').value = c.notes;
-
-    // Tags
-    const tagsCls = { 'VIP': 'tag-vip', 'Monthly Client': 'tag-brand', 'Loyal Client': 'tag-brand', 'Hydrafacial Regular': 'tag-brand', 'Botox Regular': 'tag-brand', 'Laser Treatment': 'tag-brand', 'Chemical Peel Regular': 'tag-brand' };
-    document.getElementById('detailTags').innerHTML = c.vip
-      ? `<span class="tag tag-vip">VIP</span>${c.tags.map(t => `<span class="tag ${tagsCls[t]||''}">${t}</span>`).join('')}`
-      : c.tags.length ? c.tags.map(t => `<span class="tag ${tagsCls[t]||''}">${t}</span>`).join('') : '<span style="font-size:12px;color:var(--text-muted);">No tags yet</span>';
-
-    // History
-    document.getElementById('detailHistory').innerHTML = c.history.map(h => `
-      <div class="history-item">
-        <div class="history-dot"></div>
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">${h.svc}</div>
-          <div style="font-size:12px;color:var(--text-muted);">${h.date} · ${h.amt}</div>
+function renderClients(clients) {
+  const grid = document.getElementById('clientGrid');
+  if (!clients.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">👤</div><div class="empty-title">No clients found</div><div class="empty-text">Try a different search or filter.</div></div>`;
+    return;
+  }
+  grid.innerHTML = clients.map(c => `
+    <div class="client-card" onclick="openClientDetail('${c.id}')">
+      <div class="client-card-head">
+        <div class="client-av" style="background:${c.avatarBg};color:${c.avatarColor}">${escHtml(c.initials)}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="client-name">${escHtml(c.fullName)}</div>
+          <div class="client-meta">${escHtml(c.email || c.phone || 'No contact info')}</div>
+          <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">
+            ${c.isVip?'<span class="badge badge-gold">⭐ VIP</span>':''}
+            <span class="badge ${c.status==='active'?'badge-green':'badge-gray'}">${c.status==='active'?'Active':'Inactive'}</span>
+            ${c.noShowCount>0?`<span class="badge badge-red">${c.noShowCount} no-show${c.noShowCount>1?'s':''}</span>`:''}
+          </div>
         </div>
-      </div>`).join('');
+      </div>
+      <div class="client-stats">
+        <div><div class="cs-val">${c.visits}</div><div class="cs-lbl">Visits</div></div>
+        <div><div class="cs-val">${c.lifetimeSpend}</div><div class="cs-lbl">Spent</div></div>
+        <div><div class="cs-val" style="font-size:12px;font-weight:600;color:var(--text-muted)">${escHtml(c.lastVisit)}</div><div class="cs-lbl">Last Visit</div></div>
+      </div>
+    </div>`).join('');
+}
 
-    renderTable();
-  }
+function handleSearch(q) {
+  clearTimeout(searchTimer);
+  searchQuery = q;
+  searchTimer = setTimeout(loadClients, 300);
+}
 
-  /* ── Filter ── */
-  function filterClients(query) {
-    const q = query.toLowerCase();
-    let base = clients;
-    if (activeFilter === 'active')   base = clients.filter(c => c.status === 'active');
-    if (activeFilter === 'inactive') base = clients.filter(c => c.status === 'inactive');
-    if (activeFilter === 'vip')      base = clients.filter(c => c.vip);
-    filteredClients = q ? base.filter(c => c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)) : base;
-    sortClientList();
-    renderTable();
-  }
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  loadClients();
+}
 
-  function setFilter(f, el) {
-    activeFilter = f;
-    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
-    filterClients(document.getElementById('clientSearchInput').value);
-  }
+async function openClientDetail(id) {
+  document.getElementById('clientDetailModal').classList.add('open');
+  document.getElementById('detailName').textContent = 'Loading…';
+  document.getElementById('clientDetailBody').innerHTML = `<div class="skeleton" style="height:80px;margin-bottom:16px;"></div><div class="skeleton" style="height:160px;"></div>`;
+  try {
+    const c = await apiFetch(`/api/tenants/${TENANT}/clients/${id}`);
+    document.getElementById('detailName').textContent = c.fullName;
+    document.getElementById('clientDetailBody').innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+        <div class="client-av" style="background:${c.avatarBg};color:${c.avatarColor};width:52px;height:52px;font-size:18px;">${escHtml(c.initials)}</div>
+        <div>
+          <div style="font-size:15px;font-weight:700">${escHtml(c.fullName)}</div>
+          <div style="font-size:12.5px;color:var(--text-muted)">${escHtml(c.email)} ${c.phone?'· '+escHtml(c.phone):''}</div>
+          <div style="margin-top:5px;display:flex;gap:4px;">${c.isVip?'<span class="badge badge-gold">⭐ VIP</span>':''}<span class="badge badge-gray">Client since ${escHtml(c.since)}</span></div>
+        </div>
+        <div style="margin-left:auto;text-align:right;">
+          <div style="font-size:20px;font-weight:700">${escHtml(c.lifetimeSpend)}</div>
+          <div style="font-size:11px;color:var(--text-muted)">Lifetime spend</div>
+          <div style="font-size:14px;font-weight:700;margin-top:4px">${c.visits}</div>
+          <div style="font-size:11px;color:var(--text-muted)">Visits</div>
+        </div>
+      </div>
+      ${c.medicalNotes?`<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:13px;color:var(--text-2);margin-bottom:16px;"><strong>Notes:</strong> ${escHtml(c.medicalNotes)}</div>`:''}
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Appointment History</div>
+      ${c.history.length ? `
+      <div style="border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
+        ${c.history.map(h=>`
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border);">
+            <div style="flex:1;"><div style="font-size:13.5px;font-weight:600">${escHtml(h.serviceName)}</div><div style="font-size:12px;color:var(--text-muted)">${escHtml(h.staffName)} · ${escHtml(h.date)}</div></div>
+            <div style="font-weight:700">${escHtml(h.amount)}</div>
+            <span class="badge ${h.status==='COMPLETED'?'badge-green':h.status==='CONFIRMED'?'badge-brand':'badge-gray'}">${h.status}</span>
+          </div>`).join('')}
+      </div>` : '<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13.5px">No appointment history yet.</div>'}`;
+  } catch { document.getElementById('clientDetailBody').innerHTML = '<p style="color:var(--text-muted)">Could not load client details.</p>'; }
+}
 
-  function showFilterPanel() { showToast('Advanced filters coming soon','🔍'); }
+function openAddClientModal() { document.getElementById('addClientModal').classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-  /* ── Sort ── */
-  function sortTable(col) {
-    if (sortCol === col) sortAsc = !sortAsc;
-    else { sortCol = col; sortAsc = true; }
-    document.querySelectorAll('th.sortable').forEach(th => { th.classList.toggle('sorted', th.dataset.col === col); });
-    sortClientList();
-    renderTable();
-  }
+async function saveNewClient() {
+  const name  = document.getElementById('newClientName').value.trim();
+  const email = document.getElementById('newClientEmail').value.trim();
+  const phone = document.getElementById('newClientPhone').value.trim();
+  const notes = document.getElementById('newClientNotes').value;
+  if (!name) { showToast('Full name is required'); return; }
+  const btn = document.getElementById('saveClientBtn');
+  btn.disabled=true; btn.textContent='Adding…';
+  try {
+    await apiPost(`/api/tenants/${TENANT}/clients`, { fullName:name, email:email||undefined, phone:phone||undefined, notes:notes||undefined });
+    closeModal('addClientModal');
+    showToast('Client added successfully!');
+    document.getElementById('newClientName').value=''; document.getElementById('newClientEmail').value='';
+    document.getElementById('newClientPhone').value=''; document.getElementById('newClientNotes').value='';
+    loadClients(); loadStats();
+  } catch (err) { showToast(err.message??'Failed to add client'); }
+  finally { btn.disabled=false; btn.textContent='Add Client'; }
+}
 
-  function sortClientList() {
-    filteredClients.sort((a, b) => {
-      let av = a[sortCol], bv = b[sortCol];
-      if (sortCol === 'name') { av = a.name; bv = b.name; }
-      if (typeof av === 'string') return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
-      return sortAsc ? av - bv : bv - av;
-    });
-  }
+document.getElementById('addClientModal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeModal('addClientModal'); });
+document.getElementById('clientDetailModal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeModal('clientDetailModal'); });
 
-  /* ── Modal ── */
-  function openAddClientModal() { document.getElementById('addClientModal').classList.add('open'); }
-  function closeAddClientModal() { document.getElementById('addClientModal').classList.remove('open'); }
-  function saveNewClient() { closeAddClientModal(); showToast('Client added successfully!','👤','success'); }
-  document.getElementById('addClientModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAddClientModal(); });
+function escHtml(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function showToast(msg,type='') {
+  const t=document.createElement('div'); t.className='toast '+(type||'');
+  t.innerHTML=`<div class="toast-icon">👤</div><div class="toast-content"><div class="toast-title">${escHtml(msg)}</div></div>`;
+  document.getElementById('toastWrap').appendChild(t);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));
+  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),350); },3500);
+}
 
-  /* ── Toast ── */
-  function showToast(title, icon='✅', type='') {
-    const wrap = document.getElementById('toastWrap');
-    const t = document.createElement('div');
-    t.className = `toast ${type}`;
-    t.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-content"><div class="toast-title">${title}</div></div>`;
-    wrap.appendChild(t);
-    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
-    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }, 3500);
-  }
-
-  /* ── Init ── */
-  filteredClients = [...clients];
-  sortClientList();
-  renderTable();
-  selectClient(0);
+document.addEventListener('DOMContentLoaded',()=>{ loadStats(); loadClients(); });
 </script>
 </body>
 </html>
