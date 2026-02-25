@@ -1,11 +1,8 @@
-[phases.setup]
-nixPkgs = ["nodejs_18"]
-
 [phases.install]
-cmds = ["cd backend && npm ci --include=dev"]
+cmds = ['npm install --prefix backend']
 
 [phases.build]
-cmds = ["cd backend && npm run build"]
+cmds = ['npm --prefix backend run db:generate']
 
 [start]
-cmd = "cd backend && npm start"
+cmd = 'node backend/src/server.js'

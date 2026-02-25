@@ -1,24 +1,11 @@
 {
   "version": 2,
-  "name": "callora",
-  "builds": [
-    {
-      "src": "frontend/**",
-      "use": "@vercel/static"
-    }
-  ],
+  "outputDirectory": "frontend",
+  "framework": null,
   "routes": [
-    {
-      "src": "/app/(.*)",
-      "dest": "/frontend/app/$1"
-    },
-    {
-      "src": "/pages/(.*)",
-      "dest": "/frontend/pages/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/frontend/$1"
-    }
+    { "src": "/app/(.*)", "dest": "/app/$1" },
+    { "src": "/pages/(.*)", "dest": "/pages/$1" },
+    { "src": "/", "dest": "/pages/landing.html" },
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }
