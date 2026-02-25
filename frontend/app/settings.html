@@ -163,6 +163,48 @@
   .skel{background:linear-gradient(90deg,#f0f1f3 25%,#e4e5e9 50%,#f0f1f3 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px}
   @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
+  /* ── Extra role ── */
+  .role-MEMBER{background:#f4f5f8;color:#5a6070}
+
+  /* ── Plan status badges ── */
+  .plan-status-badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;flex-shrink:0}
+  .pstatus-active{background:#e8f5e9;color:#2e7d32}
+  .pstatus-trialing{background:#fff3e0;color:#e65100}
+  .pstatus-past_due{background:#ffebee;color:#c62828}
+  .pstatus-cancelled,.pstatus-none{background:#f5f5f5;color:#9aa0ab}
+
+  /* ── Plan option cards (billing) ── */
+  .plan-cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:4px}
+  @media(max-width:760px){.plan-cards-grid{grid-template-columns:1fr}}
+  .plan-option-card{border:2px solid #e8eaed;border-radius:12px;padding:20px;position:relative;transition:border-color .15s,background .15s}
+  .plan-option-card.is-current{border-color:#6c63ff;background:#f9f8ff}
+  .plan-option-card.is-popular::before{content:'Most Popular';position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:#6c63ff;color:#fff;font-size:10px;font-weight:600;letter-spacing:.06em;padding:3px 10px;border-radius:10px;white-space:nowrap}
+  .pon-tier{font-size:10.5px;font-weight:600;color:#9aa0ab;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+  .pon-price{font-size:28px;font-weight:700;color:#1a1d23;line-height:1}
+  .pon-per{font-size:12px;color:#9aa0ab;margin-bottom:14px;margin-top:2px}
+  .pon-feats{list-style:none;margin-bottom:14px}
+  .pon-feat{font-size:12.5px;color:#374151;padding:5px 0;border-bottom:1px solid #f0f1f3;display:flex;align-items:flex-start;gap:7px}
+  .pon-feat:last-child{border-bottom:none}
+  .pon-feat::before{content:'✓';color:#6c63ff;font-weight:700;font-size:11px;margin-top:1px;flex-shrink:0}
+  .pon-feat.off::before{content:'✕';color:#d1d5db}
+  .pon-feat.off{color:#b0b7c3}
+  .pon-btn{width:100%;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;border:none}
+  .pon-btn-current{background:#f0eeff;color:#6c63ff;border:2px solid #6c63ff;cursor:default}
+  .pon-btn-upgrade{background:#6c63ff;color:#fff}
+  .pon-btn-upgrade:hover{opacity:.9}
+  .pon-btn-enterprise{background:#fff;color:#1a1d23;border:2px solid #e8eaed}
+  .pon-btn-enterprise:hover{border-color:#6c63ff;color:#6c63ff}
+
+  /* ── Phone number search ── */
+  .phone-search-bar{display:grid;grid-template-columns:160px 1fr auto;gap:10px;align-items:end;margin-top:20px;padding-top:20px;border-top:1px solid #f0f1f3}
+  @media(max-width:600px){.phone-search-bar{grid-template-columns:1fr;}}
+  .phone-num-row .release-btn{padding:5px 10px;background:#fff;color:#e05252;border:1px solid #e05252;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0}
+  .phone-num-row .release-btn:hover{background:#fff5f5}
+  .phone-num-caps{display:flex;gap:6px;flex-wrap:wrap}
+  .phone-cap{font-size:10px;padding:2px 7px;border-radius:10px;background:#f0eeff;color:#6c63ff;font-weight:600}
+  .phone-locality{font-size:12px;color:#6b7280}
+  .no-numbers-msg{background:#f9f8ff;border:1px dashed #c4beff;border-radius:10px;padding:20px;text-align:center;color:#9aa0ab;font-size:13px;margin-bottom:10px}
+
   /* Responsive */
   @media(max-width:640px){
     .settings-layout{flex-direction:column}
@@ -316,12 +358,6 @@
                 </select>
               </div>
             </div>
-            <div class="form-row single">
-              <div class="form-group">
-                <label>Business Hours</label>
-                <input type="text" id="clinicHours" placeholder="Mon-Fri 9am-6pm, Sat 9am-2pm">
-              </div>
-            </div>
             <button class="save-btn" id="saveClinicBtn" onclick="saveClinic()">Save Changes</button>
           </div>
         </div>
@@ -354,28 +390,89 @@
           <div class="card">
             <div class="card-title">Phone Numbers</div>
             <div class="card-sub">Twilio numbers used by your AI agent for inbound and outbound calls.</div>
-            <div id="phoneList"><div class="skel" style="height:48px;margin-bottom:10px"></div></div>
-            <div class="search-area-row">
-              <input type="text" id="areaCodeInput" placeholder="Area code (e.g. 415)" maxlength="3">
-              <button onclick="searchPhoneNumbers()">Search</button>
+
+            <!-- Assigned numbers -->
+            <div id="phoneList"><div class="skel" style="height:60px;margin-bottom:10px"></div></div>
+
+            <!-- Search new number -->
+            <div class="phone-search-bar">
+              <div class="form-group" style="margin-bottom:0">
+                <label>Country</label>
+                <select id="phoneCountry" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13.5px;width:100%;outline:none;color:#1a1d23;background:#fff">
+                  <option value="GB">🇬🇧 United Kingdom</option>
+                  <option value="US">🇺🇸 United States</option>
+                  <option value="CA">🇨🇦 Canada</option>
+                  <option value="AU">🇦🇺 Australia</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label>Area Code / Locality <span style="font-weight:400;color:#9aa0ab">(optional)</span></label>
+                <input type="text" id="areaCodeInput" placeholder="e.g.  415  or  Manchester" maxlength="12"
+                  style="padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13.5px;width:100%;outline:none"
+                  onkeydown="if(event.key==='Enter')searchPhoneNumbers()">
+              </div>
+              <button class="save-btn" id="searchPhoneBtn" onclick="searchPhoneNumbers()" style="margin-bottom:0;white-space:nowrap">Search Numbers</button>
             </div>
-            <div id="phoneSearchResults" style="margin-top:12px"></div>
+
+            <div id="phoneSearchResults" style="margin-top:14px"></div>
           </div>
         </div>
 
         <!-- Billing -->
         <div id="panel-billing" style="display:none">
-          <div class="plan-card" id="planCard">
-            <div class="plan-name" id="planName">Loading…</div>
-            <div class="plan-desc" id="planDesc">–</div>
-            <div class="plan-features" id="planFeatures"></div>
+
+          <!-- Current plan summary -->
+          <div class="card" style="margin-bottom:20px">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px">
+              <div>
+                <div style="font-size:11px;font-weight:600;color:#9aa0ab;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Your Current Plan</div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <span style="font-size:22px;font-weight:700;color:#1a1d23" id="billingPlanName"><div class="skel" style="height:28px;width:120px"></div></span>
+                  <span class="plan-status-badge" id="billingStatusBadge"></span>
+                </div>
+                <div id="billingTrialNote" style="font-size:13px;color:#e65100;margin-top:4px;font-weight:500"></div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:32px;font-weight:700;color:#1a1d23;line-height:1" id="billingPriceDisplay"></div>
+                <div style="font-size:12px;color:#9aa0ab;margin-top:2px" id="billingPricePer"></div>
+                <button class="portal-btn" style="margin-top:12px" onclick="openBillingPortal()">Manage Billing &amp; Invoices →</button>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid #f0f1f3;display:flex;gap:28px;flex-wrap:wrap">
+              <div>
+                <div style="font-size:11px;color:#9aa0ab;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Status</div>
+                <div id="billingStatusText" style="font-size:13.5px;font-weight:600;margin-top:3px;color:#1a1d23">–</div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:#9aa0ab;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Next Billing</div>
+                <div id="billingNextDate" style="font-size:13.5px;font-weight:600;margin-top:3px;color:#1a1d23">–</div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:#9aa0ab;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Billing Cycle</div>
+                <div id="billingCycle" style="font-size:13.5px;font-weight:600;margin-top:3px;color:#1a1d23">–</div>
+              </div>
+            </div>
+            <div id="billingCancelNote" style="margin-top:12px;padding:10px 14px;background:#fff5f5;border:1px solid #ffcdd2;border-radius:8px;font-size:13px;color:#c62828;display:none">
+              ⚠ Your plan will cancel at the end of the current billing period.
+              <a href="#" onclick="reactivatePlan(event)" style="color:#6c63ff;font-weight:600;text-decoration:none;margin-left:8px">Reactivate →</a>
+            </div>
           </div>
+
+          <!-- Plan comparison cards -->
           <div class="card">
-            <p class="billing-detail" id="billingCycle">–</p>
-            <p class="billing-detail" id="billingNextDate">–</p>
-            <p class="billing-detail" id="billingPayMethod">–</p>
-            <button class="portal-btn" onclick="openBillingPortal()">Manage Billing &amp; Invoices →</button>
+            <div class="card-title">Choose Your Plan</div>
+            <div class="card-sub">All plans include a 30-day free trial. Upgrade or downgrade any time, prorated automatically.</div>
+            <div class="plan-cards-grid" id="planCardsGrid">
+              <div class="skel" style="height:300px;border-radius:12px"></div>
+              <div class="skel" style="height:300px;border-radius:12px"></div>
+              <div class="skel" style="height:300px;border-radius:12px"></div>
+            </div>
+            <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f0f1f3;display:flex;align-items:center;gap:8px">
+              <svg width="14" height="14" fill="none" stroke="#9aa0ab" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+              <span style="font-size:12.5px;color:#6b7280">Payments processed securely by Stripe. <a href="#" onclick="openBillingPortal();return false" style="color:#6c63ff;text-decoration:none;font-weight:500">View invoices →</a></span>
+            </div>
           </div>
+
         </div>
 
         <!-- Integrations -->
@@ -470,7 +567,7 @@
     <div class="form-group" style="margin-bottom:0">
       <label>Role *</label>
       <select id="inviteRole">
-        <option value="STAFF">Staff – View only</option>
+        <option value="MEMBER">Staff – View only</option>
         <option value="ADMIN">Admin – Full access</option>
       </select>
     </div>
@@ -570,10 +667,9 @@ async function loadClinic() {
     const r = await fetch(`${BASE}/settings/clinic`, { headers });
     if (!r.ok) throw new Error();
     clinicData = await r.json();
-    document.getElementById('clinicName').value = clinicData.clinicName || '';
-    document.getElementById('clinicPhone').value = clinicData.clinicPhone || '';
-    document.getElementById('clinicAddress').value = clinicData.clinicAddress || '';
-    document.getElementById('clinicHours').value = clinicData.businessHours || '';
+    document.getElementById('clinicName').value = clinicData.name || '';
+    document.getElementById('clinicPhone').value = clinicData.phone || '';
+    document.getElementById('clinicAddress').value = clinicData.address || '';
     const tzSel = document.getElementById('clinicTimezone');
     if (clinicData.timezone) tzSel.value = clinicData.timezone;
     const curSel = document.getElementById('clinicCurrency');
@@ -589,12 +685,11 @@ async function saveClinic() {
       method: 'PUT',
       headers,
       body: JSON.stringify({
-        clinicName: document.getElementById('clinicName').value.trim(),
-        clinicPhone: document.getElementById('clinicPhone').value.trim(),
-        clinicAddress: document.getElementById('clinicAddress').value.trim(),
+        name: document.getElementById('clinicName').value.trim(),
+        phone: document.getElementById('clinicPhone').value.trim(),
+        address: document.getElementById('clinicAddress').value.trim(),
         timezone: document.getElementById('clinicTimezone').value,
         currency: document.getElementById('clinicCurrency').value,
-        businessHours: document.getElementById('clinicHours').value.trim(),
       })
     });
     if (!r.ok) throw new Error();
@@ -613,7 +708,7 @@ async function loadServices() {
   try {
     const r = await fetch(`${BASE}/service-catalog`, { headers });
     if (!r.ok) throw new Error();
-    services = await r.json();
+    services = (await r.json()).services ?? [];
     renderServices();
   } catch {
     document.getElementById('servicesList').innerHTML = '<p style="color:#e05252;font-size:13px">Failed to load services.</p>';
@@ -756,7 +851,7 @@ async function saveNotifications() {
     Object.keys(NOTIF_LABELS).forEach(key => {
       notifications[key] = document.getElementById(`notif_${key}`)?.checked ?? false;
     });
-    const r = await fetch(`${BASE}/settings/notifications`, { method: 'PUT', headers, body: JSON.stringify({ notifications }) });
+    const r = await fetch(`${BASE}/settings/notifications`, { method: 'PUT', headers, body: JSON.stringify(notifications) });
     if (!r.ok) throw new Error();
     showToast('Notification preferences saved');
   } catch { showToast('Failed to save preferences', 'error'); }
@@ -769,47 +864,101 @@ async function saveNotifications() {
 async function loadPhone() {
   try {
     const r = await fetch(`${BASE}/phone-numbers`, { headers });
-    const nums = r.ok ? await r.json() : [];
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    const nums = data.numbers ?? [];
+    const planLimitReached = data.limit !== -1 && nums.length >= data.limit && data.limit > 0;
+
     if (!nums.length) {
-      document.getElementById('phoneList').innerHTML = '<p style="color:#9aa0ab;font-size:13px">No numbers provisioned yet. Search below to add one.</p>';
+      document.getElementById('phoneList').innerHTML = `
+        <div class="no-numbers-msg">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom:8px;opacity:.4"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.24h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.83a16 16 0 0 0 6.29 6.29l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <div style="font-weight:600;color:#374151;margin-bottom:4px">No phone numbers yet</div>
+          <div>Search below to find and provision a Twilio number for your AI agent.</div>
+        </div>`;
       return;
     }
+
     document.getElementById('phoneList').innerHTML = nums.map(n => `
       <div class="phone-num-row">
-        <div class="phone-num">${escHtml(n.phoneNumber)}</div>
-        <div>
-          <span class="phone-status">${escHtml(n.friendlyName || 'Active')}</span>
+        <div style="flex:1;min-width:0">
+          <div class="phone-num">${escHtml(n.phoneNumber)}</div>
+          <div class="phone-locality" style="margin-top:2px">AI Voice Agent · Active</div>
         </div>
+        <span class="phone-status">Active</span>
+        <button class="release-btn" onclick="releaseNumber('${escHtml(n.phoneNumber)}', this)" title="Release number">Release</button>
       </div>
     `).join('');
+
+    if (planLimitReached) {
+      document.getElementById('phoneList').insertAdjacentHTML('beforeend',
+        '<p style="font-size:12.5px;color:#9aa0ab;margin-top:8px">Plan limit reached. Release your current number or upgrade to provision more.</p>');
+    }
   } catch {
     document.getElementById('phoneList').innerHTML = '<p style="color:#e05252;font-size:13px">Failed to load phone numbers.</p>';
   }
 }
 
+async function releaseNumber(number, btn) {
+  if (!confirm(`Release ${number}? This will disconnect the AI agent from this number.`)) return;
+  btn.disabled = true; btn.textContent = 'Releasing…';
+  try {
+    const r = await fetch(`${BASE}/phone-numbers/${encodeURIComponent(number)}`, { method: 'DELETE', headers });
+    if (!r.ok) throw new Error();
+    showToast('Number released');
+    loaded['phone'] = false; loadPhone(); loaded['phone'] = true;
+  } catch { showToast('Failed to release number', 'error'); btn.disabled = false; btn.textContent = 'Release'; }
+}
+
 async function searchPhoneNumbers() {
   const areaCode = document.getElementById('areaCodeInput').value.trim();
+  const country = document.getElementById('phoneCountry').value;
   const container = document.getElementById('phoneSearchResults');
-  container.innerHTML = '<div class="skel" style="height:40px;margin-bottom:8px"></div>';
+  const btn = document.getElementById('searchPhoneBtn');
+  btn.disabled = true; btn.textContent = 'Searching…';
+  container.innerHTML = '<div class="skel" style="height:52px;margin-bottom:8px"></div><div class="skel" style="height:52px;margin-bottom:8px"></div><div class="skel" style="height:52px"></div>';
   try {
-    const url = `${BASE}/phone-numbers/search?areaCode=${encodeURIComponent(areaCode)}`;
+    let url = `${BASE}/available-numbers?country=${encodeURIComponent(country)}`;
+    if (areaCode) url += `&areaCode=${encodeURIComponent(areaCode)}`;
     const r = await fetch(url, { headers });
-    if (!r.ok) throw new Error();
-    const nums = await r.json();
-    if (!nums.length) { container.innerHTML = '<p style="color:#9aa0ab;font-size:13px">No numbers found. Try another area code.</p>'; return; }
-    container.innerHTML = nums.map(n => `
-      <div class="phone-num-row">
-        <div class="phone-num">${escHtml(n.phoneNumber)}</div>
-        <button class="save-btn" style="padding:6px 12px;font-size:12px" onclick="provisionNumber('${escHtml(n.phoneNumber)}', this)">Provision</button>
-      </div>
-    `).join('');
-  } catch { container.innerHTML = '<p style="color:#e05252;font-size:13px">Search failed. Check area code.</p>'; }
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.error || 'Search failed');
+    }
+    const { numbers: nums } = await r.json();
+    if (!nums || !nums.length) {
+      container.innerHTML = '<p style="color:#9aa0ab;font-size:13px;padding:8px 0">No numbers found. Try a different area code or country.</p>';
+      return;
+    }
+    container.innerHTML = `
+      <div style="font-size:12px;color:#9aa0ab;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">${nums.length} number${nums.length !== 1 ? 's' : ''} available</div>
+      ${nums.map(n => `
+        <div class="phone-num-row" style="background:#f9f8ff;border-radius:8px;padding:12px 14px;margin-bottom:6px;border:1px solid #e8eaed">
+          <div style="flex:1;min-width:0">
+            <div class="phone-num">${escHtml(n.phoneNumber)}</div>
+            <div class="phone-locality">${escHtml([n.locality, n.region].filter(Boolean).join(', ') || n.country)}</div>
+          </div>
+          <div class="phone-num-caps">
+            ${n.capabilities?.voice ? '<span class="phone-cap">Voice</span>' : ''}
+            ${n.capabilities?.sms ? '<span class="phone-cap" style="background:#e8f5e9;color:#2e7d32">SMS</span>' : ''}
+          </div>
+          <button class="save-btn" style="padding:7px 14px;font-size:12.5px;flex-shrink:0" onclick="provisionNumber('${escHtml(n.phoneNumber)}', this)">
+            Provision
+          </button>
+        </div>
+      `).join('')}
+    `;
+  } catch (err) {
+    container.innerHTML = `<p style="color:#e05252;font-size:13px;padding:8px 0">${escHtml(err.message || 'Search failed. Please try again.')}</p>`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Search Numbers';
+  }
 }
 
 async function provisionNumber(number, btn) {
   btn.disabled = true; btn.textContent = 'Provisioning…';
   try {
-    const r = await fetch(`${BASE}/phone-numbers`, { method: 'POST', headers, body: JSON.stringify({ phoneNumber: number }) });
+    const r = await fetch(`${BASE}/buy-number`, { method: 'POST', headers, body: JSON.stringify({ phoneNumber: number }) });
     if (!r.ok) throw new Error();
     showToast('Number provisioned successfully');
     document.getElementById('phoneSearchResults').innerHTML = '';
@@ -820,33 +969,145 @@ async function provisionNumber(number, btn) {
 // ══════════════════════════════
 // BILLING
 // ══════════════════════════════
+const PLAN_DEFS = {
+  starter:    { name: 'Starter',    price: '£49',  per: '/mo · 1 location', features: ['Up to 2 staff','Unlimited bookings','Client CRM (500)','Email & SMS reminders','Stripe payments',{off:'AI Voice Agent'},{off:'Multi-location'}] },
+  pro:        { name: 'Pro',        price: '£129', per: '/mo · up to 3 locations', popular: true, features: ['Unlimited staff','Unlimited bookings & clients','Full CRM + notes','WhatsApp + SMS + email','Stripe deposits & invoicing','AI Voice Agent included','No-show prediction AI'] },
+  enterprise: { name: 'Enterprise', price: 'Custom', per: '· unlimited locations', features: ['Everything in Pro','Unlimited locations & staff','White-label & custom domain','SSO & SAML','Dedicated account manager','HIPAA BAA + custom DPA','Priority SLA (99.9%)'] },
+};
+
 let billingData = {};
+
 async function loadBilling() {
   try {
-    const r = await fetch(`${BASE}/billing/subscription`, { headers });
-    if (!r.ok) throw new Error();
-    billingData = await r.json();
-    document.getElementById('planName').textContent = billingData.planName || 'Growth';
-    document.getElementById('planDesc').textContent = billingData.planDesc || 'All features included';
-    const features = billingData.features || ['Unlimited AI calls','Google Calendar sync','Team access','Analytics'];
-    document.getElementById('planFeatures').innerHTML = features.map(f => `<span class="plan-feat">${escHtml(f)}</span>`).join('');
-    document.getElementById('billingCycle').textContent = billingData.cycle ? `Billing cycle: ${billingData.cycle}` : '';
-    document.getElementById('billingNextDate').textContent = billingData.nextBillingDate ? `Next billing date: ${billingData.nextBillingDate}` : '';
-    document.getElementById('billingPayMethod').textContent = billingData.paymentMethod ? `Payment: ${billingData.paymentMethod}` : '';
+    const r = await fetch('/billing/subscription', { headers });
+    if (r.ok) {
+      billingData = await r.json();
+    } else {
+      billingData = { hasSubscription: false, plan: 'none', status: 'none' };
+    }
   } catch {
-    document.getElementById('planName').textContent = 'Growth Plan';
-    document.getElementById('planDesc').textContent = 'Contact support for billing details';
-    document.getElementById('planFeatures').innerHTML = '';
+    billingData = { hasSubscription: false, plan: 'none', status: 'none' };
   }
+
+  const plan = billingData.plan ?? 'none';
+  const status = billingData.status ?? 'none';
+  const planDef = PLAN_DEFS[plan] ?? null;
+
+  // Plan name
+  document.getElementById('billingPlanName').textContent = planDef ? planDef.name : 'No active plan';
+
+  // Status badge
+  const badgeEl = document.getElementById('billingStatusBadge');
+  const statusLabels = { active: 'Active', trialing: 'Free Trial', past_due: 'Past Due', cancelled: 'Cancelled', none: 'No Subscription' };
+  badgeEl.textContent = statusLabels[status] ?? status;
+  badgeEl.className = `plan-status-badge pstatus-${status}`;
+
+  // Price display
+  document.getElementById('billingPriceDisplay').textContent = planDef ? planDef.price : '–';
+  document.getElementById('billingPricePer').textContent = planDef ? planDef.per : '';
+
+  // Trial note
+  const trialEl = document.getElementById('billingTrialNote');
+  if (status === 'trialing' && billingData.trialEnd) {
+    const d = new Date(billingData.trialEnd);
+    const daysLeft = Math.max(0, Math.ceil((d - Date.now()) / 86400000));
+    trialEl.textContent = `🎁 Free trial — ${daysLeft} day${daysLeft !== 1 ? 's' : ''} remaining (ends ${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })})`;
+  } else {
+    trialEl.textContent = '';
+  }
+
+  // Billing details
+  const statusTextMap = { active: 'Active ✓', trialing: 'Trial Active', past_due: '⚠ Payment overdue', cancelled: 'Cancelled', none: 'No subscription' };
+  document.getElementById('billingStatusText').textContent = statusTextMap[status] ?? '–';
+  if (billingData.currentPeriodEnd) {
+    const d = new Date(billingData.currentPeriodEnd);
+    document.getElementById('billingNextDate').textContent = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  document.getElementById('billingCycle').textContent = 'Monthly';
+
+  // Cancel note
+  const cancelNote = document.getElementById('billingCancelNote');
+  if (billingData.cancelAtPeriodEnd) cancelNote.style.display = '';
+  else cancelNote.style.display = 'none';
+
+  // Render plan cards
+  renderPlanCards(plan);
+}
+
+function renderPlanCards(currentPlan) {
+  const grid = document.getElementById('planCardsGrid');
+  grid.innerHTML = Object.entries(PLAN_DEFS).map(([key, def]) => {
+    const isCurrent = key === currentPlan;
+    const isEnterprise = key === 'enterprise';
+    const featsHtml = def.features.map(f => {
+      if (typeof f === 'object' && f.off) return `<li class="pon-feat off">${escHtml(f.off)}</li>`;
+      return `<li class="pon-feat">${escHtml(f)}</li>`;
+    }).join('');
+    let btnHtml;
+    if (isCurrent) {
+      btnHtml = `<button class="pon-btn pon-btn-current" disabled>Current Plan</button>`;
+    } else if (isEnterprise) {
+      btnHtml = `<button class="pon-btn pon-btn-enterprise" onclick="location.href='mailto:sales@callora.ai'">Contact Sales</button>`;
+    } else {
+      btnHtml = `<button class="pon-btn pon-btn-upgrade" onclick="startUpgrade('${key}')">
+        ${billingData.hasSubscription ? 'Switch to ' + def.name : 'Start Free Trial'}
+      </button>`;
+    }
+    return `
+      <div class="plan-option-card ${isCurrent ? 'is-current' : ''} ${def.popular && !isCurrent ? 'is-popular' : ''}">
+        <div class="pon-tier">${escHtml(key.toUpperCase())}</div>
+        <div class="pon-price">${escHtml(def.price)}</div>
+        <div class="pon-per">${escHtml(def.per)}</div>
+        <ul class="pon-feats">${featsHtml}</ul>
+        ${btnHtml}
+      </div>`;
+  }).join('');
+}
+
+async function startUpgrade(planKey) {
+  try {
+    if (billingData.hasSubscription) {
+      // Upgrade existing subscription
+      const r = await fetch('/billing/upgrade', { method: 'POST', headers, body: JSON.stringify({ newPlanKey: planKey }) });
+      if (!r.ok) throw new Error();
+      showToast(`Switched to ${PLAN_DEFS[planKey].name} plan`);
+      loaded['billing'] = false; loadBilling(); loaded['billing'] = true;
+    } else {
+      // Start checkout flow
+      const successUrl = window.location.origin + window.location.pathname + '?billingSuccess=1';
+      const cancelUrl = window.location.href;
+      const r = await fetch('/billing/checkout', { method: 'POST', headers, body: JSON.stringify({ planKey, successUrl, cancelUrl }) });
+      if (!r.ok) throw new Error();
+      const { url } = await r.json();
+      if (url) window.location.href = url;
+    }
+  } catch { showToast('Unable to start upgrade. Please try again.', 'error'); }
+}
+
+async function reactivatePlan(e) {
+  e.preventDefault();
+  try {
+    const r = await fetch('/billing/reactivate', { method: 'POST', headers });
+    if (!r.ok) throw new Error();
+    showToast('Subscription reactivated');
+    loaded['billing'] = false; loadBilling(); loaded['billing'] = true;
+  } catch { showToast('Failed to reactivate', 'error'); }
 }
 
 async function openBillingPortal() {
   try {
-    const r = await fetch(`${BASE}/billing/portal`, { method: 'POST', headers });
+    const r = await fetch('/billing/portal', { method: 'POST', headers });
     if (!r.ok) throw new Error();
     const { url } = await r.json();
     if (url) window.open(url, '_blank');
+    else showToast('No billing portal configured yet', 'error');
   } catch { showToast('Unable to open billing portal', 'error'); }
+}
+
+// Show billing success banner if redirected from Stripe
+if (new URLSearchParams(location.search).get('billingSuccess') === '1') {
+  document.getElementById('alertBanner').innerHTML = '<div class="alert alert-success">🎉 Plan activated successfully! Your subscription is now live.</div>';
+  setTimeout(() => document.getElementById('alertBanner').innerHTML = '', 5000);
 }
 
 // ══════════════════════════════
@@ -908,7 +1169,7 @@ async function loadTeam() {
   try {
     const r = await fetch(`${BASE}/team`, { headers });
     if (!r.ok) throw new Error();
-    teamMembers = await r.json();
+    teamMembers = (await r.json()).members ?? [];
     renderTeam();
   } catch {
     document.getElementById('teamList').innerHTML = '<p style="color:#e05252;font-size:13px">Failed to load team members.</p>';
@@ -930,7 +1191,7 @@ function renderTeam() {
       <span class="role-badge role-${escHtml(m.role)}">${escHtml(m.roleLabel || m.role)}</span>
       ${m.role !== 'OWNER' ? `
         <select class="role-select" onchange="updateMemberRole('${m.id}', this.value)">
-          <option value="STAFF" ${m.role === 'STAFF' ? 'selected' : ''}>Staff</option>
+          <option value="MEMBER" ${m.role === 'MEMBER' ? 'selected' : ''}>Staff</option>
           <option value="ADMIN" ${m.role === 'ADMIN' ? 'selected' : ''}>Admin</option>
         </select>
         <button class="remove-btn" onclick="removeMember('${m.id}', '${escHtml(m.fullName || m.email)}')">Remove</button>
