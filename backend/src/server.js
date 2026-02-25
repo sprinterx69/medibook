@@ -27,6 +27,12 @@ import settingsRoutes from './routes/settings-routes.js';
 import servicesRoutes from './routes/services-routes.js';
 import integrationRoutes from './routes/integration-routes.js';
 import teamRoutes from './routes/team-routes.js';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const server = Fastify({
   logger: {
@@ -79,6 +85,46 @@ await server.register(settingsRoutes);
 await server.register(servicesRoutes);
 await server.register(integrationRoutes);
 await server.register(teamRoutes);
+
+// ─── Static Files (Frontend) ──────────────────────────────────────────────────
+// Serve frontend HTML files
+const frontendPath = join(__dirname, '../../frontend');
+
+// Serve static assets (CSS, JS, images)
+server.register(import('@fastify/static'), {
+  root: frontendPath,
+  prefix: '/',
+  wildcard: false,
+});
+
+// Route for root → index.html
+server.get('/', async (request, reply) => {
+  const indexPath = join(frontendPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    return reply.sendFile('index.html');
+  }
+  return { status: 'ok', message: 'Callora API Server' };
+});
+
+// Route for /app/* pages
+server.get('/app/*', async (request, reply) => {
+  const page = request.params['*'];
+  const filePath = join(frontendPath, 'app', page);
+  if (fs.existsSync(filePath)) {
+    return reply.sendFile(join('app', page));
+  }
+  reply.code(404).send({ error: 'Page not found' });
+});
+
+// Route for /pages/* (login, onboarding, landing)
+server.get('/pages/*', async (request, reply) => {
+  const page = request.params['*'];
+  const filePath = join(frontendPath, 'pages', page);
+  if (fs.existsSync(filePath)) {
+    return reply.sendFile(join('pages', page));
+  }
+  reply.code(404).send({ error: 'Page not found' });
+});
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 server.get('/health', async () => ({
