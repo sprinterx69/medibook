@@ -12,6 +12,7 @@ import corsPlugin from '@fastify/cors';
 import { inboundCallHandler } from './handlers/inbound-call.js';
 import { mediaStreamHandler } from './handlers/media-stream.js';
 import { statusCallbackHandler } from './handlers/status-callback.js';
+import { voiceWebhookHandler } from './handlers/voice-webhook-handler.js';
 import jwtPlugin from '@fastify/jwt';
 import agentRoutes from './routes/agent-routes.js';
 import phoneRoutes from './routes/phone-routes.js';
@@ -140,6 +141,14 @@ server.post('/voice/inbound', inboundCallHandler);
  * Twilio calls this with call lifecycle events (ringing, answered, completed).
  */
 server.post('/voice/status', statusCallbackHandler);
+
+/**
+ * POST /api/voice-webhook
+ * Twilio calls this for numbers purchased via Settings > Buy Number.
+ * Identifies the clinic from the called number and returns TwiML.
+ * Upgrade path: connect to /voice/stream for full AI agent (see handler comments).
+ */
+server.post('/api/voice-webhook', voiceWebhookHandler);
 
 // ─── WebSocket Route ──────────────────────────────────────────────────────────
 

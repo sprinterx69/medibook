@@ -11,6 +11,7 @@ import {
   getClinicSettings,
   updateClinicSettings,
   updateNotificationSettings,
+  buyClinicNumber,
 } from '../services/settings-service.js';
 
 export default async function settingsRoutes(fastify) {
@@ -64,6 +65,28 @@ export default async function settingsRoutes(fastify) {
       return { success: true };
     } catch (err) {
       return reply.code(400).send({ error: err.message });
+    }
+  });
+
+  // ── POST /api/tenants/:tenantId/settings/buy-number ───────────────────────
+  // Automatically searches for and purchases an available local phone number.
+  // Body (optional): { country: "GB" }   — defaults to GB.
+  // Multi-tenant safe: requireAuth verifies JWT tenantId matches URL tenantId.
+  // Prevents duplicate purchase if clinic already owns a number (409).
+  // Enforces plan limits — STARTER cannot purchase (402).
+  fastify.post('/api/tenants/:tenantId/settings/buy-number', {
+    preHandler: requireAuth,
+  }, async (request, reply) => {
+    const { country = 'GB' } = request.body ?? {};
+    try {
+      const result = await buyClinicNumber(request.params.tenantId, country);
+      return reply.code(201).send(result);
+    } catch (err) {
+      return reply.code(err.statusCode ?? 500).send({
+        error:        err.message,
+        code:         err.code         ?? null,
+        requiredPlan: err.requiredPlan ?? null,
+      });
     }
   });
 }
