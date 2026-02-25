@@ -1,0 +1,8 @@
+[phases.build]
+cmds = ["npm ci", "cd backend && npx prisma generate"]
+
+[phases.setup]
+nixPkgs = ["nodejs_18"]
+
+[start]
+cmd = "cd backend && npm start"
