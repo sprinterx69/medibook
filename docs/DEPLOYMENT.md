@@ -16,10 +16,13 @@
 2. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub
 3. Select the `medibook` repo
 4. Set **Root Directory** to `backend`
-5. Railway auto-detects Node.js and runs `npm start`
-6. Add a **PostgreSQL** plugin in Railway → copy the `DATABASE_URL`
-7. Add all environment variables from `.env.example` in Railway's Variables tab
-8. Deploy → copy the generated URL (e.g. `https://medibook-backend.up.railway.app`)
+5. Ensure Railway is using `backend/nixpacks.toml` (this avoids workspace autodetect bugs)
+6. Railway should run:
+   - Build: `npm run build`
+   - Start: `npm start`
+7. Add a **PostgreSQL** plugin in Railway → copy the `DATABASE_URL`
+8. Add all environment variables from `.env.example` in Railway's Variables tab
+9. Deploy → copy the generated URL (e.g. `https://medibook-backend.up.railway.app`)
 
 ---
 
@@ -28,7 +31,7 @@
 1. Go to [vercel.com](https://vercel.com) → New Project → Import from GitHub
 2. Set **Root Directory** to `frontend`
 3. **Framework**: Other (static)
-4. **Output Directory**: `pages`
+4. Leave **Output Directory** empty (or use `.`)
 5. Deploy → your frontend is live at `https://medibook.vercel.app`
 
 ---

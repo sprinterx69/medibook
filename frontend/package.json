@@ -1,0 +1,15 @@
+{
+  "name": "medibook-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo 'Static frontend: no build step required'",
+    "start": "npx serve -s . -l ${PORT:-3000}"
+  },
+  "dependencies": {
+    "serve": "^14.2.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
