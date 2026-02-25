@@ -3,659 +3,992 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Settings — MediBook</title>
-<link rel="stylesheet" href="styles.css">
+<title>Settings – Callora</title>
 <style>
-.settings-layout { display: grid; grid-template-columns: 200px 1fr; gap: 24px; }
-.settings-nav { }
-.settings-nav-item { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 7px; text-decoration: none; color: var(--text-muted); font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all 0.15s; margin-bottom: 2px; border: none; background: none; font-family: inherit; width: 100%; text-align: left; }
-.settings-nav-item:hover { background: var(--surface-2); color: var(--text-2); }
-.settings-nav-item.active { background: var(--brand-dim); color: var(--brand-text); font-weight: 600; }
-.settings-panel { display: none; }
-.settings-panel.active { display: block; }
-.color-picker-wrap { display: flex; align-items: center; gap: 10px; }
-.color-swatch { width: 36px; height: 36px; border-radius: 8px; border: 2px solid var(--border); cursor: pointer; }
-.plan-card { border: 2px solid var(--border); border-radius: var(--radius-lg); padding: 20px; cursor: pointer; transition: all 0.15s; }
-.plan-card:hover { border-color: var(--border-strong); }
-.plan-card.current { border-color: var(--brand); background: var(--brand-dim); }
-.plan-name { font-size: 16px; font-weight: 700; color: var(--text); }
-.plan-price { font-size: 28px; font-weight: 800; color: var(--text); letter-spacing: -0.03em; margin: 4px 0; }
-.plan-price span { font-size: 14px; font-weight: 400; color: var(--text-muted); }
-.plan-feature { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-2); margin-top: 8px; }
-.check-icon { color: var(--green); font-size: 13px; }
-.btn-danger { background: #ef4444 !important; color: #fff !important; border-color: #ef4444 !important; }
-.btn-danger:hover { background: #dc2626 !important; }
-@keyframes spin { to { transform: rotate(360deg); } }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f9fb;color:#1a1d23;display:flex;height:100vh;overflow:hidden}
+
+  /* ── Sidebar ── */
+  .sidebar{width:220px;background:#fff;border-right:1px solid #e8eaed;display:flex;flex-direction:column;flex-shrink:0}
+  .logo{padding:20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e8eaed}
+  .logo-mark{width:32px;height:32px;background:linear-gradient(135deg,#6c63ff,#4ecdc4);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px}
+  .logo-text{font-weight:700;font-size:16px;color:#1a1d23}
+  .nav{padding:12px 8px;flex:1;overflow-y:auto}
+  .nav-label{font-size:10px;font-weight:600;color:#9aa0ab;text-transform:uppercase;letter-spacing:.8px;padding:8px 8px 4px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:#5a6070;font-size:13.5px;font-weight:500;text-decoration:none;transition:background .15s,color .15s}
+  .nav-item:hover{background:#f4f5f8;color:#1a1d23}
+  .nav-item.active{background:#f0eeff;color:#6c63ff}
+  .nav-item svg{opacity:.65;flex-shrink:0}
+  .nav-item.active svg{opacity:1}
+  .nav-divider{height:1px;background:#e8eaed;margin:8px 0}
+  .nav-bottom{padding:12px 8px;border-top:1px solid #e8eaed}
+  .user-pill{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer}
+  .user-pill:hover{background:#f4f5f8}
+  .avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;background:#e0deff;color:#6c63ff;flex-shrink:0}
+  .user-info{flex:1;min-width:0}
+  .user-name{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .user-role{font-size:11px;color:#9aa0ab}
+  .sign-out-btn{font-size:12px;color:#9aa0ab;cursor:pointer;padding:4px 8px;border-radius:6px}
+  .sign-out-btn:hover{color:#e05252;background:#fff0f0}
+
+  /* ── Main ── */
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .topbar{padding:16px 28px;background:#fff;border-bottom:1px solid #e8eaed;display:flex;align-items:center;gap:16px}
+  .topbar h1{font-size:18px;font-weight:700}
+  .content{flex:1;overflow-y:auto;padding:28px}
+
+  /* ── Settings layout ── */
+  .settings-layout{display:flex;gap:24px;max-width:900px}
+  .settings-nav{width:180px;flex-shrink:0}
+  .settings-nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;cursor:pointer;color:#5a6070;font-size:13.5px;font-weight:500;transition:background .15s,color .15s;margin-bottom:2px}
+  .settings-nav-item:hover{background:#f4f5f8;color:#1a1d23}
+  .settings-nav-item.active{background:#f0eeff;color:#6c63ff;font-weight:600}
+  .settings-nav-item svg{opacity:.6;flex-shrink:0}
+  .settings-nav-item.active svg{opacity:1}
+  .panel{flex:1;min-width:0}
+
+  /* ── Card ── */
+  .card{background:#fff;border:1px solid #e8eaed;border-radius:12px;padding:24px;margin-bottom:20px}
+  .card-title{font-size:15px;font-weight:700;margin-bottom:4px}
+  .card-sub{font-size:13px;color:#6b7280;margin-bottom:20px}
+
+  /* ── Form fields ── */
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  .form-row.single{grid-template-columns:1fr}
+  .form-group{display:flex;flex-direction:column;gap:6px}
+  .form-group label{font-size:12.5px;font-weight:600;color:#374151}
+  .form-group input,.form-group select,.form-group textarea{padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13.5px;color:#1a1d23;outline:none;transition:border-color .15s;background:#fff}
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#6c63ff;box-shadow:0 0 0 3px rgba(108,99,255,.1)}
+  .form-group textarea{resize:vertical;min-height:80px}
+  .save-btn{padding:9px 20px;background:#6c63ff;color:#fff;border:none;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;transition:opacity .15s}
+  .save-btn:hover{opacity:.9}
+  .save-btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* ── Toggle ── */
+  .toggle-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid #f0f1f3}
+  .toggle-row:last-child{border-bottom:none}
+  .toggle-label{font-size:13.5px;font-weight:500}
+  .toggle-desc{font-size:12px;color:#6b7280;margin-top:2px}
+  .toggle{position:relative;width:40px;height:22px;flex-shrink:0;margin-top:2px}
+  .toggle input{opacity:0;width:0;height:0}
+  .toggle-slider{position:absolute;inset:0;background:#d1d5db;border-radius:11px;transition:.25s;cursor:pointer}
+  .toggle-slider:before{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;left:3px;transition:.25s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .toggle input:checked+.toggle-slider{background:#6c63ff}
+  .toggle input:checked+.toggle-slider:before{transform:translateX(18px)}
+
+  /* ── Services ── */
+  .service-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f1f3}
+  .service-item:last-child{border-bottom:none}
+  .service-color{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+  .service-name{font-size:13.5px;font-weight:600;flex:1}
+  .service-meta{font-size:12px;color:#6b7280}
+  .service-badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+  .badge-active{background:#e8f5e9;color:#2e7d32}
+  .badge-inactive{background:#f5f5f5;color:#9aa0ab}
+  .icon-btn{width:30px;height:30px;border:1px solid #e8eaed;border-radius:7px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6b7280;transition:background .15s,color .15s}
+  .icon-btn:hover{background:#f4f5f8;color:#1a1d23}
+  .add-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;background:#f0eeff;color:#6c63ff;border:1px dashed #c4beff;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;margin-top:12px;transition:background .15s}
+  .add-btn:hover{background:#e8e4ff}
+
+  /* ── Phone numbers ── */
+  .phone-num-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f1f3}
+  .phone-num-row:last-child{border-bottom:none}
+  .phone-num{font-size:14px;font-weight:600;flex:1}
+  .phone-status{font-size:11px;padding:2px 8px;border-radius:20px;background:#e8f5e9;color:#2e7d32;font-weight:500}
+  .search-area-row{display:flex;gap:10px;margin-top:12px}
+  .search-area-row input{flex:1;padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13.5px;outline:none}
+  .search-area-row input:focus{border-color:#6c63ff;box-shadow:0 0 0 3px rgba(108,99,255,.1)}
+  .search-area-row button{padding:9px 16px;background:#6c63ff;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+
+  /* ── Billing ── */
+  .plan-card{background:linear-gradient(135deg,#6c63ff,#4ecdc4);color:#fff;border-radius:12px;padding:24px;margin-bottom:16px}
+  .plan-name{font-size:22px;font-weight:700}
+  .plan-desc{font-size:13px;opacity:.85;margin-top:4px}
+  .plan-features{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}
+  .plan-feat{background:rgba(255,255,255,.2);padding:4px 12px;border-radius:20px;font-size:12px}
+  .billing-detail{font-size:13px;color:#6b7280;margin-bottom:6px}
+  .portal-btn{padding:10px 20px;background:#fff;color:#6c63ff;border:2px solid #6c63ff;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;transition:background .15s}
+  .portal-btn:hover{background:#f0eeff}
+
+  /* ── Integrations ── */
+  .integration-item{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #f0f1f3}
+  .integration-item:last-child{border-bottom:none}
+  .int-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:#f4f5f8}
+  .int-name{font-size:13.5px;font-weight:600}
+  .int-desc{font-size:12px;color:#6b7280;margin-top:2px}
+  .int-status{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;flex-shrink:0}
+  .int-connected{background:#e8f5e9;color:#2e7d32}
+  .int-disconnected{background:#f5f5f5;color:#9aa0ab}
+  .connect-btn{padding:6px 14px;background:#6c63ff;color:#fff;border:none;border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;flex-shrink:0}
+  .connect-btn:hover{opacity:.9}
+  .disconnect-btn{padding:6px 14px;background:#fff;color:#e05252;border:1px solid #e05252;border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;flex-shrink:0}
+  .disconnect-btn:hover{background:#fff5f5}
+
+  /* ── Team ── */
+  .member-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f1f3}
+  .member-row:last-child{border-bottom:none}
+  .member-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+  .member-name{font-size:13.5px;font-weight:600}
+  .member-email{font-size:12px;color:#6b7280}
+  .role-badge{font-size:11px;padding:2px 10px;border-radius:20px;font-weight:600}
+  .role-OWNER{background:#fff3cd;color:#7d5a00}
+  .role-ADMIN{background:#e8eeff;color:#3b3ddb}
+  .role-STAFF{background:#f4f5f8;color:#5a6070}
+  .role-select{padding:5px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:12.5px;outline:none;color:#1a1d23}
+  .remove-btn{padding:5px 10px;background:#fff;color:#e05252;border:1px solid #e05252;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer}
+  .remove-btn:hover{background:#fff5f5}
+
+  /* ── Modal ── */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s}
+  .overlay.open{opacity:1;pointer-events:all}
+  .modal{background:#fff;border-radius:16px;padding:28px;width:440px;max-width:95vw;transform:translateY(16px);transition:transform .2s;max-height:90vh;overflow-y:auto}
+  .overlay.open .modal{transform:translateY(0)}
+  .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .modal-title{font-size:16px;font-weight:700}
+  .close-btn{width:28px;height:28px;border:none;background:#f4f5f8;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:#6b7280}
+  .close-btn:hover{background:#e8eaed}
+  .modal-footer{margin-top:20px;display:flex;justify-content:flex-end;gap:10px}
+  .cancel-btn{padding:9px 18px;background:#f4f5f8;color:#5a6070;border:none;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer}
+  .cancel-btn:hover{background:#e8eaed}
+
+  /* ── Alerts ── */
+  .toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13.5px;font-weight:600;z-index:2000;display:none;box-shadow:0 4px 20px rgba(0,0,0,.15)}
+  .toast.success{background:#1e7e34;color:#fff}
+  .toast.error{background:#c62828;color:#fff}
+  .alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:16px}
+  .alert-success{background:#e8f5e9;color:#2e7d32;border:1px solid #c8e6c9}
+  .alert-error{background:#ffebee;color:#c62828;border:1px solid #ffcdd2}
+
+  /* ── Skeleton ── */
+  .skel{background:linear-gradient(90deg,#f0f1f3 25%,#e4e5e9 50%,#f0f1f3 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px}
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+  /* Responsive */
+  @media(max-width:640px){
+    .settings-layout{flex-direction:column}
+    .settings-nav{width:100%}
+  }
 </style>
 </head>
 <body>
-<div class="app-shell">
 
 <!-- Sidebar -->
-<aside class="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-mark">M</div>
-    <span class="logo-text">MediBook</span>
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">C</div>
+    <div class="logo-text">Callora</div>
   </div>
-  <div class="sidebar-scroll">
-    <div class="nav-section">Clinic</div>
-    <a href="dashboard.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</a>
-    <a href="calendar.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>Calendar</a>
-    <a href="clients.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Clients</a>
-    <a href="payments.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payments</a>
-    <a href="staff.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Staff</a>
-    <div class="nav-section">AI & Settings</div>
-    <a href="agent.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.63 19a19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6.08 6.08l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>AI Agent</a>
-    <a href="settings.html" class="nav-item active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Settings</a>
+  <div class="nav">
+    <div class="nav-label">Main</div>
+    <a href="dashboard.html" class="nav-item">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a href="calendar.html" class="nav-item">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Calendar
+    </a>
+    <a href="clients.html" class="nav-item">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Clients
+    </a>
+    <a href="payments.html" class="nav-item">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+      Payments
+    </a>
+    <a href="staff.html" class="nav-item">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Staff
+    </a>
+    <a href="agent.html" class="nav-item">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      AI Agent
+    </a>
+    <div class="nav-divider"></div>
+    <a href="settings.html" class="nav-item active">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
   </div>
-  <div class="sidebar-footer">
-    <div class="user-card">
-      <div class="user-av">LC</div>
-      <div><div class="user-name">Lumière Clinic</div><div class="user-role">Clinic Owner</div></div>
+  <div class="nav-bottom">
+    <div class="user-pill">
+      <div class="avatar" id="sidebarAvatar">–</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebarName">Loading…</div>
+        <div class="user-role" id="sidebarRole">–</div>
+      </div>
+      <span class="sign-out-btn" onclick="signOut()" title="Sign out">↩</span>
     </div>
   </div>
-</aside>
+</nav>
 
 <!-- Main -->
 <div class="main">
   <div class="topbar">
-    <div class="topbar-left">
-      <span class="page-title">Settings</span>
-    </div>
-    <div class="topbar-right">
-      <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
-    </div>
+    <h1>Settings</h1>
   </div>
-
   <div class="content">
+    <div id="alertBanner"></div>
     <div class="settings-layout">
-
       <!-- Settings nav -->
-      <nav class="settings-nav">
-        <div style="font-size:11px;font-weight:700;color:var(--text-light);letter-spacing:0.07em;text-transform:uppercase;padding:0 12px 8px">Configuration</div>
-        <button class="settings-nav-item active" onclick="switchPanel('clinic',this)">🏥 Clinic Info</button>
-        <button class="settings-nav-item" onclick="switchPanel('services',this)">💆 Services</button>
-        <button class="settings-nav-item" onclick="switchPanel('branding',this)">🎨 Branding</button>
-        <button class="settings-nav-item" onclick="switchPanel('notifications',this)">🔔 Notifications</button>
-        <div style="height:1px;background:var(--border);margin:10px 12px"></div>
-        <div style="font-size:11px;font-weight:700;color:var(--text-light);letter-spacing:0.07em;text-transform:uppercase;padding:0 12px 8px">Account</div>
-        <button class="settings-nav-item" onclick="switchPanel('phones',this)">📞 Phone Numbers</button>
-        <button class="settings-nav-item" onclick="switchPanel('plan',this)">💳 Plan & Billing</button>
-        <button class="settings-nav-item" onclick="switchPanel('integrations',this)">🔌 Integrations</button>
-        <button class="settings-nav-item" onclick="switchPanel('team',this)">👥 Team Access</button>
-      </nav>
+      <div class="settings-nav">
+        <div class="settings-nav-item active" data-panel="clinic" onclick="showPanel('clinic')">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          Clinic Info
+        </div>
+        <div class="settings-nav-item" data-panel="services" onclick="showPanel('services')">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+          Services
+        </div>
+        <div class="settings-nav-item" data-panel="notifications" onclick="showPanel('notifications')">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Notifications
+        </div>
+        <div class="settings-nav-item" data-panel="phone" onclick="showPanel('phone')">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.24h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.83a16 16 0 0 0 6.29 6.29l.95-.95a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Phone Numbers
+        </div>
+        <div class="settings-nav-item" data-panel="billing" onclick="showPanel('billing')">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+          Plan &amp; Billing
+        </div>
+        <div class="settings-nav-item" data-panel="integrations" onclick="showPanel('integrations')">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          Integrations
+        </div>
+        <div class="settings-nav-item" data-panel="team" onclick="showPanel('team')">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Team Access
+        </div>
+      </div>
 
       <!-- Panels -->
-      <div>
+      <div class="panel">
 
         <!-- Clinic Info -->
-        <div class="settings-panel active" id="panel-clinic">
-          <div class="card card-body" style="margin-bottom:16px">
-            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:18px">Clinic Information</div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Clinic Name</label>
-                <input class="input" type="text" value="Lumière Aesthetics">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Business Type</label>
-                <select class="select">
-                  <option selected>Medical Aesthetics</option>
-                  <option>Dental Clinic</option>
-                  <option>Physiotherapy</option>
-                  <option>Hair Clinic</option>
-                  <option>Other</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Phone Number</label>
-                <input class="input" type="tel" value="+44 20 7946 0001">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Email Address</label>
-                <input class="input" type="email" value="hello@lumiere.co.uk">
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Website</label>
-              <input class="input" type="url" value="https://lumiere.co.uk">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Address</label>
-              <input class="input" type="text" value="42 Wimpole Street, Marylebone" style="margin-bottom:8px">
-              <div class="form-row">
-                <input class="input" type="text" placeholder="City" value="London">
-                <input class="input" type="text" placeholder="Postcode" value="W1G 8YF">
-              </div>
-            </div>
-            <div class="form-row" style="margin-bottom:0">
-              <div class="form-group" style="margin-bottom:0">
-                <label class="form-label">Timezone</label>
-                <select class="select">
-                  <option selected>Europe/London (GMT+0)</option>
-                  <option>Europe/Paris (GMT+1)</option>
-                  <option>America/New_York (GMT-5)</option>
-                </select>
-              </div>
-              <div class="form-group" style="margin-bottom:0">
-                <label class="form-label">Currency</label>
-                <select class="select">
-                  <option selected>GBP (£)</option>
-                  <option>EUR (€)</option>
-                  <option>USD ($)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="card card-body" style="display:flex;align-items:center;gap:14px;cursor:pointer" onclick="switchPanel('phones', document.querySelector('[onclick*=phones]'))">
-            <div style="width:40px;height:40px;border-radius:10px;background:var(--brand-dim);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📞</div>
-            <div style="flex:1">
-              <div style="font-size:14px;font-weight:600;color:var(--text)">AI Voice Receptionist Number</div>
-              <div style="font-size:12px;color:var(--text-muted)">Manage your Twilio phone number in Phone Numbers settings</div>
-            </div>
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:16px;height:16px;color:var(--text-muted)"><path d="M9 18l6-6-6-6"/></svg>
-          </div>
-        </div>
-
-        <!-- Phone Numbers -->
-        <div class="settings-panel" id="panel-phones">
+        <div id="panel-clinic">
           <div class="card">
-            <div class="card-header">
-              <div>
-                <div class="card-title">Phone Numbers</div>
-                <div class="card-subtitle">Twilio numbers that route calls to your AI voice agent</div>
+            <div class="card-title">Clinic Information</div>
+            <div class="card-sub">Basic details shown to clients and used in communications.</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Clinic Name</label>
+                <input type="text" id="clinicName" placeholder="e.g. Downtown Dental">
               </div>
-              <button class="btn btn-primary btn-sm" id="btnGetNumber" onclick="openGetNumberModal()">+ Get a Number</button>
-            </div>
-            <div class="card-body" id="phoneNumbersList">
-              <!-- Rendered by JS -->
-              <div style="display:flex;align-items:center;justify-content:center;padding:32px;color:var(--text-muted)">
-                <div style="width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin 0.7s linear infinite;margin-right:10px"></div>
-                Loading…
+              <div class="form-group">
+                <label>Phone</label>
+                <input type="text" id="clinicPhone" placeholder="+1 (555) 000-0000">
               </div>
             </div>
+            <div class="form-row single">
+              <div class="form-group">
+                <label>Address</label>
+                <input type="text" id="clinicAddress" placeholder="123 Main St, City, State">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Timezone</label>
+                <select id="clinicTimezone">
+                  <option value="America/New_York">Eastern (ET)</option>
+                  <option value="America/Chicago">Central (CT)</option>
+                  <option value="America/Denver">Mountain (MT)</option>
+                  <option value="America/Los_Angeles">Pacific (PT)</option>
+                  <option value="America/Anchorage">Alaska (AKT)</option>
+                  <option value="Pacific/Honolulu">Hawaii (HT)</option>
+                  <option value="Europe/London">London (GMT/BST)</option>
+                  <option value="Europe/Paris">Paris (CET/CEST)</option>
+                  <option value="Asia/Dubai">Dubai (GST)</option>
+                  <option value="Asia/Singapore">Singapore (SGT)</option>
+                  <option value="Australia/Sydney">Sydney (AEST)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Currency</label>
+                <select id="clinicCurrency">
+                  <option value="USD">USD – US Dollar</option>
+                  <option value="GBP">GBP – British Pound</option>
+                  <option value="EUR">EUR – Euro</option>
+                  <option value="CAD">CAD – Canadian Dollar</option>
+                  <option value="AUD">AUD – Australian Dollar</option>
+                  <option value="AED">AED – UAE Dirham</option>
+                  <option value="SGD">SGD – Singapore Dollar</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row single">
+              <div class="form-group">
+                <label>Business Hours</label>
+                <input type="text" id="clinicHours" placeholder="Mon-Fri 9am-6pm, Sat 9am-2pm">
+              </div>
+            </div>
+            <button class="save-btn" id="saveClinicBtn" onclick="saveClinic()">Save Changes</button>
           </div>
-
-          <!-- Plan context banner -->
-          <div id="phonePlanBanner" style="display:none;margin-top:12px"></div>
         </div>
 
         <!-- Services -->
-        <div class="settings-panel" id="panel-services">
-          <div class="card" style="margin-bottom:16px">
-            <div class="card-header">
-              <div><div class="card-title">Services</div><div class="card-subtitle">Treatments offered at your clinic</div></div>
-              <button class="btn btn-primary btn-sm" onclick="showToast('info','Add service form coming soon')">+ Add Service</button>
-            </div>
-            <div class="card-body" style="padding:0">
-              <table style="width:100%;border-collapse:collapse">
-                <thead><tr><th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);border-bottom:1px solid var(--border);letter-spacing:0.05em;text-transform:uppercase;background:var(--surface-2)">Service</th><th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);border-bottom:1px solid var(--border);letter-spacing:0.05em;text-transform:uppercase;background:var(--surface-2)">Duration</th><th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);border-bottom:1px solid var(--border);letter-spacing:0.05em;text-transform:uppercase;background:var(--surface-2)">Price</th><th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);border-bottom:1px solid var(--border);letter-spacing:0.05em;text-transform:uppercase;background:var(--surface-2)">Status</th><th style="background:var(--surface-2);border-bottom:1px solid var(--border)"></th></tr></thead>
-                <tbody id="servicesTable"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Branding -->
-        <div class="settings-panel" id="panel-branding">
-          <div class="card card-body" style="margin-bottom:16px">
-            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:18px">Brand Colours</div>
-            <div class="form-group">
-              <label class="form-label">Primary Brand Colour</label>
-              <div class="color-picker-wrap">
-                <input type="color" value="#0d9488" style="width:44px;height:44px;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:2px">
-                <input class="input" type="text" value="#0d9488" style="width:120px">
-                <div style="width:44px;height:44px;background:#0d9488;border-radius:8px;border:1px solid var(--border)"></div>
-              </div>
-            </div>
-            <div class="form-group" style="margin-bottom:0">
-              <label class="form-label">Clinic Logo</label>
-              <div style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:32px;text-align:center;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
-                <div style="font-size:28px;margin-bottom:8px">🖼️</div>
-                <div style="font-size:13.5px;font-weight:600;color:var(--text)">Upload logo</div>
-                <div style="font-size:12px;color:var(--text-muted);margin-top:4px">PNG or SVG, max 2MB. Recommended: 200×60px</div>
-              </div>
+        <div id="panel-services" style="display:none">
+          <div class="card">
+            <div class="card-title">Service Catalog</div>
+            <div class="card-sub">Services offered by your clinic. Clients can book these via the AI agent.</div>
+            <div id="servicesList"><div class="skel" style="height:48px;margin-bottom:10px"></div><div class="skel" style="height:48px;margin-bottom:10px"></div><div class="skel" style="height:48px"></div></div>
+            <div class="add-btn" onclick="openAddService()">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              Add Service
             </div>
           </div>
         </div>
 
         <!-- Notifications -->
-        <div class="settings-panel" id="panel-notifications">
-          <div class="card card-body">
-            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:18px">Notification Preferences</div>
-            <div class="toggle-row">
-              <div><div class="toggle-label">Email booking confirmations to clients</div><div class="toggle-desc">Automatically email clients when an appointment is confirmed by the AI agent.</div></div>
-              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-            </div>
-            <div class="toggle-row">
-              <div><div class="toggle-label">SMS reminders (24h before)</div><div class="toggle-desc">Send a text reminder to clients 24 hours before their appointment.</div></div>
-              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-            </div>
-            <div class="toggle-row">
-              <div><div class="toggle-label">Notify me of new AI bookings</div><div class="toggle-desc">Send an email to the clinic owner when the AI agent makes a booking.</div></div>
-              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-            </div>
-            <div class="toggle-row">
-              <div><div class="toggle-label">Daily summary email</div><div class="toggle-desc">Receive a morning digest of the day's appointments and any overnight AI calls.</div></div>
-              <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
-            </div>
-            <div class="toggle-row" style="border-bottom:none">
-              <div><div class="toggle-label">Payment failure alerts</div><div class="toggle-desc">Immediately notify me if a client's payment fails.</div></div>
-              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-            </div>
+        <div id="panel-notifications" style="display:none">
+          <div class="card">
+            <div class="card-title">Notification Preferences</div>
+            <div class="card-sub">Control which emails and SMS messages are sent to you and your clients.</div>
+            <div id="notifList"><div class="skel" style="height:60px;margin-bottom:10px"></div><div class="skel" style="height:60px;margin-bottom:10px"></div><div class="skel" style="height:60px"></div></div>
+            <button class="save-btn" id="saveNotifBtn" onclick="saveNotifications()" style="margin-top:16px">Save Preferences</button>
           </div>
         </div>
 
-        <!-- Plan & Billing -->
-        <div class="settings-panel" id="panel-plan">
-          <div style="font-size:12.5px;font-weight:700;color:var(--text-muted);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:12px">Current Plan</div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px">
-            <div class="plan-card">
-              <div class="plan-name">Starter</div>
-              <div class="plan-price">£49<span>/mo</span></div>
-              <div class="plan-feature"><span class="check-icon">✓</span> Up to 2 staff</div>
-              <div class="plan-feature"><span class="check-icon">✓</span> 1 location</div>
-              <div class="plan-feature" style="color:var(--text-muted)">✗ AI Voice Agent</div>
+        <!-- Phone Numbers -->
+        <div id="panel-phone" style="display:none">
+          <div class="card">
+            <div class="card-title">Phone Numbers</div>
+            <div class="card-sub">Twilio numbers used by your AI agent for inbound and outbound calls.</div>
+            <div id="phoneList"><div class="skel" style="height:48px;margin-bottom:10px"></div></div>
+            <div class="search-area-row">
+              <input type="text" id="areaCodeInput" placeholder="Area code (e.g. 415)" maxlength="3">
+              <button onclick="searchPhoneNumbers()">Search</button>
             </div>
-            <div class="plan-card current">
-              <div style="display:flex;justify-content:space-between;align-items:start"><div class="plan-name">Pro</div><span class="badge badge-brand">Current</span></div>
-              <div class="plan-price">£129<span>/mo</span></div>
-              <div class="plan-feature"><span class="check-icon">✓</span> Unlimited staff</div>
-              <div class="plan-feature"><span class="check-icon">✓</span> Up to 3 locations</div>
-              <div class="plan-feature"><span class="check-icon">✓</span> AI Voice Agent</div>
-            </div>
-            <div class="plan-card">
-              <div class="plan-name">Enterprise</div>
-              <div class="plan-price" style="font-size:20px;padding-top:6px">Custom</div>
-              <div class="plan-feature"><span class="check-icon">✓</span> Unlimited locations</div>
-              <div class="plan-feature"><span class="check-icon">✓</span> White-label</div>
-              <div class="plan-feature"><span class="check-icon">✓</span> Dedicated support</div>
-            </div>
+            <div id="phoneSearchResults" style="margin-top:12px"></div>
           </div>
-          <div class="card card-body">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-              <div style="font-size:15px;font-weight:700">Billing Details</div>
-              <button class="btn btn-secondary btn-sm" onclick="showToast('info','Opening Stripe billing portal…')">Manage Billing</button>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-              <div style="padding:14px;background:var(--surface-2);border-radius:var(--radius);border:1px solid var(--border)"><div style="font-size:11.5px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px">Next Payment</div><div style="font-size:16px;font-weight:700;color:var(--text)">£129.00</div><div style="font-size:12px;color:var(--text-muted)">Due 22 Mar 2026</div></div>
-              <div style="padding:14px;background:var(--surface-2);border-radius:var(--radius);border:1px solid var(--border)"><div style="font-size:11.5px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px">Payment Method</div><div style="font-size:15px;font-weight:700;color:var(--text)">•••• 4242</div><div style="font-size:12px;color:var(--text-muted)">Visa · Expires 08/27</div></div>
-            </div>
+        </div>
+
+        <!-- Billing -->
+        <div id="panel-billing" style="display:none">
+          <div class="plan-card" id="planCard">
+            <div class="plan-name" id="planName">Loading…</div>
+            <div class="plan-desc" id="planDesc">–</div>
+            <div class="plan-features" id="planFeatures"></div>
+          </div>
+          <div class="card">
+            <p class="billing-detail" id="billingCycle">–</p>
+            <p class="billing-detail" id="billingNextDate">–</p>
+            <p class="billing-detail" id="billingPayMethod">–</p>
+            <button class="portal-btn" onclick="openBillingPortal()">Manage Billing &amp; Invoices →</button>
           </div>
         </div>
 
         <!-- Integrations -->
-        <div class="settings-panel" id="panel-integrations">
-          <div id="intGrid" style="display:flex;flex-direction:column;gap:12px"></div>
-        </div>
-
-        <!-- Team -->
-        <div class="settings-panel" id="panel-team">
+        <div id="panel-integrations" style="display:none">
           <div class="card">
-            <div class="card-header">
-              <div><div class="card-title">Team Members</div><div class="card-subtitle">Manage who has access to your MediBook account</div></div>
-              <button class="btn btn-primary btn-sm">+ Invite</button>
-            </div>
-            <div class="card-body" style="padding:0">
-              <table style="width:100%;border-collapse:collapse">
-                <thead><tr><th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);border-bottom:1px solid var(--border);letter-spacing:0.05em;text-transform:uppercase;background:var(--surface-2)">Member</th><th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);border-bottom:1px solid var(--border);letter-spacing:0.05em;text-transform:uppercase;background:var(--surface-2)">Role</th><th style="padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);border-bottom:1px solid var(--border);letter-spacing:0.05em;text-transform:uppercase;background:var(--surface-2)">Last Login</th><th style="padding:11px 16px;background:var(--surface-2);border-bottom:1px solid var(--border)"></th></tr></thead>
-                <tbody>
-                  <tr><td style="padding:13px 16px"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="background:var(--brand-dim);color:var(--brand-text)">PP</div><div><div style="font-size:13.5px;font-weight:600;color:var(--text)">Dr. Priya Patel</div><div style="font-size:12px;color:var(--text-muted)">priya@lumiere.co.uk</div></div></div></td><td style="padding:13px 16px"><span class="badge badge-brand">Owner</span></td><td style="padding:13px 16px;font-size:13px;color:var(--text-muted)">Today, 9:14am</td><td style="padding:13px 16px"></td></tr>
-                  <tr><td style="padding:13px 16px"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="background:#f5f3ff;color:#5b21b6">EC</div><div><div style="font-size:13.5px;font-weight:600;color:var(--text)">Dr. Elena Chen</div><div style="font-size:12px;color:var(--text-muted)">elena@lumiere.co.uk</div></div></div></td><td style="padding:13px 16px"><span class="badge badge-gray">Manager</span></td><td style="padding:13px 16px;font-size:13px;color:var(--text-muted)">Yesterday</td><td style="padding:13px 16px"><button class="btn btn-ghost btn-sm" onclick="showToast('info','Edit permissions coming soon')">Edit</button></td></tr>
-                  <tr><td style="padding:13px 16px"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="background:#fffbeb;color:#92400e">TN</div><div><div style="font-size:13.5px;font-weight:600;color:var(--text)">Tom Nakamura</div><div style="font-size:12px;color:var(--text-muted)">tom@lumiere.co.uk</div></div></div></td><td style="padding:13px 16px"><span class="badge badge-gray">Staff</span></td><td style="padding:13px 16px;font-size:13px;color:var(--text-muted)">3 days ago</td><td style="padding:13px 16px"><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
-                </tbody>
-              </table>
-            </div>
+            <div class="card-title">Connected Integrations</div>
+            <div class="card-sub">Third-party services powering your Callora workspace.</div>
+            <div id="integrationsList"><div class="skel" style="height:60px;margin-bottom:10px"></div><div class="skel" style="height:60px;margin-bottom:10px"></div><div class="skel" style="height:60px"></div></div>
           </div>
         </div>
 
+        <!-- Team Access -->
+        <div id="panel-team" style="display:none">
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+              <div>
+                <div class="card-title" style="margin-bottom:0">Team Members</div>
+                <div class="card-sub" style="margin-bottom:0">Manage who has access to your Callora workspace.</div>
+              </div>
+              <button class="save-btn" onclick="openInviteModal()">+ Invite</button>
+            </div>
+            <div id="teamList"><div class="skel" style="height:52px;margin-bottom:10px"></div><div class="skel" style="height:52px;margin-bottom:10px"></div><div class="skel" style="height:52px"></div></div>
+          </div>
+        </div>
+
+      </div><!-- /panel -->
+    </div><!-- /settings-layout -->
+  </div>
+</div>
+
+<!-- Add Service Modal -->
+<div class="overlay" id="serviceModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="serviceModalTitle">Add Service</div>
+      <button class="close-btn" onclick="closeServiceModal()">✕</button>
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label>Service Name *</label>
+      <input type="text" id="svcName" placeholder="e.g. Teeth Cleaning">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Duration (min) *</label>
+        <input type="number" id="svcDuration" placeholder="60" min="5" step="5">
       </div>
+      <div class="form-group">
+        <label>Price ($) *</label>
+        <input type="number" id="svcPrice" placeholder="120" min="0" step="0.01">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Color</label>
+        <input type="color" id="svcColor" value="#6c63ff">
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <input type="text" id="svcCategory" placeholder="e.g. Preventive">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label>Description</label>
+      <textarea id="svcDesc" placeholder="Optional description…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" onclick="closeServiceModal()">Cancel</button>
+      <button class="save-btn" onclick="saveService()">Save Service</button>
     </div>
   </div>
 </div>
 
-<!-- Get a Number Modal -->
-<div class="modal-overlay" id="modalGetNumber" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center">
-  <div class="card card-body" style="width:480px;max-width:calc(100vw - 32px);max-height:80vh;overflow-y:auto;position:relative">
-    <button onclick="closeGetNumberModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1">✕</button>
-    <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px">Get a Phone Number</div>
-    <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:20px">Search for an available Twilio number. It will be automatically configured to route calls to your AI voice agent.</div>
-
-    <div class="form-row" style="margin-bottom:12px">
-      <div class="form-group" style="margin-bottom:0">
-        <label class="form-label">Country</label>
-        <select class="select" id="numCountry">
-          <option value="GB">🇬🇧 United Kingdom</option>
-          <option value="US">🇺🇸 United States</option>
-          <option value="CA">🇨🇦 Canada</option>
-          <option value="AU">🇦🇺 Australia</option>
-        </select>
-      </div>
-      <div class="form-group" style="margin-bottom:0">
-        <label class="form-label">Area Code <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
-        <input class="input" type="text" id="numAreaCode" placeholder="e.g. 20 for London">
-      </div>
+<!-- Invite Team Modal -->
+<div class="overlay" id="inviteModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Invite Team Member</div>
+      <button class="close-btn" onclick="closeInviteModal()">✕</button>
     </div>
-
-    <button class="btn btn-secondary" style="width:100%;margin-bottom:20px" onclick="searchNumbers()" id="btnSearch">Search Available Numbers</button>
-
-    <div id="numResults" style="display:none">
-      <div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px">Available Numbers</div>
-      <div id="numList" style="display:flex;flex-direction:column;gap:8px"></div>
-      <div style="font-size:11.5px;color:var(--text-muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">Number includes voice calls and SMS. Billed monthly by Twilio at standard rates.</div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label>Full Name *</label>
+      <input type="text" id="inviteName" placeholder="Jane Smith">
     </div>
-
-    <div id="numEmpty" style="display:none;text-align:center;padding:20px 0;color:var(--text-muted);font-size:13.5px">
-      No numbers found for that area code. Try a different one or leave it blank.
+    <div class="form-group" style="margin-bottom:14px">
+      <label>Email *</label>
+      <input type="email" id="inviteEmail" placeholder="jane@clinic.com">
     </div>
-
-    <div id="numSearching" style="display:none;text-align:center;padding:20px 0;color:var(--text-muted);font-size:13.5px">
-      <div style="width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 10px"></div>
-      Searching Twilio…
+    <div class="form-group" style="margin-bottom:14px">
+      <label>Title</label>
+      <input type="text" id="inviteTitle" placeholder="Hygienist, Front Desk…">
     </div>
-  </div>
-</div>
-
-<!-- Release confirm modal -->
-<div class="modal-overlay" id="modalRelease" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center">
-  <div class="card card-body" style="width:400px;max-width:calc(100vw - 32px)">
-    <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">Release Phone Number?</div>
-    <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:20px">This will permanently release <strong id="releaseNumDisplay"></strong> from your account. Your AI voice agent will stop receiving calls immediately. This cannot be undone.</div>
-    <div style="display:flex;gap:10px;justify-content:flex-end">
-      <button class="btn btn-secondary" onclick="closeReleaseModal()">Cancel</button>
-      <button class="btn btn-danger" id="btnConfirmRelease" onclick="confirmRelease()">Release Number</button>
+    <div class="form-group" style="margin-bottom:0">
+      <label>Role *</label>
+      <select id="inviteRole">
+        <option value="STAFF">Staff – View only</option>
+        <option value="ADMIN">Admin – Full access</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" onclick="closeInviteModal()">Cancel</button>
+      <button class="save-btn" onclick="sendInvite()">Send Invite</button>
     </div>
   </div>
 </div>
 
 <!-- Toast -->
-<div class="toast-wrap"><div class="toast" id="toast"><span class="toast-icon" id="toastIcon">✓</span><div class="toast-content"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div></div>
+<div class="toast" id="toast"></div>
 
 <script>
-const SERVICES = [
-  { name:'Hydrafacial', duration:'60 min', price:'£180', active:true },
-  { name:'Botox', duration:'45 min', price:'£280', active:true },
-  { name:'Laser Treatment', duration:'90 min', price:'£320', active:true },
-  { name:'Dermal Filler', duration:'60 min', price:'£420', active:true },
-  { name:'Chemical Peel', duration:'60 min', price:'£150', active:true },
-  { name:'Consultation', duration:'30 min', price:'£90', active:true },
-];
+const TOKEN = localStorage.getItem('medibook_token');
+const TENANT = localStorage.getItem('medibook_tenant_id');
+if (!TOKEN || !TENANT) location.href = '../pages/login.html';
 
-const INTEGRATIONS = [
-  { name:'Twilio', desc:'Phone numbers & AI call routing', status:'connected', icon:'📞' },
-  { name:'OpenAI (GPT-4o)', desc:'AI receptionist intelligence', status:'connected', icon:'🤖' },
-  { name:'ElevenLabs', desc:'Natural text-to-speech voices', status:'connected', icon:'🎙️' },
-  { name:'Deepgram', desc:'Real-time speech recognition', status:'connected', icon:'👂' },
-  { name:'Stripe', desc:'Subscription billing & payments', status:'connected', icon:'💳' },
-  { name:'Resend', desc:'Transactional email delivery', status:'connected', icon:'✉️' },
-];
+const BASE = `/api/tenants/${TENANT}`;
+const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${TOKEN}` };
 
-function switchPanel(id, btn) {
-  document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-' + id).classList.add('active');
-  btn.classList.add('active');
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function buildServicesTable() {
-  document.getElementById('servicesTable').innerHTML = SERVICES.map(s => `
-    <tr>
-      <td style="padding:12px 16px;font-size:13.5px;font-weight:600;color:var(--text);border-bottom:1px solid var(--border)">${s.name}</td>
-      <td style="padding:12px 16px;font-size:13px;color:var(--text-muted);border-bottom:1px solid var(--border)">${s.duration}</td>
-      <td style="padding:12px 16px;font-size:13.5px;font-weight:600;color:var(--text);border-bottom:1px solid var(--border)">${s.price}</td>
-      <td style="padding:12px 16px;border-bottom:1px solid var(--border)"><span class="badge badge-green badge-dot">Active</span></td>
-      <td style="padding:12px 16px;border-bottom:1px solid var(--border);text-align:right"><button class="btn btn-ghost btn-sm" onclick="showToast('info','Edit service coming soon')">Edit</button></td>
-    </tr>`).join('');
+// ── Sidebar user info ──
+(async () => {
+  try {
+    const r = await fetch(`${BASE}/me`, { headers });
+    if (!r.ok) return;
+    const u = await r.json();
+    const initials = (u.fullName || u.email || '?').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('sidebarAvatar').textContent = initials;
+    document.getElementById('sidebarName').textContent = u.fullName || u.email;
+    document.getElementById('sidebarRole').textContent = u.role;
+  } catch {}
+})();
+
+function signOut() {
+  localStorage.removeItem('medibook_token');
+  localStorage.removeItem('medibook_tenant_id');
+  location.href = '../pages/login.html';
 }
 
-function buildIntegrations() {
-  document.getElementById('intGrid').innerHTML = INTEGRATIONS.map(i => `
-    <div class="card" style="display:flex;align-items:center;padding:16px 20px;gap:14px">
-      <div style="width:40px;height:40px;border-radius:10px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;border:1px solid var(--border)">${i.icon}</div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:600;color:var(--text)">${i.name}</div>
-        <div style="font-size:12px;color:var(--text-muted)">${i.desc}</div>
-      </div>
-      <span class="badge badge-green badge-dot">Connected</span>
-      <button class="btn btn-secondary btn-sm" onclick="showToast('info','Configure ${i.name} in Admin → API Integrations')">Configure</button>
-    </div>`).join('');
-}
-
-function saveSettings() { showToast('success', 'Settings saved', 'Your clinic settings have been updated.'); }
-
-let toastTimer;
-function showToast(type, title, msg='') {
-  const icons = { success:'✓', error:'✕', info:'ℹ' };
-  document.getElementById('toastIcon').textContent = icons[type] || 'ℹ';
-  document.getElementById('toastTitle').textContent = title;
-  document.getElementById('toastMsg').textContent = msg;
+// ── Toast ──
+function showToast(msg, type = 'success') {
   const t = document.getElementById('toast');
-  t.className = 'toast ' + type + ' show';
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+  t.textContent = msg;
+  t.className = `toast ${type}`;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3500);
 }
 
-document.addEventListener('DOMContentLoaded', () => { buildServicesTable(); buildIntegrations(); });
+// ── Panel switching ──
+const loaded = {};
+function showPanel(name) {
+  document.querySelectorAll('.settings-nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelector(`[data-panel="${name}"]`).classList.add('active');
+  document.querySelectorAll('.panel > div[id^="panel-"]').forEach(el => el.style.display = 'none');
+  document.getElementById(`panel-${name}`).style.display = '';
+  if (!loaded[name]) { loaded[name] = true; loadPanel(name); }
+}
 
-// ─── Phone Number Provisioning ─────────────────────────────────────────────────
-// Config — swap TENANT_ID with your real tenant ID or read from auth context
-const TENANT_ID = localStorage.getItem('medibook_tenant_id') || 'demo-tenant';
-const API_BASE  = (typeof window.MEDIBOOK_API_URL !== 'undefined' ? window.MEDIBOOK_API_URL : '');
+function loadPanel(name) {
+  if (name === 'clinic') loadClinic();
+  else if (name === 'services') loadServices();
+  else if (name === 'notifications') loadNotifications();
+  else if (name === 'phone') loadPhone();
+  else if (name === 'billing') loadBilling();
+  else if (name === 'integrations') loadIntegrations();
+  else if (name === 'team') loadTeam();
+}
 
-let phoneState = { numbers: [], plan: 'PRO', limit: 1, canAdd: true };
-let pendingReleaseNumber = null;
+// Load clinic panel immediately (default)
+loaded['clinic'] = true;
+loadPanel('clinic');
 
-// ── Load numbers from API ────────────────────────────────────────────────────
-async function loadPhoneNumbers() {
+// ── Handle redirect params (Google OAuth callback) ──
+const urlParams = new URLSearchParams(location.search);
+if (urlParams.get('googleConnected') === '1') {
+  showPanel('integrations');
+  document.getElementById('alertBanner').innerHTML = '<div class="alert alert-success">Google Calendar connected successfully.</div>';
+  setTimeout(() => document.getElementById('alertBanner').innerHTML = '', 4000);
+}
+if (urlParams.get('googleError') === '1') {
+  showPanel('integrations');
+  document.getElementById('alertBanner').innerHTML = '<div class="alert alert-error">Google Calendar connection failed. Please try again.</div>';
+  setTimeout(() => document.getElementById('alertBanner').innerHTML = '', 5000);
+}
+
+// ══════════════════════════════
+// CLINIC INFO
+// ══════════════════════════════
+let clinicData = {};
+async function loadClinic() {
   try {
-    const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/phone-numbers`);
-    if (!res.ok) throw new Error('API error');
-    phoneState = await res.json();
-  } catch (_) {
-    // Fallback demo state so the UI is always usable
-    phoneState = { numbers: [], plan: 'PRO', limit: 1, canAdd: true };
-  }
-  renderPhonePanel();
+    const r = await fetch(`${BASE}/settings/clinic`, { headers });
+    if (!r.ok) throw new Error();
+    clinicData = await r.json();
+    document.getElementById('clinicName').value = clinicData.clinicName || '';
+    document.getElementById('clinicPhone').value = clinicData.clinicPhone || '';
+    document.getElementById('clinicAddress').value = clinicData.clinicAddress || '';
+    document.getElementById('clinicHours').value = clinicData.businessHours || '';
+    const tzSel = document.getElementById('clinicTimezone');
+    if (clinicData.timezone) tzSel.value = clinicData.timezone;
+    const curSel = document.getElementById('clinicCurrency');
+    if (clinicData.currency) curSel.value = clinicData.currency;
+  } catch { showToast('Failed to load clinic settings', 'error'); }
 }
 
-// ── Render the phone numbers panel ──────────────────────────────────────────
-function renderPhonePanel() {
-  const list   = document.getElementById('phoneNumbersList');
-  const banner = document.getElementById('phonePlanBanner');
-  const btnGet = document.getElementById('btnGetNumber');
-
-  const { numbers, plan, limit, canAdd } = phoneState;
-
-  // Hide/show the top "Get a Number" button
-  btnGet.style.display = canAdd ? '' : 'none';
-
-  // ── Number cards ────────────────────────────────────────────────────────
-  if (numbers.length === 0) {
-    const isStarter = plan === 'STARTER';
-    list.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center">
-        <div style="width:56px;height:56px;border-radius:14px;background:var(--brand-dim);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px">📞</div>
-        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">No phone number assigned</div>
-        <div style="font-size:13px;color:var(--text-muted);max-width:320px;margin-bottom:20px">
-          ${isStarter
-            ? 'Phone numbers require the Pro plan. Upgrade to enable your AI voice agent.'
-            : 'Get a Twilio number and your AI voice agent will start taking calls immediately.'}
-        </div>
-        ${isStarter
-          ? `<button class="btn btn-primary" onclick="switchPanel('plan', document.querySelector('[onclick*=plan]'))">Upgrade to Pro →</button>`
-          : `<button class="btn btn-primary" onclick="openGetNumberModal()">Get a Number</button>`}
-      </div>`;
-  } else {
-    list.innerHTML = numbers.map(n => `
-      <div style="display:flex;align-items:center;gap:14px;padding:16px;border-bottom:1px solid var(--border)">
-        <div style="width:40px;height:40px;border-radius:10px;background:var(--brand-dim);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📞</div>
-        <div style="flex:1">
-          <div style="font-size:15px;font-weight:700;color:var(--text)">${n.phoneNumber}</div>
-          <div style="font-size:12px;color:var(--text-muted)">Twilio · AI voice agent · Routes to your agent greeting</div>
-        </div>
-        <span class="badge badge-green badge-dot">Active</span>
-        <button class="btn btn-ghost btn-sm" onclick="openReleaseModal('${n.phoneNumber}')" style="color:var(--red,#ef4444)">Release</button>
-      </div>`).join('');
-  }
-
-  // ── Plan / limit banner ──────────────────────────────────────────────────
-  if (plan === 'STARTER') {
-    banner.style.display = '';
-    banner.innerHTML = `
-      <div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:var(--radius-lg);padding:14px 16px;display:flex;align-items:center;gap:12px">
-        <span style="font-size:18px">⚡</span>
-        <div style="flex:1">
-          <div style="font-size:13.5px;font-weight:600;color:#92400e">Phone numbers require Pro or above</div>
-          <div style="font-size:12px;color:#b45309">Your Starter plan doesn't include the AI voice agent or Twilio numbers.</div>
-        </div>
-        <button class="btn btn-sm" style="background:#f59e0b;color:#fff;border:none" onclick="switchPanel('plan', document.querySelector('[onclick*=plan]'))">Upgrade</button>
-      </div>`;
-  } else if (!canAdd && numbers.length >= (limit === -1 ? Infinity : limit)) {
-    banner.style.display = '';
-    banner.innerHTML = `
-      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;display:flex;align-items:center;gap:12px">
-        <span style="font-size:18px">📊</span>
-        <div style="flex:1">
-          <div style="font-size:13.5px;font-weight:600;color:var(--text)">Phone number limit reached</div>
-          <div style="font-size:12px;color:var(--text-muted)">Your ${plan === 'PRO' ? 'Pro' : 'current'} plan allows ${limit} number. Release it first or upgrade to Enterprise for unlimited.</div>
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="switchPanel('plan', document.querySelector('[onclick*=plan]'))">Upgrade Plan</button>
-      </div>`;
-  } else {
-    banner.style.display = 'none';
-    banner.innerHTML = '';
-  }
-}
-
-// ── "Get a Number" modal ─────────────────────────────────────────────────────
-function openGetNumberModal() {
-  document.getElementById('modalGetNumber').style.display = 'flex';
-  document.getElementById('numResults').style.display    = 'none';
-  document.getElementById('numEmpty').style.display      = 'none';
-  document.getElementById('numSearching').style.display  = 'none';
-  document.getElementById('numAreaCode').value           = '';
-}
-
-function closeGetNumberModal() {
-  document.getElementById('modalGetNumber').style.display = 'none';
-}
-
-async function searchNumbers() {
-  const country  = document.getElementById('numCountry').value;
-  const areaCode = document.getElementById('numAreaCode').value.trim();
-
-  document.getElementById('numResults').style.display   = 'none';
-  document.getElementById('numEmpty').style.display     = 'none';
-  document.getElementById('numSearching').style.display = 'block';
-
+async function saveClinic() {
+  const btn = document.getElementById('saveClinicBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
   try {
-    const qs  = new URLSearchParams({ country, ...(areaCode && { areaCode }) });
-    const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/available-numbers?${qs}`);
-    const data = await res.json();
-    const nums = data.numbers ?? [];
-
-    document.getElementById('numSearching').style.display = 'none';
-
-    if (nums.length === 0) {
-      document.getElementById('numEmpty').style.display = 'block';
-    } else {
-      document.getElementById('numResults').style.display = 'block';
-      document.getElementById('numList').innerHTML = nums.map(n => `
-        <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface-2)">
-          <div style="flex:1">
-            <div style="font-size:14px;font-weight:700;color:var(--text)">${n.friendlyName || n.phoneNumber}</div>
-            <div style="font-size:12px;color:var(--text-muted)">${[n.locality, n.region, n.country].filter(Boolean).join(', ')}</div>
-          </div>
-          <button class="btn btn-primary btn-sm" onclick="buyNumber('${n.phoneNumber}', this)">Buy</button>
-        </div>`).join('');
-    }
-  } catch (err) {
-    document.getElementById('numSearching').style.display = 'none';
-    document.getElementById('numEmpty').style.display = 'block';
-    document.getElementById('numEmpty').textContent = 'Search failed. Please try again.';
-  }
-}
-
-async function buyNumber(phoneNumber, btn) {
-  btn.disabled = true;
-  btn.textContent = 'Buying…';
-
-  try {
-    const res  = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/buy-number`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ phoneNumber }),
+    const r = await fetch(`${BASE}/settings/clinic`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        clinicName: document.getElementById('clinicName').value.trim(),
+        clinicPhone: document.getElementById('clinicPhone').value.trim(),
+        clinicAddress: document.getElementById('clinicAddress').value.trim(),
+        timezone: document.getElementById('clinicTimezone').value,
+        currency: document.getElementById('clinicCurrency').value,
+        businessHours: document.getElementById('clinicHours').value.trim(),
+      })
     });
-    const data = await res.json();
+    if (!r.ok) throw new Error();
+    showToast('Clinic settings saved');
+  } catch { showToast('Failed to save settings', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Save Changes'; }
+}
 
-    if (!res.ok) {
-      showToast('error', 'Purchase failed', data.error || 'Something went wrong.');
-      btn.disabled = false;
-      btn.textContent = 'Buy';
+// ══════════════════════════════
+// SERVICES
+// ══════════════════════════════
+let services = [];
+let editingServiceId = null;
+
+async function loadServices() {
+  try {
+    const r = await fetch(`${BASE}/service-catalog`, { headers });
+    if (!r.ok) throw new Error();
+    services = await r.json();
+    renderServices();
+  } catch {
+    document.getElementById('servicesList').innerHTML = '<p style="color:#e05252;font-size:13px">Failed to load services.</p>';
+  }
+}
+
+function renderServices() {
+  if (!services.length) {
+    document.getElementById('servicesList').innerHTML = '<p style="color:#9aa0ab;font-size:13px">No services yet. Add your first service.</p>';
+    return;
+  }
+  document.getElementById('servicesList').innerHTML = services.map(s => `
+    <div class="service-item">
+      <div class="service-color" style="background:${escHtml(s.color || '#6c63ff')}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="service-name">${escHtml(s.name)}</div>
+        <div class="service-meta">${s.durationMins} min · $${(s.priceCents/100).toFixed(2)}</div>
+      </div>
+      <span class="service-badge ${s.isActive ? 'badge-active' : 'badge-inactive'}">${s.isActive ? 'Active' : 'Inactive'}</span>
+      <button class="icon-btn" onclick="toggleService('${s.id}')" title="${s.isActive ? 'Disable' : 'Enable'}">
+        ${s.isActive
+          ? '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>'
+          : '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'}
+      </button>
+      <button class="icon-btn" onclick="openEditService('${s.id}')" title="Edit">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+async function toggleService(id) {
+  try {
+    const r = await fetch(`${BASE}/service-catalog/${id}/toggle`, { method: 'PATCH', headers });
+    if (!r.ok) throw new Error();
+    const updated = await r.json();
+    services = services.map(s => s.id === id ? { ...s, isActive: updated.isActive } : s);
+    renderServices();
+  } catch { showToast('Failed to toggle service', 'error'); }
+}
+
+function openAddService() {
+  editingServiceId = null;
+  document.getElementById('serviceModalTitle').textContent = 'Add Service';
+  ['svcName','svcDuration','svcPrice','svcCategory','svcDesc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('svcColor').value = '#6c63ff';
+  document.getElementById('serviceModal').classList.add('open');
+}
+
+function openEditService(id) {
+  editingServiceId = id;
+  const s = services.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('serviceModalTitle').textContent = 'Edit Service';
+  document.getElementById('svcName').value = s.name;
+  document.getElementById('svcDuration').value = s.durationMins;
+  document.getElementById('svcPrice').value = (s.priceCents / 100).toFixed(2);
+  document.getElementById('svcColor').value = s.color || '#6c63ff';
+  document.getElementById('svcCategory').value = s.category || '';
+  document.getElementById('svcDesc').value = s.description || '';
+  document.getElementById('serviceModal').classList.add('open');
+}
+
+function closeServiceModal() {
+  document.getElementById('serviceModal').classList.remove('open');
+}
+
+async function saveService() {
+  const name = document.getElementById('svcName').value.trim();
+  const durationMins = parseInt(document.getElementById('svcDuration').value);
+  const priceDollars = parseFloat(document.getElementById('svcPrice').value);
+  if (!name || !durationMins || isNaN(priceDollars)) { showToast('Please fill required fields', 'error'); return; }
+  const body = {
+    name,
+    durationMins,
+    priceCents: Math.round(priceDollars * 100),
+    color: document.getElementById('svcColor').value,
+    category: document.getElementById('svcCategory').value.trim() || null,
+    description: document.getElementById('svcDesc').value.trim() || null,
+  };
+  try {
+    let r;
+    if (editingServiceId) {
+      r = await fetch(`${BASE}/service-catalog/${editingServiceId}`, { method: 'PUT', headers, body: JSON.stringify(body) });
+    } else {
+      r = await fetch(`${BASE}/service-catalog`, { method: 'POST', headers, body: JSON.stringify(body) });
+    }
+    if (!r.ok) throw new Error();
+    closeServiceModal();
+    showToast(editingServiceId ? 'Service updated' : 'Service created');
+    loaded['services'] = false;
+    loadServices();
+    loaded['services'] = true;
+  } catch { showToast('Failed to save service', 'error'); }
+}
+
+// ══════════════════════════════
+// NOTIFICATIONS
+// ══════════════════════════════
+let notifData = {};
+async function loadNotifications() {
+  try {
+    const r = await fetch(`${BASE}/settings/notifications`, { headers });
+    if (!r.ok) throw new Error();
+    notifData = await r.json();
+    renderNotifications();
+  } catch {
+    document.getElementById('notifList').innerHTML = '<p style="color:#e05252;font-size:13px">Failed to load notification settings.</p>';
+  }
+}
+
+const NOTIF_LABELS = {
+  emailBookingConfirmations: { label: 'Email booking confirmations', desc: 'Send clients an email when they book an appointment.' },
+  smsReminders: { label: 'SMS appointment reminders', desc: 'Text clients 24 hours before their appointment.' },
+  notifyOwnerOnAiBooking: { label: 'Notify owner on AI bookings', desc: 'Email the owner when the AI agent books an appointment.' },
+  dailySummaryEmail: { label: 'Daily summary email', desc: 'Send a daily digest of appointments and activity.' },
+  paymentFailureAlerts: { label: 'Payment failure alerts', desc: 'Alert the owner when a payment fails or is declined.' },
+};
+
+function renderNotifications() {
+  document.getElementById('notifList').innerHTML = Object.entries(NOTIF_LABELS).map(([key, info]) => `
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">${info.label}</div>
+        <div class="toggle-desc">${info.desc}</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="notif_${key}" ${notifData[key] ? 'checked' : ''}>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  `).join('');
+}
+
+async function saveNotifications() {
+  const btn = document.getElementById('saveNotifBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const notifications = {};
+    Object.keys(NOTIF_LABELS).forEach(key => {
+      notifications[key] = document.getElementById(`notif_${key}`)?.checked ?? false;
+    });
+    const r = await fetch(`${BASE}/settings/notifications`, { method: 'PUT', headers, body: JSON.stringify({ notifications }) });
+    if (!r.ok) throw new Error();
+    showToast('Notification preferences saved');
+  } catch { showToast('Failed to save preferences', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Save Preferences'; }
+}
+
+// ══════════════════════════════
+// PHONE NUMBERS
+// ══════════════════════════════
+async function loadPhone() {
+  try {
+    const r = await fetch(`${BASE}/phone-numbers`, { headers });
+    const nums = r.ok ? await r.json() : [];
+    if (!nums.length) {
+      document.getElementById('phoneList').innerHTML = '<p style="color:#9aa0ab;font-size:13px">No numbers provisioned yet. Search below to add one.</p>';
       return;
     }
-
-    closeGetNumberModal();
-    showToast('success', 'Number purchased!', `${data.phoneNumber} is now active on your account.`);
-    await loadPhoneNumbers();
-  } catch (err) {
-    showToast('error', 'Network error', 'Could not reach the server. Please try again.');
-    btn.disabled = false;
-    btn.textContent = 'Buy';
+    document.getElementById('phoneList').innerHTML = nums.map(n => `
+      <div class="phone-num-row">
+        <div class="phone-num">${escHtml(n.phoneNumber)}</div>
+        <div>
+          <span class="phone-status">${escHtml(n.friendlyName || 'Active')}</span>
+        </div>
+      </div>
+    `).join('');
+  } catch {
+    document.getElementById('phoneList').innerHTML = '<p style="color:#e05252;font-size:13px">Failed to load phone numbers.</p>';
   }
 }
 
-// ── Release modal ────────────────────────────────────────────────────────────
-function openReleaseModal(phoneNumber) {
-  pendingReleaseNumber = phoneNumber;
-  document.getElementById('releaseNumDisplay').textContent = phoneNumber;
-  document.getElementById('modalRelease').style.display = 'flex';
-}
-
-function closeReleaseModal() {
-  pendingReleaseNumber = null;
-  document.getElementById('modalRelease').style.display = 'none';
-}
-
-async function confirmRelease() {
-  if (!pendingReleaseNumber) return;
-  const btn = document.getElementById('btnConfirmRelease');
-  btn.disabled = true;
-  btn.textContent = 'Releasing…';
-
+async function searchPhoneNumbers() {
+  const areaCode = document.getElementById('areaCodeInput').value.trim();
+  const container = document.getElementById('phoneSearchResults');
+  container.innerHTML = '<div class="skel" style="height:40px;margin-bottom:8px"></div>';
   try {
-    const encoded = encodeURIComponent(pendingReleaseNumber);
-    const res     = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/phone-numbers/${encoded}`, { method: 'DELETE' });
-    const data    = await res.json();
+    const url = `${BASE}/phone-numbers/search?areaCode=${encodeURIComponent(areaCode)}`;
+    const r = await fetch(url, { headers });
+    if (!r.ok) throw new Error();
+    const nums = await r.json();
+    if (!nums.length) { container.innerHTML = '<p style="color:#9aa0ab;font-size:13px">No numbers found. Try another area code.</p>'; return; }
+    container.innerHTML = nums.map(n => `
+      <div class="phone-num-row">
+        <div class="phone-num">${escHtml(n.phoneNumber)}</div>
+        <button class="save-btn" style="padding:6px 12px;font-size:12px" onclick="provisionNumber('${escHtml(n.phoneNumber)}', this)">Provision</button>
+      </div>
+    `).join('');
+  } catch { container.innerHTML = '<p style="color:#e05252;font-size:13px">Search failed. Check area code.</p>'; }
+}
 
-    if (!res.ok) {
-      showToast('error', 'Release failed', data.error || 'Something went wrong.');
-    } else {
-      closeReleaseModal();
-      showToast('success', 'Number released', `${data.phoneNumber} has been removed from your account.`);
-      await loadPhoneNumbers();
-    }
-  } catch (err) {
-    showToast('error', 'Network error', 'Could not reach the server. Please try again.');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Release Number';
+async function provisionNumber(number, btn) {
+  btn.disabled = true; btn.textContent = 'Provisioning…';
+  try {
+    const r = await fetch(`${BASE}/phone-numbers`, { method: 'POST', headers, body: JSON.stringify({ phoneNumber: number }) });
+    if (!r.ok) throw new Error();
+    showToast('Number provisioned successfully');
+    document.getElementById('phoneSearchResults').innerHTML = '';
+    loaded['phone'] = false; loadPhone(); loaded['phone'] = true;
+  } catch { showToast('Failed to provision number', 'error'); btn.disabled = false; btn.textContent = 'Provision'; }
+}
+
+// ══════════════════════════════
+// BILLING
+// ══════════════════════════════
+let billingData = {};
+async function loadBilling() {
+  try {
+    const r = await fetch(`${BASE}/billing/subscription`, { headers });
+    if (!r.ok) throw new Error();
+    billingData = await r.json();
+    document.getElementById('planName').textContent = billingData.planName || 'Growth';
+    document.getElementById('planDesc').textContent = billingData.planDesc || 'All features included';
+    const features = billingData.features || ['Unlimited AI calls','Google Calendar sync','Team access','Analytics'];
+    document.getElementById('planFeatures').innerHTML = features.map(f => `<span class="plan-feat">${escHtml(f)}</span>`).join('');
+    document.getElementById('billingCycle').textContent = billingData.cycle ? `Billing cycle: ${billingData.cycle}` : '';
+    document.getElementById('billingNextDate').textContent = billingData.nextBillingDate ? `Next billing date: ${billingData.nextBillingDate}` : '';
+    document.getElementById('billingPayMethod').textContent = billingData.paymentMethod ? `Payment: ${billingData.paymentMethod}` : '';
+  } catch {
+    document.getElementById('planName').textContent = 'Growth Plan';
+    document.getElementById('planDesc').textContent = 'Contact support for billing details';
+    document.getElementById('planFeatures').innerHTML = '';
   }
+}
+
+async function openBillingPortal() {
+  try {
+    const r = await fetch(`${BASE}/billing/portal`, { method: 'POST', headers });
+    if (!r.ok) throw new Error();
+    const { url } = await r.json();
+    if (url) window.open(url, '_blank');
+  } catch { showToast('Unable to open billing portal', 'error'); }
+}
+
+// ══════════════════════════════
+// INTEGRATIONS
+// ══════════════════════════════
+async function loadIntegrations() {
+  try {
+    const r = await fetch(`${BASE}/integrations`, { headers });
+    if (!r.ok) throw new Error();
+    const integrations = await r.json();
+    renderIntegrations(integrations);
+  } catch {
+    document.getElementById('integrationsList').innerHTML = '<p style="color:#e05252;font-size:13px">Failed to load integrations.</p>';
+  }
+}
+
+function renderIntegrations(list) {
+  document.getElementById('integrationsList').innerHTML = list.map(intg => `
+    <div class="integration-item">
+      <div class="int-icon">${escHtml(intg.icon || '🔌')}</div>
+      <div style="flex:1;min-width:0">
+        <div class="int-name">${escHtml(intg.name)}</div>
+        <div class="int-desc">${escHtml(intg.description || '')}</div>
+      </div>
+      <span class="int-status ${intg.connected ? 'int-connected' : 'int-disconnected'}">${intg.connected ? 'Connected' : 'Not connected'}</span>
+      ${intg.type === 'oauth' ? (
+        intg.connected
+          ? `<button class="disconnect-btn" onclick="disconnectIntegration('${escHtml(intg.key)}')">Disconnect</button>`
+          : `<button class="connect-btn" onclick="connectGoogleCalendar()">Connect</button>`
+      ) : ''}
+    </div>
+  `).join('');
+}
+
+async function connectGoogleCalendar() {
+  try {
+    const r = await fetch(`${BASE}/integrations/google-calendar/connect`, { headers });
+    if (!r.ok) throw new Error();
+    const { authUrl } = await r.json();
+    if (authUrl) location.href = authUrl;
+  } catch { showToast('Failed to initiate Google Calendar connection', 'error'); }
+}
+
+async function disconnectIntegration(key) {
+  if (!confirm('Disconnect this integration?')) return;
+  try {
+    const r = await fetch(`${BASE}/integrations/${key}`, { method: 'DELETE', headers });
+    if (!r.ok) throw new Error();
+    showToast('Integration disconnected');
+    loaded['integrations'] = false; loadIntegrations(); loaded['integrations'] = true;
+  } catch { showToast('Failed to disconnect integration', 'error'); }
+}
+
+// ══════════════════════════════
+// TEAM
+// ══════════════════════════════
+let teamMembers = [];
+async function loadTeam() {
+  try {
+    const r = await fetch(`${BASE}/team`, { headers });
+    if (!r.ok) throw new Error();
+    teamMembers = await r.json();
+    renderTeam();
+  } catch {
+    document.getElementById('teamList').innerHTML = '<p style="color:#e05252;font-size:13px">Failed to load team members.</p>';
+  }
+}
+
+function renderTeam() {
+  if (!teamMembers.length) {
+    document.getElementById('teamList').innerHTML = '<p style="color:#9aa0ab;font-size:13px">No team members yet.</p>';
+    return;
+  }
+  document.getElementById('teamList').innerHTML = teamMembers.map(m => `
+    <div class="member-row">
+      <div class="member-avatar" style="background:${escHtml(m.avatarBg || '#e0deff')};color:${escHtml(m.avatarColor || '#6c63ff')}">${escHtml(m.initials || '?')}</div>
+      <div style="flex:1;min-width:0">
+        <div class="member-name">${escHtml(m.fullName || m.email)}</div>
+        <div class="member-email">${escHtml(m.email)}</div>
+      </div>
+      <span class="role-badge role-${escHtml(m.role)}">${escHtml(m.roleLabel || m.role)}</span>
+      ${m.role !== 'OWNER' ? `
+        <select class="role-select" onchange="updateMemberRole('${m.id}', this.value)">
+          <option value="STAFF" ${m.role === 'STAFF' ? 'selected' : ''}>Staff</option>
+          <option value="ADMIN" ${m.role === 'ADMIN' ? 'selected' : ''}>Admin</option>
+        </select>
+        <button class="remove-btn" onclick="removeMember('${m.id}', '${escHtml(m.fullName || m.email)}')">Remove</button>
+      ` : '<span style="font-size:12px;color:#9aa0ab;padding:0 8px">Owner</span>'}
+    </div>
+  `).join('');
+}
+
+async function updateMemberRole(userId, role) {
+  try {
+    const r = await fetch(`${BASE}/team/${userId}`, { method: 'PUT', headers, body: JSON.stringify({ role }) });
+    if (!r.ok) throw new Error();
+    showToast('Role updated');
+    teamMembers = teamMembers.map(m => m.id === userId ? { ...m, role } : m);
+    renderTeam();
+  } catch { showToast('Failed to update role', 'error'); }
+}
+
+async function removeMember(userId, name) {
+  if (!confirm(`Remove ${name} from the team?`)) return;
+  try {
+    const r = await fetch(`${BASE}/team/${userId}`, { method: 'DELETE', headers });
+    if (!r.ok) throw new Error();
+    showToast(`${name} removed`);
+    teamMembers = teamMembers.filter(m => m.id !== userId);
+    renderTeam();
+  } catch { showToast('Failed to remove member', 'error'); }
+}
+
+function openInviteModal() {
+  ['inviteName','inviteEmail','inviteTitle'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('inviteRole').value = 'STAFF';
+  document.getElementById('inviteModal').classList.add('open');
+}
+
+function closeInviteModal() {
+  document.getElementById('inviteModal').classList.remove('open');
+}
+
+async function sendInvite() {
+  const fullName = document.getElementById('inviteName').value.trim();
+  const email = document.getElementById('inviteEmail').value.trim();
+  const title = document.getElementById('inviteTitle').value.trim();
+  const role = document.getElementById('inviteRole').value;
+  if (!fullName || !email) { showToast('Name and email are required', 'error'); return; }
+  try {
+    const r = await fetch(`${BASE}/team/invite`, { method: 'POST', headers, body: JSON.stringify({ fullName, email, title, role }) });
+    if (r.status === 409) { showToast('A user with that email already exists', 'error'); return; }
+    if (!r.ok) throw new Error();
+    closeInviteModal();
+    showToast(`Invite sent to ${email}`);
+    loaded['team'] = false; loadTeam(); loaded['team'] = true;
+  } catch { showToast('Failed to send invite', 'error'); }
 }
 
 // Close modals on overlay click
-document.getElementById('modalGetNumber').addEventListener('click', e => { if (e.target === e.currentTarget) closeGetNumberModal(); });
-document.getElementById('modalRelease').addEventListener('click',    e => { if (e.target === e.currentTarget) closeReleaseModal(); });
-
-// Load numbers when the phone panel is first shown
-const _origSwitch = window.switchPanel;
-window.switchPanel = function(id, btn) {
-  _origSwitch(id, btn);
-  if (id === 'phones') loadPhoneNumbers();
-};
+document.getElementById('serviceModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeServiceModal(); });
+document.getElementById('inviteModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeInviteModal(); });
 </script>
 </body>
 </html>
