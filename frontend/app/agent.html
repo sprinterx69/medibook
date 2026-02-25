@@ -115,8 +115,8 @@
   </div>
   <div class="sidebar-footer">
     <div class="user-card">
-      <div class="user-av">LC</div>
-      <div><div class="user-name">Lumière Clinic</div><div class="user-role">Clinic Owner</div></div>
+      <div class="user-av" id="sidebarAvatar">–</div>
+      <div><div class="user-name" id="sidebarName">Loading…</div><div class="user-role" id="sidebarRole">–</div></div>
     </div>
   </div>
 </aside>
@@ -196,22 +196,21 @@
 
           <div>
             <div class="card" style="position:sticky;top:0">
-              <div class="card-header"><div><div class="card-title">Live Statistics</div><div class="card-subtitle">Last 30 days</div></div></div>
-              <div class="card-body">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-                  <div><div style="font-size:24px;font-weight:700;color:var(--text)">284</div><div style="font-size:12px;color:var(--text-muted);font-weight:600">Total Calls</div></div>
-                  <div><div style="font-size:24px;font-weight:700;color:var(--green)">91%</div><div style="font-size:12px;color:var(--text-muted);font-weight:600">Resolution Rate</div></div>
-                  <div><div style="font-size:24px;font-weight:700;color:var(--brand)">47</div><div style="font-size:12px;color:var(--text-muted);font-weight:600">Bookings Made</div></div>
-                  <div><div style="font-size:24px;font-weight:700;color:var(--text)">1m 42s</div><div style="font-size:12px;color:var(--text-muted);font-weight:600">Avg. Call Length</div></div>
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Agent Statistics</div>
+                  <div class="card-subtitle" id="statsSubtitle">Last 30 days</div>
                 </div>
-                <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-                  <div style="font-size:12.5px;font-weight:600;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.04em">Top Call Reasons</div>
-                  <div style="display:flex;flex-direction:column;gap:7px">
-                    <div style="display:flex;align-items:center;gap:8px;font-size:13px"><div style="width:8px;height:8px;border-radius:50%;background:var(--brand)"></div>Book appointment <span style="margin-left:auto;color:var(--text-muted)">58%</span></div>
-                    <div style="display:flex;align-items:center;gap:8px;font-size:13px"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue)"></div>Check availability <span style="margin-left:auto;color:var(--text-muted)">22%</span></div>
-                    <div style="display:flex;align-items:center;gap:8px;font-size:13px"><div style="width:8px;height:8px;border-radius:50%;background:var(--purple)"></div>Pricing questions <span style="margin-left:auto;color:var(--text-muted)">12%</span></div>
-                    <div style="display:flex;align-items:center;gap:8px;font-size:13px"><div style="width:8px;height:8px;border-radius:50%;background:var(--gold)"></div>Cancel/reschedule <span style="margin-left:auto;color:var(--text-muted)">8%</span></div>
-                  </div>
+              </div>
+              <div class="card-body" id="statsCardBody">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                  <div><div class="stat-val" id="statTotalCalls" style="font-size:24px;font-weight:700;color:var(--text)">–</div><div style="font-size:12px;color:var(--text-muted);font-weight:600">Total Calls</div></div>
+                  <div><div class="stat-val" id="statBookings" style="font-size:24px;font-weight:700;color:var(--brand)">–</div><div style="font-size:12px;color:var(--text-muted);font-weight:600">Bookings Made</div></div>
+                  <div><div class="stat-val" id="statResolution" style="font-size:24px;font-weight:700;color:var(--green)">–</div><div style="font-size:12px;color:var(--text-muted);font-weight:600">Resolution Rate</div></div>
+                  <div><div class="stat-val" id="statAvgDuration" style="font-size:24px;font-weight:700;color:var(--text)">–</div><div style="font-size:12px;color:var(--text-muted);font-weight:600">Avg. Duration</div></div>
+                </div>
+                <div id="statsEmptyNote" style="display:none;margin-top:16px;padding:14px;background:var(--surface-2);border-radius:8px;font-size:13px;color:var(--text-muted);text-align:center">
+                  No call data yet. Statistics will appear once your AI agent starts receiving calls.
                 </div>
               </div>
             </div>
@@ -437,14 +436,16 @@
 <div class="toast-wrap"><div class="toast" id="toast"><span class="toast-icon" id="toastIcon">✓</span><div class="toast-content"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div></div>
 
 <script>
-// ─── Config ──────────────────────────────────────────────────────────────────
-// API base URL — change to your backend URL in production
-const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  ? 'http://localhost:3001'
-  : 'https://medibook-backend-production-dfb2.up.railway.app';
+// ─── Auth & Config ───────────────────────────────────────────────────────────
+const TOKEN_KEY = 'medibook_token';
+const TENANT_KEY = 'medibook_tenant_id';
+const _token = localStorage.getItem(TOKEN_KEY);
+const TENANT_ID = localStorage.getItem(TENANT_KEY) || new URLSearchParams(window.location.search).get('tenantId') || '';
+if (!_token || !TENANT_ID) { location.href = '../pages/login.html'; }
+const authHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${_token}` };
 
-// For demo purposes, use a fixed tenantId. In production this comes from auth.
-const TENANT_ID = new URLSearchParams(window.location.search).get('tenantId') || 'demo-tenant';
+// API base — same origin in production (served by Fastify)
+const API_BASE = '';
 
 // ─── State ───────────────────────────────────────────────────────────────────
 let settings = {};
@@ -500,7 +501,7 @@ const DEMO_SETTINGS = {
 // ─── Fetch settings from API ──────────────────────────────────────────────────
 async function loadSettings() {
   try {
-    const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-settings`);
+    const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-settings`, { headers: authHeaders });
     if (!res.ok) throw new Error('API not available');
     settings = await res.json();
     document.getElementById('lastSaved').textContent = 'Saved to database';
@@ -510,6 +511,55 @@ async function loadSettings() {
     document.getElementById('lastSaved').textContent = 'Demo mode (backend offline)';
   }
   populateForm();
+  loadSidebarUser();
+  loadAgentStats();
+}
+
+// ─── Sidebar user info ────────────────────────────────────────────────────────
+async function loadSidebarUser() {
+  try {
+    const r = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/me`, { headers: authHeaders });
+    if (!r.ok) return;
+    const u = await r.json();
+    const initials = (u.fullName || u.email || '?').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('sidebarAvatar').textContent = initials;
+    document.getElementById('sidebarName').textContent = u.fullName || u.email;
+    document.getElementById('sidebarRole').textContent = u.role ?? '';
+  } catch {}
+}
+
+// ─── Agent statistics ─────────────────────────────────────────────────────────
+async function loadAgentStats() {
+  try {
+    const r = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/activity?type=AI_CALL&limit=200`, { headers: authHeaders });
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    const calls = (data.activities ?? data ?? []);
+    const total = calls.length;
+
+    if (total === 0) {
+      document.getElementById('statsEmptyNote').style.display = '';
+      ['statTotalCalls','statBookings','statResolution','statAvgDuration'].forEach(id => {
+        document.getElementById(id).textContent = '0';
+      });
+      return;
+    }
+
+    const bookings = calls.filter(c => c.metadata?.booked || c.type === 'AI_BOOKING').length;
+    const resolutionPct = total > 0 ? Math.round((calls.filter(c => !c.metadata?.transferred).length / total) * 100) : 0;
+
+    document.getElementById('statTotalCalls').textContent = total;
+    document.getElementById('statBookings').textContent = bookings;
+    document.getElementById('statResolution').textContent = resolutionPct + '%';
+    document.getElementById('statAvgDuration').textContent = '–';
+    document.getElementById('statsEmptyNote').style.display = 'none';
+  } catch {
+    // Stats not available — show empty state gracefully
+    document.getElementById('statsEmptyNote').style.display = '';
+    ['statTotalCalls','statBookings','statResolution','statAvgDuration'].forEach(id => {
+      document.getElementById(id).textContent = '–';
+    });
+  }
 }
 
 // ─── Save settings to API ─────────────────────────────────────────────────────
@@ -523,7 +573,7 @@ async function saveSettings() {
   try {
     const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-settings`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders,
       body: JSON.stringify(payload),
     });
 
@@ -802,7 +852,7 @@ async function refreshPrompt() {
   const meta = document.getElementById('promptMeta');
   box.textContent = 'Generating…';
   try {
-    const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-prompt`);
+    const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-prompt`, { headers: authHeaders });
     if (!res.ok) throw new Error();
     const data = await res.json();
     box.textContent = data.prompt;
@@ -851,7 +901,7 @@ function discardChanges() {
 // ─── Agent toggle ─────────────────────────────────────────────────────────────
 async function toggleAgent() {
   try {
-    const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-settings/toggle`, { method:'PATCH' });
+    const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-settings/toggle`, { method:'PATCH', headers: authHeaders });
     if (res.ok) {
       const data = await res.json();
       settings.isActive = data.isActive;
