@@ -169,7 +169,7 @@
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-const API    = (location.hostname==='localhost'||location.hostname==='127.0.0.1') ? 'http://localhost:3001' : '';
+const API    = (location.hostname==='localhost'||location.hostname==='127.0.0.1') ? 'http://localhost:3001' : 'https://medibook-backend-production-dfb2.up.railway.app';
 const TOKEN  = localStorage.getItem('medibook_token');
 const TENANT = localStorage.getItem('medibook_tenant_id');
 if (!TOKEN||!TENANT) { location.href='../pages/login.html'; }

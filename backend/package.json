@@ -5,7 +5,7 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "npx prisma generate && npx prisma db push --accept-data-loss && node src/server.js",
     "dev": "node --watch src/server.js",
     "build": "echo 'No build step required for ESM Node.js'",
     "db:migrate": "npx prisma migrate deploy",

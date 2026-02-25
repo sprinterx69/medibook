@@ -3,8 +3,7 @@
 // Business logic for calendar / appointment views.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { prisma } from '../config/prisma.js';
 
 /** ISO date string → start-of-day UTC */
 function dayStart(iso) {

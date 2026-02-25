@@ -4,8 +4,7 @@
 // Stores OAuth tokens in tenant.settings.integrations JSON column.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { prisma } from '../config/prisma.js';
 
 // Base integration catalogue — status comes from env vars and stored tokens
 const INTEGRATIONS_CATALOGUE = [

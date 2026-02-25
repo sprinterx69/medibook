@@ -3,8 +3,7 @@
 // Business logic for clinic settings and notification preferences.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { prisma } from '../config/prisma.js';
 
 const DEFAULT_NOTIFICATIONS = {
   emailBookingConfirmations: true,

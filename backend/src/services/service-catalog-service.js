@@ -3,8 +3,7 @@
 // Business logic for the clinic's service catalogue (treatments).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { prisma } from '../config/prisma.js';
 
 /**
  * List all services for a tenant.

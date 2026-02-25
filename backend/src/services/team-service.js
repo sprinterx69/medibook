@@ -3,9 +3,8 @@
 // Business logic for team member management (users within a tenant).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../config/prisma.js';
 import bcrypt from 'bcryptjs';
-const prisma = new PrismaClient();
 
 function initials(name) {
   return name.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('');
