@@ -5,4 +5,4 @@ cmds = []
 nixPkgs = ["nodejs_18"]
 
 [start]
-cmd = "cd backend && npm install && npm start"
+cmd = "cd backend && npm install && npx prisma generate && npx prisma db push --accept-data-loss && npm start"
