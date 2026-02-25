@@ -2,6 +2,7 @@
   "name": "callora",
   "version": "1.0.0",
   "private": true,
+  "workspaces": ["backend"],
   "scripts": {
     "build": "cd backend && npm run build",
     "start": "cd backend && npm start"
