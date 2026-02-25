@@ -27,6 +27,7 @@ import settingsRoutes from './routes/settings-routes.js';
 import servicesRoutes from './routes/services-routes.js';
 import integrationRoutes from './routes/integration-routes.js';
 import teamRoutes from './routes/team-routes.js';
+import staticPlugin from '@fastify/static';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs';
@@ -90,20 +91,12 @@ await server.register(teamRoutes);
 // Serve frontend HTML files
 const frontendPath = join(__dirname, '../../frontend');
 
-// Serve static assets (CSS, JS, images)
-server.register(import('@fastify/static'), {
+// Serve static assets (CSS, JS, images) — index.html handles GET /
+server.register(staticPlugin, {
   root: frontendPath,
   prefix: '/',
   wildcard: false,
-});
-
-// Route for root → index.html
-server.get('/', async (request, reply) => {
-  const indexPath = join(frontendPath, 'index.html');
-  if (fs.existsSync(indexPath)) {
-    return reply.sendFile('index.html');
-  }
-  return { status: 'ok', message: 'Callora API Server' };
+  index: 'index.html',
 });
 
 // Route for /app/* pages
