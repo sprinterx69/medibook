@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activate AI Agent - Callora</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#0f1117;color:#e8eaf0;min-height:100vh}
+.container{max-width:800px;margin:0 auto;padding:40px 20px}
+.header{text-align:center;margin-bottom:40px}
+.logo{width:60px;height:60px;background:linear-gradient(135deg,#d4a84b,#a07830);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 20px}
+.header h1{font-size:28px;font-weight:700;margin-bottom:8px}
+.header p{color:#6b7a96;font-size:15px}
+.wizard{background:#161b27;border:1px solid #252d42;border-radius:16px;padding:32px}
+.step{display:none}
+.step.active{display:block;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.step-header{display:flex;align-items:center;gap:12px;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #252d42}
+.step-number{width:32px;height:32px;background:#d4a84b;color:#000;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.step-title{font-size:18px;font-weight:600}
+.step-subtitle{color:#6b7a96;font-size:13px;margin-left:auto}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:13px;font-weight:500;margin-bottom:6px;color:#e8eaf0}
+.form-input,.form-select{width:100%;background:#0f1117;border:1px solid #252d42;border-radius:8px;padding:12px 14px;color:#e8eaf0;font-size:14px}
+.form-input:focus,.form-select:focus{outline:none;border-color:#d4a84b}
+.category-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.category-card{background:#1c2235;border:2px solid #252d42;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s}
+.category-card:hover{border-color:#3a4560}
+.category-card.selected{border-color:#d4a84b;background:rgba(212,168,75,0.1)}
+.category-icon{font-size:28px;margin-bottom:8px}
+.category-name{font-size:13px;font-weight:500}
+.add-btn{width:100%;padding:14px;border:2px dashed #3a4560;border-radius:12px;background:transparent;color:#d4a84b;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s}
+.add-btn:hover{border-color:#d4a84b}
+.wizard-footer{display:flex;justify-content:space-between;margin-top:32px;padding-top:24px;border-top:1px solid #252d42}
+.btn{padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;border:none}
+.btn-secondary{background:transparent;border:1px solid #3a4560;color:#e8eaf0}
+.btn-secondary:hover{border-color:#6b7a96}
+.btn-primary{background:#d4a84b;color:#000}
+.btn-primary:hover{background:#e0b55a}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+.btn-activate{background:linear-gradient(135deg,#d4a84b,#a07830);color:#000;font-size:16px;padding:16px 32px}
+.btn-activate:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(212,168,75,0.3)}
+.progress-bar{display:flex;gap:6px;margin-bottom:32px}
+.progress-step{flex:1;height:4px;background:#252d42;border-radius:2px;transition:all 0.3s}
+.progress-step.active{background:#d4a84b}
+.progress-step.completed{background:#4ade80}
+.services-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+.service-card{background:#1c2235;border:1px solid #252d42;border-radius:10px;padding:14px;cursor:pointer;transition:all 0.2s;position:relative}
+.service-card:hover{border-color:#3a4560}
+.service-card.active{border-color:#d4a84b;background:rgba(212,168,75,0.05)}
+.service-checkbox{position:absolute;top:10px;right:10px;width:20px;height:20px;accent-color:#d4a84b}
+.service-name{font-size:14px;font-weight:600;margin-bottom:6px;padding-right:30px}
+.service-meta{font-size:12px;color:#6b7a96}
+.staff-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.staff-row{background:#1c2235;border:1px solid #252d42;border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px}
+.staff-avatar{width:40px;height:40px;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.staff-info{flex:1}
+.staff-name{font-size:14px;font-weight:600}
+.staff-role{font-size:12px;color:#6b7a96}
+.icon-btn{width:32px;height:32px;background:#252d42;border:none;border-radius:6px;color:#6b7a96;cursor:pointer;transition:all 0.2s}
+.icon-btn:hover{background:#e05252;color:#fff}
+.greeting-preview{background:#0f1117;border:1px solid #252d42;border-radius:10px;padding:16px;margin:16px 0;font-style:italic;color:#6b7a96}
+.greeting-preview strong{color:#d4a84b}
+.voice-options{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:16px 0}
+.voice-option{background:#1c2235;border:2px solid #252d42;border-radius:12px;padding:16px;cursor:pointer;transition:all 0.2s;text-align:center}
+.voice-option:hover{border-color:#3a4560}
+.voice-option.selected{border-color:#d4a84b;background:rgba(212,168,75,0.1)}
+.voice-icon{font-size:32px;margin-bottom:8px}
+.review-item{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #252d42;font-size:14px}
+.review-item:last-child{border-bottom:none}
+.review-label{color:#6b7a96}
+.review-value{color:#e8eaf0;font-weight:500}
+.transfer-section{background:#1c2235;border-radius:12px;padding:20px;margin:20px 0}
+.transfer-section h3{font-size:14px;font-weight:600;margin-bottom:12px;color:#d4a84b}
+.transfer-help{font-size:12px;color:#6b7a96;margin-top:8px}
+.success-state{text-align:center;padding:60px 20px}
+.success-icon{width:80px;height:80px;background:linear-gradient(135deg,#4ade80,#22c55e);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 24px;animation:scaleIn 0.5s ease}
+@keyframes scaleIn{from{transform:scale(0)}to{transform:scale(1)}}
+.success-title{font-size:24px;font-weight:700;margin-bottom:12px}
+.success-desc{color:#6b7a96;font-size:15px;margin-bottom:32px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">🎙️</div>
+    <h1>Activate Your AI Agent</h1>
+    <p>Get your AI receptionist live in 7 simple steps</p>
+  </div>
+  <div class="progress-bar" id="progress-bar">
+    <div class="progress-step active" data-step="1"></div>
+    <div class="progress-step" data-step="2"></div>
+    <div class="progress-step" data-step="3"></div>
+    <div class="progress-step" data-step="4"></div>
+    <div class="progress-step" data-step="5"></div>
+    <div class="progress-step" data-step="6"></div>
+    <div class="progress-step" data-step="7"></div>
+  </div>
+  <div class="wizard">
+    <!-- STEP 1: Clinic Identity -->
+    <div class="step active" id="step-1">
+      <div class="step-header">
+        <div class="step-number">1</div>
+        <div class="step-title">Clinic Identity</div>
+        <div class="step-subtitle">Step 1 of 7</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Clinic Name</label>
+        <input type="text" class="form-input" id="clinic-name" placeholder="e.g., Glow Aesthetics" oninput="updateState()">
+      </div>
+      <label class="form-label">Business Category</label>
+      <div class="category-grid">
+        <div class="category-card" data-category="aesthetics" onclick="selectCategory('aesthetics')"><div class="category-icon">✨</div><div class="category-name">Aesthetics</div></div>
+        <div class="category-card" data-category="dental" onclick="selectCategory('dental')"><div class="category-icon">🦷</div><div class="category-name">Dental</div></div>
+        <div class="category-card" data-category="hair" onclick="selectCategory('hair')"><div class="category-icon">💇</div><div class="category-name">Hair Salon</div></div>
+        <div class="category-card" data-category="spa" onclick="selectCategory('spa')"><div class="category-icon">🧖‍♀️</div><div class="category-name">Spa</div></div>
+        <div class="category-card" data-category="barber" onclick="selectCategory('barber')"><div class="category-icon">💈</div><div class="category-name">Barbershop</div></div>
+        <div class="category-card" data-category="medical" onclick="selectCategory('medical')"><div class="category-icon">🏥</div><div class="category-name">Medical</div></div>
+        <div class="category-card" data-category="wellness" onclick="selectCategory('wellness')"><div class="category-icon">🌿</div><div class="category-name">Wellness</div></div>
+        <div class="category-card" data-category="other" onclick="selectCategory('other')"><div class="category-icon">🏢</div><div class="category-name">Other</div></div>
+      </div>
+      <div class="wizard-footer">
+        <div></div>
+        <button class="btn btn-primary" id="btn-1" onclick="nextStep(2)" disabled>Continue</button>
+      </div>
+    </div>
+    <!-- STEP 2: Locations -->
+    <div class="step" id="step-2">
+      <div class="step-header">
+        <div class="step-number">2</div>
+        <div class="step-title">Location & Contact</div>
+        <div class="step-subtitle">Step 2 of 7</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Address</label>
+        <input type="text" class="form-input" id="address" placeholder="123 Beauty Street, London" oninput="updateState()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Parking</label>
+        <select class="form-select" id="parking" onchange="updateState()">
+          <option value="">Select parking option</option>
+          <option value="Free parking available">Free parking available</option>
+          <option value="Street parking nearby">Street parking nearby</option>
+          <option value="NCP car park next door £2/hr">NCP car park next door £2/hr</option>
+          <option value="Paid parking on-site">Paid parking on-site</option>
+          <option value="No parking available">No parking available</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="tel" class="form-input" id="phone" placeholder="+44 20 7123 4567" oninput="updateState()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="email" placeholder="hello@clinic.com" oninput="updateState()">
+        </div>
+      </div>
+      <div class="wizard-footer">
+        <button class="btn btn-secondary" onclick="prevStep(1)">Back</button>
+        <button class="btn btn-primary" id="btn-2" onclick="nextStep(3)">Continue</button>
+      </div>
+    </div>
+    <!-- STEP 3: Staff -->
+    <div class="step" id="step-3">
+      <div class="step-header">
+        <div class="step-number">3</div>
+        <div class="step-title">Your Team</div>
+        <div class="step-subtitle">Step 3 of 7</div>
+      </div>
+      <div class="staff-list" id="staff-list"></div>
+      <button class="add-btn" onclick="addStaff()">+ Add Staff Member</button>
+      <div class="wizard-footer">
+        <button class="btn btn-secondary" onclick="prevStep(2)">Back</button>
+        <button class="btn btn-primary" id="btn-3" onclick="nextStep(4)">Continue</button>
+      </div>
+    </div>
+    <!-- STEP 4: Services -->
+    <div class="step" id="step-4">
+      <div class="step-header">
+        <div class="step-number">4</div>
+        <div class="step-title">Your Services</div>
+        <div class="step-subtitle">Step 4 of 7</div>
+      </div>
+      <p style="color:#6b7a96;font-size:13px;margin-bottom:16px">Check services you offer. Click to edit details.</p>
+      <div class="services-grid" id="services-grid"></div>
+      <button class="add-btn" onclick="addCustomService()">+ Add Custom Service</button>
+      <div class="wizard-footer">
+        <button class="btn btn-secondary" onclick="prevStep(3)">Back</button>
+        <button class="btn btn-primary" id="btn-4" onclick="nextStep(5)">Continue</button>
+      </div>
+    </div>
+    <!-- STEP 5: Hours -->
+    <div class="step" id="step-5">
+      <div class="step-header">
+        <div class="step-number">5</div>
+        <div class="step-title">Business Hours</div>
+        <div class="step-subtitle">Step 5 of 7</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quick Select</label>
+        <select class="form-select" id="hours-preset" onchange="applyHoursPreset(this.value)">
+          <option value="">Custom hours</option>
+          <option value="weekday">Mon-Fri 9-5, Weekend Closed</option>
+          <option value="extended">Mon-Sat 9-6, Sun Closed</option>
+          <option value="full">Mon-Sun 10-8</option>
+        </select>
+      </div>
+      <div id="hours-container" style="display:grid;gap:8px;margin:16px 0"></div>
+      <label class="form-label" style="display:flex;align-items:center;gap:8px;margin-top:16px">
+        <input type="checkbox" id="bank-holidays" onchange="updateState()">
+        Closed on Bank Holidays
+      </label>
+      <div class="wizard-footer">
+        <button class="btn btn-secondary" onclick="prevStep(4)">Back</button>
+        <button class="btn btn-primary" id="btn-5" onclick="nextStep(6)">Continue</button>
+      </div>
+    </div>
+    <!-- STEP 6: Policies -->
+    <div class="step" id="step-6">
+      <div class="step-header">
+        <div class="step-number">6</div>
+        <div class="step-title">Booking Rules</div>
+        <div class="step-subtitle">Step 6 of 7</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cancellation Notice</label>
+        <select class="form-select" id="cancellation" onchange="updateState()">
+          <option value="24h">24 hours required</option>
+          <option value="48h">48 hours required</option>
+          <option value="same-day" selected>Same day OK</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Advance Booking Required</label>
+        <select class="form-select" id="advance-booking" onchange="updateState()">
+          <option value="same-day" selected>Same day allowed</option>
+          <option value="24h">24 hours ahead</option>
+          <option value="1-week">1 week ahead</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Deposit Required</label>
+        <select class="form-select" id="deposit" onchange="updateState()">
+          <option value="none" selected>No deposit</option>
+          <option value="20">£20</option>
+          <option value="50">£50</option>
+        </select>
+      </div>
+      <div class="wizard-footer">
+        <button class="btn btn-secondary" onclick="prevStep(5)">Back</button>
+        <button class="btn btn-primary" id="btn-6" onclick="nextStep(7)">Continue</button>
+      </div>
+    </div>
+    <!-- STEP 7: AI Setup & Activate -->
+    <div class="step" id="step-7">
+      <div class="step-header">
+        <div class="step-number">7</div>
+        <div class="step-title">AI Setup & Activate</div>
+        <div class="step-subtitle">Step 7 of 7</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Name Your AI Agent</label>
+        <input type="text" class="form-input" id="ai-name" placeholder="e.g., Sophie" value="Sophie" oninput="updateGreeting()">
+      </div>
+      <div class="greeting-preview" id="greeting-preview">
+        "Welcome to <strong>Your Clinic</strong>, this is <strong>Sophie</strong> speaking. How may I help you today?"
+      </div>
+      <label class="form-label">Voice Gender</label>
+      <div class="voice-options">
+        <div class="voice-option" data-gender="male" onclick="selectVoice('male')">
+          <div class="voice-icon">👨</div>
+          <div style="font-weight:600">Male</div>
+          <div style="font-size:12px;color:#6b7a96">Professional & Calm</div>
+        </div>
+        <div class="voice-option selected" data-gender="female" onclick="selectVoice('female')">
+          <div class="voice-icon">👩</div>
+          <div style="font-weight:600">Female</div>
+          <div style="font-size:12px;color:#6b7a96">Warm & Welcoming</div>
+        </div>
+      </div>
+      <div class="transfer-section">
+        <h3>📞 Transfer Calls to Staff (Optional)</h3>
+        <div class="form-group">
+          <label class="form-label">Transfer Number</label>
+          <input type="tel" class="form-input" id="transfer-number" placeholder="+44 20 XXXX XXXX" oninput="updateState()">
+          <div class="transfer-help">When caller asks to speak to a human, AI will offer to transfer to this number</div>
+        </div>
+      </div>
+      <div style="background:#1c2235;border-radius:12px;padding:20px;margin:20px 0">
+        <div class="review-item"><span class="review-label">Clinic</span><span class="review-value" id="review-clinic">-</span></div>
+        <div class="review-item"><span class="review-label">Staff</span><span class="review-value" id="review-staff">-</span></div>
+        <div class="review-item"><span class="review-label">Services</span><span class="review-value" id="review-services">-</span></div>
+        <div class="review-item"><span class="review-label">AI Name</span><span class="review-value" id="review-ai">Sophie</span></div>
+        <div class="review-item"><span class="review-label">Transfer</span><span class="review-value" id="review-transfer">Not set</span></div>
+      </div>
+      <div class="wizard-footer" style="justify-content:center">
+        <button class="btn btn-secondary" onclick="prevStep(6)">Back</button>
+        <button class="btn btn-activate" onclick="activateAI()">🚀 ACTIVATE AI AGENT</button>
+      </div>
+    </div>
+    <!-- SUCCESS -->
+    <div class="step" id="step-success">
+      <div class="success-state">
+        <div class="success-icon">🎉</div>
+        <h2 class="success-title">AI Agent is Live!</h2>
+        <p class="success-desc">Your AI receptionist is ready to answer calls 24/7.</p>
+        <div style="background:#1c2235;border-radius:12px;padding:20px;margin-bottom:32px;text-align:left">
+          <div style="font-size:12px;color:#6b7a96;margin-bottom:8px">Your AI will greet callers:</div>
+          <div style="font-style:italic;color:#e8eaf0" id="success-greeting">"Welcome..."</div>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:center">
+          <button class="btn btn-primary" onclick="window.location.href='/app/settings.html'">Go to Settings</button>
+          <button class="btn btn-activate" onclick="window.location.href='/app/dashboard.html'">View Dashboard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const serviceTemplates={aesthetics:['Botox','Lip Fillers','Cheek Fillers','Microneedling','Chemical Peel','HydraFacial','Profhilo','Laser Hair Removal','Skin Consultation','Dermaplaning','LED Therapy','Microblading','Fat Freezing','Thread Lift','PRP Therapy'],dental:['Check-up','Hygiene Clean','Teeth Whitening','Fillings','Invisalign','Crowns','Emergency','Root Canal','Veneers','Implants','Extractions','Braces','Bonding','X-Ray','Consultation'],hair:['Cut & Style','Full Color','Balayage','Highlights','Keratin','Blow Dry','Root Touch-up','Hair Treatment','Beard Trim','Fade','Perm','Extensions','Toning','Scalp Treatment','Consultation'],spa:['Swedish Massage','Deep Tissue','Facial','Body Scrub','Manicure','Pedicure','Aromatherapy','Hot Stone','Body Wrap','Reflexology','Head Massage','Couples Massage','Foot Spa','Back Facial','Relaxation'],barber:['Haircut','Skin Fade','Beard Trim','Hot Towel Shave','Hair Wash','Full Service','Kids Cut','Senior Cut','Beard Shaping','Line Up','Buzz Cut','Head Shave','Facial','Beard Colour','Consultation'],medical:['GP Consult','Health Check','Blood Test','Vaccination','Physiotherapy','Nutrition','Mental Health','Prescription','Specialist Referral','Chronic Care','Women\'s Health','Men\'s Health','Travel Clinic','Minor Surgery','Screening'],wellness:['Yoga Class','Meditation','Acupuncture','Chiropractic','Massage','Nutrition Plan','Life Coaching','Reiki','Cryotherapy','Sauna','IV Therapy','Weight Loss','Detox','Mindfulness','Workshop'],other:['Consultation','Treatment A','Treatment B','Service 1','Service 2','Service 3','Service 4','Service 5','Service 6','Service 7','Service 8','Service 9','Service 10','Service 11','Service 12']};
+let currentStep=1;
+let state={clinicName:'',category:'',address:'',parking:'',phone:'',email:'',staff:[],services:[],hours:{},bankHolidays:false,cancellation:'same-day',advanceBooking:'same-day',deposit:'none',aiName:'Sophie',voiceGender:'female',transferNumber:''};
+function init(){generateHoursInputs();updateButtonStates();}
+function selectCategory(cat){state.category=cat;document.querySelectorAll('.category-card').forEach(c=>c.classList.remove('selected'));document.querySelector(`[data-category="${cat}"]`).classList.add('selected');const svcs=serviceTemplates[cat]||serviceTemplates.other;state.services=svcs.map((name,i)=>({id:i,name,price:'',duration:'30',active:i<8,staff:[],info:''}));updateState();renderServices();}
+function renderServices(){document.getElementById('services-grid').innerHTML=state.services.map(s=>`<div class="service-card ${s.active?'active':''}" onclick="toggleService(${s.id})"><input type="checkbox" class="service-checkbox" ${s.active?'checked':''} onclick="event.stopPropagation();toggleService(${s.id})"><div class="service-name">${s.name}</div><div class="service-meta">${s.price?'£'+s.price:'Set price'} • ${s.duration}min</div></div>`).join('');}
+function toggleService(id){const s=state.services.find(x=>x.id===id);s.active=!s.active;renderServices();updateState();}
+function addStaff(){const name=prompt('Staff name:');if(!name)return;const role=prompt('Role:')||'Staff';state.staff.push({id:Date.now(),name,role});renderStaff();updateState();}
+function renderStaff(){document.getElementById('staff-list').innerHTML=state.staff.map(s=>`<div class="staff-row"><div class="staff-avatar">👤</div><div class="staff-info"><div class="staff-name">${s.name}</div><div class="staff-role">${s.role}</div></div><button class="icon-btn" onclick="state.staff=state.staff.filter(x=>x.id!==${s.id});renderStaff();updateState()">🗑️</button></div>`).join('');}
+function addCustomService(){const name=prompt('Service name:');if(!name)return;state.services.push({id:Date.now(),name,price:'',duration:'30',active:true,staff:[],info:''});renderServices();updateState();}
+function generateHoursInputs(){const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];document.getElementById('hours-container').innerHTML=days.map((day,i)=>`<div style="display:grid;grid-template-columns:60px 1fr 1fr auto;gap:10px;align-items:center;padding:10px;background:#1c2235;border-radius:8px"><span style="font-size:13px;font-weight:500;color:#6b7a96">${day}</span><select class="form-select" id="open-${i}" onchange="updateHour(${i},'open',this.value)" style="padding:8px">${timeOptions('09:00')}</select><select class="form-select" id="close-${i}" onchange="updateHour(${i},'close',this.value)" style="padding:8px">${timeOptions('17:00')}</select><label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#6b7a96;white-space:nowrap"><input type="checkbox" id="closed-${i}" onchange="toggleClosed(${i},this.checked)"> Closed</label></div>`).join('');}
+function timeOptions(sel){let h='';for(let i=6;i<=22;i++)for(let m of['00','30']){let t=`${i.toString().padStart(2,'0')}:${m}`;h+=`<option value="${t}" ${t===sel?'selected':''}>${t}</option>`;}return h;}
+function updateHour(d,t,v){if(!state.hours[d])state.hours[d]={open:'09:00',close:'17:00',closed:false};state.hours[d][t]=v;}
+function toggleClosed(d,c){if(!state.hours[d])state.hours[d]={open:'09:00',close:'17:00',closed:false};state.hours[d].closed=c;document.getElementById(`open-${d}`).disabled=c;document.getElementById(`close-${d}`).disabled=c;}
+function applyHoursPreset(p){const presets={weekday:{0:{open:'09:00',close:'17:00'},5:{closed:true},6:{closed:true}},extended:{0:{open:'09:00',close:'18:00'},5:{open:'09:00',close:'18:00'},6:{closed:true}},full:{0:{open:'10:00',close:'20:00'},5:{open:'10:00',close:'20:00'},6:{open:'10:00',close:'20:00'}}};const pre=presets[p];if(!pre)return;for(let i=0;i<7;i++){const day=pre[i]||pre[0];const cb=document.getElementById(`closed-${i}`),os=document.getElementById(`open-${i}`),cs=document.getElementById(`close-${i}`);if(day.closed){cb.checked=true;toggleClosed(i,true);}else{cb.checked=false;toggleClosed(i,false);os.value=day.open;cs.value=day.close;updateHour(i,'open',day.open);updateHour(i,'close',day.close);}}}
+function selectVoice(g){state.voiceGender=g;document.querySelectorAll('.voice-option').forEach(v=>v.classList.remove('selected'));document.querySelector(`[data-gender="${g}"]`).classList.add('selected');updateState();}
+function updateGreeting(){state.aiName=document.getElementById('ai-name').value||'Sophie';const c=state.clinicName||'Your Clinic';document.getElementById('greeting-preview').innerHTML=`"Welcome to <strong>${c}</strong>, this is <strong>${state.aiName}</strong> speaking. How may I help you today?"`;document.getElementById('review-ai').textContent=state.aiName;}
+function updateState(){state.clinicName=document.getElementById('clinic-name').value;state.address=document.getElementById('address').value;state.parking=document.getElementById('parking').value;state.phone=document.getElementById('phone').value;state.email=document.getElementById('email').value;state.bankHolidays=document.getElementById('bank-holidays').checked;state.cancellation=document.getElementById('cancellation').value;state.advanceBooking=document.getElementById('advance-booking').value;state.deposit=document.getElementById('deposit').value;state.transferNumber=document.getElementById('transfer-number').value;updateButtonStates();updateReview();}
+function updateButtonStates(){document.getElementById('btn-1').disabled=!state.clinicName||!state.category;}
+function updateReview(){document.getElementById('review-clinic').textContent=state.clinicName||'-';document.getElementById('review-staff').textContent=state.staff.length+' members';document.getElementById('review-services').textContent=state.services.filter(s=>s.active).length+' active';document.getElementById('review-transfer').textContent=state.transferNumber||'Not set';}
+function nextStep(n){document.getElementById(`step-${currentStep}`).classList.remove('active');currentStep=n;document.getElementById(`step-${currentStep}`).classList.add('active');updateProgress();if(n===7){updateGreeting();updateReview();}}
+function prevStep(n){nextStep(n);}
+function updateProgress(){document.querySelectorAll('.progress-step').forEach((p,i)=>{p.classList.remove('active','completed');if(i+1<currentStep)p.classList.add('completed');else if(i+1===currentStep)p.classList.add('active');});}
+function activateAI(){updateState();document.getElementById('step-7').classList.remove('active');document.getElementById('step-success').classList.add('active');document.getElementById('success-greeting').textContent=`"Welcome to ${state.clinicName}, this is ${state.aiName} speaking. How may I help you today?"`;}
+init();
+</script>
+</body>
+</html>
