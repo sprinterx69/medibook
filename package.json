@@ -1,8 +1,5 @@
 {
   "name": "medibook",
   "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "start": "cd backend && npm start"
-  }
+  "private": true
 }
