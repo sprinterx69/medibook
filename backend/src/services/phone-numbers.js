@@ -90,8 +90,20 @@ export async function purchaseNumber(tenantId, phoneNumber) {
   });
   if (!tenant) throw Object.assign(new Error('Tenant not found'), { statusCode: 404 });
 
-  const limit    = PHONE_LIMITS[tenant.plan] ?? 0;
   const settings = tenant.settings ?? {};
+
+  // Check for active subscription (including trials) - overrides plan field
+  const subscription = await prisma.subscription.findFirst({
+    where: { 
+      tenantId,
+      status: { in: ['ACTIVE', 'TRIALING'] },
+      currentPeriodEnd: { gt: new Date() }
+    }
+  });
+
+  // Determine effective plan: subscription overrides tenant.plan
+  const effectivePlan = subscription ? 'PRO' : tenant.plan;
+  const limit = PHONE_LIMITS[effectivePlan] ?? 0;
 
   // Enforce plan — STARTER has no voice agent
   if (limit === 0) {
