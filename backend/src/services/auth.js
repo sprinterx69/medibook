@@ -313,3 +313,4 @@ export async function resendVerificationCode(email) {
   await sendVerificationEmail({ to: normEmail, fullName: reg.fullName, code: verifyCode });
   return { message: 'Verification code resent.' };
 }
+// Deployed at Thu Feb 26 10:29:04 UTC 2026
