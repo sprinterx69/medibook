@@ -92,20 +92,9 @@ export async function purchaseNumber(tenantId, phoneNumber) {
 
   const settings = tenant.settings ?? {};
 
-  // Check for active subscription (including trials) - overrides plan field
-  const subscription = await prisma.subscription.findFirst({
-    where: { 
-      tenantId,
-      status: { in: ['ACTIVE', 'TRIALING'] },
-      currentPeriodEnd: { gt: new Date() }
-    }
-  });
-  
-  console.log('[purchaseNumber] tenantId:', tenantId, 'tenant.plan:', tenant.plan, 'subscription:', subscription ? subscription.status : 'none');
-
-  // Determine effective plan: subscription overrides tenant.plan
-  const effectivePlan = subscription ? 'PRO' : tenant.plan;
-  const limit = PHONE_LIMITS[effectivePlan] ?? 0;
+  // Allow PRO/ENTERPRISE tenants to buy numbers (supports free trials & pre-Stripe setups)
+  // Only block if explicitly STARTER plan
+  const limit = PHONE_LIMITS[tenant.plan] ?? 0;
 
   // Enforce plan — STARTER has no voice agent
   if (limit === 0) {
