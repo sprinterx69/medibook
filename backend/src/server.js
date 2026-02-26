@@ -123,7 +123,7 @@ server.get('/pages/*', async (request, reply) => {
 // ─── Health Check ─────────────────────────────────────────────────────────────
 server.get('/health', async () => ({
   status: 'ok',
-  service: 'medibook-voice-agent',
+  service: 'callora-voice-agent', // v2.1
   timestamp: new Date().toISOString(),
 }));
 
