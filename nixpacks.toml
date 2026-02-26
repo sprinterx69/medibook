@@ -1,8 +1,5 @@
 [phases.install]
-cmds = ['npm install --prefix backend']
-
-[phases.build]
-cmds = ['npm --prefix backend run db:generate']
+cmds = ['cd backend && npm install']
 
 [start]
-cmd = 'node backend/src/server.js'
+cmd = 'cd backend && npm start'
