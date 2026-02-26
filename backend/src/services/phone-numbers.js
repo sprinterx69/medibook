@@ -100,6 +100,8 @@ export async function purchaseNumber(tenantId, phoneNumber) {
       currentPeriodEnd: { gt: new Date() }
     }
   });
+  
+  console.log('[purchaseNumber] tenantId:', tenantId, 'tenant.plan:', tenant.plan, 'subscription:', subscription ? subscription.status : 'none');
 
   // Determine effective plan: subscription overrides tenant.plan
   const effectivePlan = subscription ? 'PRO' : tenant.plan;
