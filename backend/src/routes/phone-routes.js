@@ -18,9 +18,22 @@ import {
 } from '../services/phone-numbers.js';
 
 export default async function phoneRoutes(fastify) {
+  // Auth middleware - verify JWT and ensure tenant matches
+  const requireAuth = async (request, reply) => {
+    try {
+      await request.jwtVerify();
+      if (request.user.tenantId !== request.params.tenantId) {
+        return reply.code(403).send({ error: 'Forbidden' });
+      }
+    } catch {
+      return reply.code(401).send({ error: 'Unauthorized' });
+    }
+  };
 
   // ── GET /api/tenants/:tenantId/phone-numbers ──────────────────────────────
-  fastify.get('/api/tenants/:tenantId/phone-numbers', async (request, reply) => {
+  fastify.get('/api/tenants/:tenantId/phone-numbers', {
+    preHandler: requireAuth,
+  }, async (request, reply) => {
     try {
       return await getTenantNumbers(request.params.tenantId);
     } catch (err) {
@@ -30,7 +43,9 @@ export default async function phoneRoutes(fastify) {
 
   // ── GET /api/tenants/:tenantId/available-numbers ──────────────────────────
   // Query params: country (default GB), areaCode (optional)
-  fastify.get('/api/tenants/:tenantId/available-numbers', async (request, reply) => {
+  fastify.get('/api/tenants/:tenantId/available-numbers', {
+    preHandler: requireAuth,
+  }, async (request, reply) => {
     const { country = 'GB', areaCode } = request.query;
 
     if (!SUPPORTED_COUNTRIES.map(c => c.code).includes(country)) {
@@ -49,7 +64,9 @@ export default async function phoneRoutes(fastify) {
 
   // ── POST /api/tenants/:tenantId/buy-number ────────────────────────────────
   // Body: { phoneNumber: "+441234567890" }
-  fastify.post('/api/tenants/:tenantId/buy-number', async (request, reply) => {
+  fastify.post('/api/tenants/:tenantId/buy-number', {
+    preHandler: requireAuth,
+  }, async (request, reply) => {
     const { phoneNumber } = request.body ?? {};
     if (!phoneNumber) {
       return reply.status(400).send({ error: 'phoneNumber is required in request body' });
@@ -70,7 +87,9 @@ export default async function phoneRoutes(fastify) {
 
   // ── DELETE /api/tenants/:tenantId/phone-numbers/:number ───────────────────
   // :number must be URL-encoded, e.g. %2B441234567890
-  fastify.delete('/api/tenants/:tenantId/phone-numbers/:number', async (request, reply) => {
+  fastify.delete('/api/tenants/:tenantId/phone-numbers/:number', {
+    preHandler: requireAuth,
+  }, async (request, reply) => {
     const phoneNumber = decodeURIComponent(request.params.number);
     try {
       return await releaseNumber(request.params.tenantId, phoneNumber);
