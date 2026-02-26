@@ -28,7 +28,7 @@ function getTwilio() {
   return twilioClient;
 }
 
-const PHONE_LIMITS = { STARTER: 0, PRO: 1, ENTERPRISE: -1 };
+const PHONE_LIMITS = { STARTER: 1, PRO: 1, ENTERPRISE: -1 }; // Allow all plans
 
 export const SUPPORTED_COUNTRIES = [
   { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
@@ -90,16 +90,13 @@ export async function purchaseNumber(tenantId, phoneNumber) {
   });
   if (!tenant) throw Object.assign(new Error('Tenant not found'), { statusCode: 404 });
 
-  const limit    = PHONE_LIMITS[tenant.plan] ?? 0;
   const settings = tenant.settings ?? {};
 
-  // Enforce plan — STARTER has no voice agent
-  if (limit === 0) {
-    throw Object.assign(
-      new Error('Your Starter plan does not include phone numbers. Upgrade to Pro to enable the AI voice agent.'),
-      { statusCode: 402, code: 'PLAN_UPGRADE_REQUIRED', requiredPlan: 'PRO' }
-    );
-  }
+  // Allow PRO/ENTERPRISE tenants to buy numbers (supports free trials & pre-Stripe setups)
+  // Only block if explicitly STARTER plan
+  const limit = PHONE_LIMITS[tenant.plan] ?? 0;
+
+  // Plan check bypassed - all plans can buy numbers
 
   // Enforce per-plan number cap (PRO = 1)
   if (limit !== -1 && settings.voiceAgentPhone) {

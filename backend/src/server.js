@@ -123,7 +123,18 @@ server.get('/pages/*', async (request, reply) => {
 // ─── Health Check ─────────────────────────────────────────────────────────────
 server.get('/health', async () => ({
   status: 'ok',
-  service: 'medibook-voice-agent',
+  service: 'callora-voice-agent-v2',
+  timestamp: new Date().toISOString(),
+}));
+
+server.get('/version', async () => ({
+  version: '2.1',
+  feature: 'plan-bypass-active'
+}));
+
+server.get('/test-old', async () => ({
+  status: 'ok',
+  service: 'callora-voice-agent', // v2.1
   timestamp: new Date().toISOString(),
 }));
 
@@ -172,3 +183,4 @@ try {
   server.log.error(err);
   process.exit(1);
 }
+// Force deploy Thu Feb 26 10:32:07 UTC 2026

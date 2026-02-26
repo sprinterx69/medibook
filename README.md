@@ -243,3 +243,4 @@ See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for full production setup includi
 ## License
 
 MIT — use freely, build on top, don't hold us liable.
+# Thu Feb 26 10:16:38 UTC 2026

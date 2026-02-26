@@ -161,7 +161,7 @@ export async function verifyEmailAndActivate({ email, code, frontendUrl }) {
       data: {
         slug: reg.slug,
         name: reg.businessName,
-        plan: 'STARTER', // Stripe webhook upgrades this after checkout
+        plan: reg.planKey?.toUpperCase() ?? 'STARTER', // Use selected plan (Stripe webhook will update if needed)
         settings: {
           timezone:   'Europe/London',
           currency:   'gbp',
@@ -313,3 +313,4 @@ export async function resendVerificationCode(email) {
   await sendVerificationEmail({ to: normEmail, fullName: reg.fullName, code: verifyCode });
   return { message: 'Verification code resent.' };
 }
+// Deployed at Thu Feb 26 10:29:04 UTC 2026
