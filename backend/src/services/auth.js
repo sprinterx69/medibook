@@ -161,7 +161,7 @@ export async function verifyEmailAndActivate({ email, code, frontendUrl }) {
       data: {
         slug: reg.slug,
         name: reg.businessName,
-        plan: 'STARTER', // Stripe webhook upgrades this after checkout
+        plan: reg.planKey?.toUpperCase() ?? 'STARTER', // Use selected plan (Stripe webhook will update if needed)
         settings: {
           timezone:   'Europe/London',
           currency:   'gbp',
