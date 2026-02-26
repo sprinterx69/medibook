@@ -3,6 +3,3 @@ cmds = ['npm install --prefix backend']
 
 [phases.build]
 cmds = ['npm --prefix backend run db:generate']
-
-[start]
-cmd = 'node backend/src/server.js'
