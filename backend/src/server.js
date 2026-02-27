@@ -28,6 +28,7 @@ import settingsRoutes from './routes/settings-routes.js';
 import servicesRoutes from './routes/services-routes.js';
 import integrationRoutes from './routes/integration-routes.js';
 import teamRoutes from './routes/team-routes.js';
+import onboardingRoutes from './routes/onboarding-routes.js';
 import staticPlugin from '@fastify/static';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -87,6 +88,7 @@ await server.register(settingsRoutes);
 await server.register(servicesRoutes);
 await server.register(integrationRoutes);
 await server.register(teamRoutes);
+await server.register(onboardingRoutes);
 
 // ─── Static Files (Frontend) ──────────────────────────────────────────────────
 // Serve frontend HTML files
