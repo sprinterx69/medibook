@@ -13,6 +13,18 @@ import { prisma } from '../config/prisma.js';
 
 
 
+// Normalize legacy 3-letter day keys (Mon/Tue/…) stored before the onboarding
+// fix was deployed, so the agent page always receives full lowercase names.
+const _HOUR_DAY_MAP = { Mon:'monday', Tue:'tuesday', Wed:'wednesday', Thu:'thursday', Fri:'friday', Sat:'saturday', Sun:'sunday' };
+function normalizeBusinessHours(hours) {
+  if (!hours) return null;
+  const out = {};
+  for (const [k, v] of Object.entries(hours)) {
+    out[_HOUR_DAY_MAP[k] ?? k] = v;
+  }
+  return out;
+}
+
 const DEFAULT_BUSINESS_HOURS = {
   monday:    { open: true,  from: '09:00', to: '19:00' },
   tuesday:   { open: true,  from: '09:00', to: '19:00' },
@@ -177,7 +189,7 @@ export default async function agentRoutes(fastify) {
       afterHoursMessage: va.afterHoursMessage ?? `Thank you for calling ${tenant.name}. We're currently closed. Our opening hours are Monday to Saturday, 9am to 7pm. Please call back during business hours or leave a voicemail.`,
       transferMessage: va.transferMessage ?? 'Of course, let me connect you with a member of our team. Please hold for just a moment.',
       transferNumber: va.transferNumber ?? '',
-      businessHours: va.businessHours ?? DEFAULT_BUSINESS_HOURS,
+      businessHours: normalizeBusinessHours(va.businessHours) ?? DEFAULT_BUSINESS_HOURS,
       // Services
       enabledServiceIds: va.enabledServiceIds ?? [],
       // Knowledge base

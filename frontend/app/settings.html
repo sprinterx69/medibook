@@ -611,8 +611,7 @@ function escHtml(s) {
 })();
 
 function signOut() {
-  localStorage.removeItem('medibook_token');
-  localStorage.removeItem('medibook_tenant_id');
+  localStorage.clear();
   location.href = '../pages/login.html';
 }
 
