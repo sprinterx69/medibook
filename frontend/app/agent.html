@@ -419,7 +419,7 @@
 
 <div class="modal-backdrop" id="staffModal" style="display:none" onclick="if(event.target===this)closeStaffModal()">
   <div class="modal">
-    <div class="modal-title" id="staffModalTitle">Add Team Member</div>
+    <div class="modal-title" id="staffModalHeading">Add Team Member</div>
     <input type="hidden" id="staffModalId">
     <div class="form-group">
       <label class="form-label">Full Name *</label>
@@ -427,7 +427,7 @@
     </div>
     <div class="form-group">
       <label class="form-label">Job Title</label>
-      <input class="input" type="text" id="staffModalTitle" placeholder="e.g. Lead Aesthetician">
+      <input class="input" type="text" id="staffModalJobTitle" placeholder="e.g. Lead Aesthetician">
     </div>
     <div class="form-group">
       <label class="form-label">Email</label>
@@ -489,10 +489,18 @@ async function checkOnboardingAndLoad(){
 async function loadSettings(){
   try{
     const res=await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-settings`,{headers:authHeaders});
-    if(!res.ok)throw new Error();
+    if(!res.ok){
+      const err=await res.json().catch(()=>({}));
+      console.error('GET agent-settings failed',res.status,err);
+      throw new Error(`${res.status}: ${err.error||'unknown'}`);
+    }
     settings=await res.json();
     document.getElementById('lastSaved').textContent='Synced with database';
-  }catch{document.getElementById('lastSaved').textContent='Could not reach backend';}
+  }catch(e){
+    console.error('loadSettings error',e);
+    document.getElementById('lastSaved').textContent='Could not load data — check console';
+    showToast('error','Could not load agent data',e.message||'Backend unreachable');
+  }
   populateForm();loadSidebarUser();loadAgentStats();loadStaff();
 }
 
@@ -684,17 +692,17 @@ function openStaffModal(staffId){
   document.getElementById('staffColorPicker').innerHTML=STAFF_COLORS.map(c=>`<div class="color-swatch ${c===_selColor?'selected':''}" style="background:${c}" onclick="selColor('${c}',this)"></div>`).join('');
   if(staffId){
     const m=staffList.find(s=>s.id===staffId);if(!m)return;
-    document.getElementById('staffModalTitle').textContent='Edit Team Member';
+    document.getElementById('staffModalHeading').textContent='Edit Team Member';
     document.getElementById('staffModalSaveBtn').textContent='Save Changes';
     document.getElementById('staffModalId').value=m.id;
     document.getElementById('staffModalName').value=m.name;
-    document.getElementById('staffModalTitle').value=m.title||'';
+    document.getElementById('staffModalJobTitle').value=m.title||'';
     document.getElementById('staffModalEmail').value=m.email||'';
     _selColor=m.color||STAFF_COLORS[0];
   }else{
-    document.getElementById('staffModalTitle').textContent='Add Team Member';
+    document.getElementById('staffModalHeading').textContent='Add Team Member';
     document.getElementById('staffModalSaveBtn').textContent='Add Member';
-    ['staffModalId','staffModalName','staffModalTitle','staffModalEmail'].forEach(id=>document.getElementById(id).value='');
+    ['staffModalId','staffModalName','staffModalJobTitle','staffModalEmail'].forEach(id=>document.getElementById(id).value='');
     _selColor=STAFF_COLORS[0];
   }
   document.querySelectorAll('.color-swatch').forEach(s=>s.classList.toggle('selected',s.style.background===_selColor||s.style.backgroundColor===_selColor));
@@ -707,7 +715,7 @@ async function saveStaffMember(){
   const id=document.getElementById('staffModalId').value;
   const name=document.getElementById('staffModalName').value.trim();
   if(!name){showToast('error','Name required','Please enter a name.');return;}
-  const payload={name,title:document.getElementById('staffModalTitle').value.trim(),email:document.getElementById('staffModalEmail').value.trim(),color:_selColor};
+  const payload={name,title:document.getElementById('staffModalJobTitle').value.trim(),email:document.getElementById('staffModalEmail').value.trim(),color:_selColor};
   const btn=document.getElementById('staffModalSaveBtn');btn.disabled=true;btn.textContent='Saving…';
   try{
     const res=id
@@ -775,13 +783,20 @@ async function saveSettings(){
   const btn=document.getElementById('saveBtn');btn.textContent='Saving…';btn.disabled=true;
   try{
     const res=await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-settings`,{method:'PUT',headers:authHeaders,body:JSON.stringify(collectFormData())});
-    if(!res.ok)throw new Error();
+    if(!res.ok){
+      const err=await res.json().catch(()=>({}));
+      console.error('PUT agent-settings failed',res.status,err);
+      throw new Error(`${res.status}: ${err.error||'unknown'}`);
+    }
     settings={...settings,...collectFormData()};isDirty=false;
     document.getElementById('unsavedBar').style.display='none';
     document.getElementById('discardBtn').style.display='none';
     document.getElementById('lastSaved').textContent='Saved just now';
     showToast('success','Settings saved','Your AI agent has been updated.');
-  }catch{showToast('error','Save failed','Could not reach the backend.');}
+  }catch(e){
+    console.error('saveSettings error',e);
+    showToast('error','Save failed',e.message||'Could not reach the backend.');
+  }
   finally{btn.textContent='Save Changes';btn.disabled=false;}
 }
 
