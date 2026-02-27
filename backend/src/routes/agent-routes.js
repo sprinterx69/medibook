@@ -163,7 +163,12 @@ export default async function agentRoutes(fastify) {
       include: {
         services: {
           where: { isActive: true },
-          select: { id: true, name: true, durationMins: true, priceCents: true },
+          select: { id: true, name: true, durationMins: true, priceCents: true, category: true, description: true, depositCents: true },
+          orderBy: { name: 'asc' },
+        },
+        staff: {
+          where: { isActive: true },
+          select: { id: true, name: true, title: true, email: true, color: true },
           orderBy: { name: 'asc' },
         },
       },
@@ -179,6 +184,14 @@ export default async function agentRoutes(fastify) {
     return {
       tenantId: tenant.id,
       tenantName: tenant.name,
+      // Business info
+      businessType: settings.businessType ?? '',
+      address: settings.address ?? '',
+      parking: settings.parking ?? '',
+      phone: settings.phone ?? '',
+      email: settings.email ?? '',
+      // Staff from DB
+      staff: tenant.staff,
       // Identity
       agentName: va.agentName ?? 'Aria',
       voiceId: va.voiceId ?? '21m00Tcm4TlvDq8ikWAM',
@@ -217,10 +230,14 @@ export default async function agentRoutes(fastify) {
     const currentVoiceAgent = currentSettings.voiceAgent ?? {};
     const updatedSettings = {
       ...currentSettings,
+      // Business info (top-level in tenant.settings)
+      businessType: body.businessType ?? currentSettings.businessType,
+      address:      body.address      ?? currentSettings.address,
+      parking:      body.parking      ?? currentSettings.parking,
+      phone:        body.phone        ?? currentSettings.phone,
+      email:        body.email        ?? currentSettings.email,
       voiceAgent: {
-        // Preserve fields set during onboarding that aren't in the agent page form
         ...currentVoiceAgent,
-        // Overwrite only the fields the agent page manages
         agentName: body.agentName,
         voiceId: body.voiceId,
         voicePersonality: body.voicePersonality,
@@ -234,15 +251,19 @@ export default async function agentRoutes(fastify) {
         faqs: body.faqs,
         neverSay: body.neverSay,
         clinicContext: body.clinicContext,
+        bankHolidayClosed: body.bankHolidayClosed,
         bookingRules: body.bookingRules,
         updatedAt: new Date().toISOString(),
       },
     };
 
-    await prisma.tenant.update({
-      where: { id: tenantId },
-      data: { settings: updatedSettings },
-    });
+    const updateData = { settings: updatedSettings };
+    // Also update the tenant name if changed
+    if (body.tenantName && body.tenantName.trim() && body.tenantName !== tenant.name) {
+      updateData.name = body.tenantName.trim();
+    }
+
+    await prisma.tenant.update({ where: { id: tenantId }, data: updateData });
 
     return { success: true, message: 'Agent settings saved successfully.' };
   });
