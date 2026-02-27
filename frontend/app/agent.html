@@ -495,7 +495,7 @@ async function loadSettings(){
       throw new Error(`${res.status}: ${err.error||'unknown'}`);
     }
     settings=await res.json();
-    console.log('✅ agent-settings loaded',{agentName:settings.agentName,services:settings.services?.length,staff:settings.staff?.length,hasHours:!!settings.businessHours});
+    console.log("🔍 DEBUG agent-settings:",JSON.stringify(settings,null,2))',{agentName:settings.agentName,services:settings.services?.length,staff:settings.staff?.length,hasHours:!!settings.businessHours});
     document.getElementById('lastSaved').textContent='Synced with database';
   }catch(e){
     console.error('loadSettings error',e);
