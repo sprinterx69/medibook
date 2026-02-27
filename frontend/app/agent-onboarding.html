@@ -1930,23 +1930,23 @@ async function init() {
   const auth = getAuth();
   if (!auth) return;
 
-  // Check if onboarding already complete
+  // Fast-path: if the onboarding flag is already cached, go straight to agent page
+  if (localStorage.getItem('onboarding_done_' + auth.tenantId) === '1') {
+    window.location.href = '/app/agent.html';
+    return;
+  }
+
+  // Check if onboarding already complete via the status endpoint
   try {
-    const res = await fetch(`${API}/api/tenants/${auth.tenantId}`, {
+    const res = await fetch(`${API}/api/tenants/${auth.tenantId}/onboarding/status`, {
       headers: { 'Authorization': `Bearer ${auth.token}` }
     });
     if (res.ok) {
       const data = await res.json();
-      const tenant = data.tenant || data;
-      if (tenant && tenant.onboardingComplete) {
+      if (data.completed) {
+        localStorage.setItem('onboarding_done_' + auth.tenantId, '1');
         window.location.href = '/app/agent.html';
         return;
-      }
-      // Pre-fill clinic name if available
-      if (tenant && tenant.clinicName) {
-        state.clinicName = tenant.clinicName;
-        const nameInput = document.getElementById('clinicName');
-        if (nameInput) nameInput.value = tenant.clinicName;
       }
     }
   } catch(e) {}

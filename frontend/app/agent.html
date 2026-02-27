@@ -118,6 +118,7 @@
       <div class="user-av" id="sidebarAvatar">–</div>
       <div><div class="user-name" id="sidebarName">Loading…</div><div class="user-role" id="sidebarRole">–</div></div>
     </div>
+    <a href="#" onclick="localStorage.clear();location.href='../pages/login.html';return false;" style="display:block;text-align:center;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 0;margin-top:2px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">Sign out</a>
   </div>
 </aside>
 
@@ -538,12 +539,16 @@ async function checkOnboardingAndLoad() {
     } else if (res.status === 401) {
       location.href = '../pages/login.html';
     } else {
-      // Non-ok (e.g. 404 new tenant) — send to onboarding
-      window.location.href = '/app/agent-onboarding.html';
+      // Server error — don't blindly redirect to onboarding; show page and
+      // let loadSettings fall back gracefully if needed.
+      document.getElementById('onboardingGate').style.display = 'none';
+      await loadSettings();
     }
   } catch {
-    // Network error — if we have no local flag, send to onboarding to be safe
-    window.location.href = '/app/agent-onboarding.html';
+    // Network error — show the agent page; only onboarding/status returning
+    // completed:false should redirect the user back to onboarding.
+    document.getElementById('onboardingGate').style.display = 'none';
+    await loadSettings();
   }
 }
 
