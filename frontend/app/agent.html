@@ -498,6 +498,21 @@ const DEMO_SETTINGS = {
   ],
 };
 
+// ─── Onboarding check — redirect if not yet set up ───────────────────────────
+async function checkOnboardingAndLoad() {
+  try {
+    const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/onboarding/status`, { headers: authHeaders });
+    if (res.ok) {
+      const data = await res.json();
+      if (!data.completed) {
+        window.location.href = '/app/agent-onboarding.html';
+        return;
+      }
+    }
+  } catch { /* network error — continue to show agent page */ }
+  await loadSettings();
+}
+
 // ─── Fetch settings from API ──────────────────────────────────────────────────
 async function loadSettings() {
   try {
@@ -1025,7 +1040,7 @@ function showToast(type, title, msg='') {
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', loadSettings);
+document.addEventListener('DOMContentLoaded', checkOnboardingAndLoad);
 
 // URL hash support
 window.addEventListener('load', () => {
