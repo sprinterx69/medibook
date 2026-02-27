@@ -1,13 +1,15 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { prisma } from '../config/prisma.js';
+import OpenAI from 'openai';
 // routes/agent-routes.js
 //
 // REST API for AI voice agent settings.
 // Settings are stored in tenant.settings.voiceAgent (JSON column).
 //
-// GET  /api/tenants/:tenantId/agent-settings  — load current config
-// PUT  /api/tenants/:tenantId/agent-settings  — save config
-// GET  /api/tenants/:tenantId/agent-prompt    — preview generated system prompt
+// GET  /api/tenants/:tenantId/agent-settings           — load current config
+// PUT  /api/tenants/:tenantId/agent-settings           — save config
+// GET  /api/tenants/:tenantId/agent-prompt             — preview system prompt
+// POST /api/tenants/:tenantId/agent-prompt/regenerate  — regenerate via OpenAI
 // ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -322,12 +324,48 @@ export default async function agentRoutes(fastify) {
         orderBy: { name: 'asc' },
       });
 
-      const va = (tenant.settings ?? {}).voiceAgent ?? {};
+      const s = tenant.settings ?? {};
+      const va = s.voiceAgent ?? {};
 
-      // Prefer the AI-generated prompt (created during onboarding). Fall back to
-      // the dynamically-built prompt for tenants that haven't onboarded yet.
-      const prompt = va.systemPrompt || buildPromptFromSettings(tenant, va, tenant.services, staff);
-      const isAiGenerated = !!va.systemPrompt;
+      let prompt = va.systemPrompt;
+      let isAiGenerated = !!prompt;
+
+      // If no saved prompt exists yet (onboarding OpenAI call may have been
+      // skipped), try OpenAI now (fire-and-forget save) then fall back to the
+      // template builder so the response is always fast.
+      if (!prompt && process.env.OPENAI_API_KEY && va.agentName) {
+        try {
+          const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+          const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+          const bh = normalizeBusinessHours(va.businessHours) ?? DEFAULT_BUSINESS_HOURS;
+          const hoursStr = days.map(d => { const h = bh[d]; return h?.open ? `${d.charAt(0).toUpperCase()}${d.slice(1)}: ${h.from}–${h.to}` : `${d.charAt(0).toUpperCase()}${d.slice(1)}: Closed`; }).join(', ');
+          const enabledIds = va.enabledServiceIds ?? [];
+          const svcList = (enabledIds.length ? tenant.services.filter(sv => enabledIds.includes(sv.id)) : tenant.services)
+            .map(sv => `• ${sv.name}: ${sv.durationMins} min, £${(sv.priceCents / 100).toFixed(0)}`).join('\n') || '• General appointments';
+          const staffLines = staff.map(m => `• ${m.name}${m.title ? ` — ${m.title}` : ''}`).join('\n');
+          const rules = va.bookingRules ?? DEFAULT_BOOKING_RULES;
+          const completion = await openai.chat.completions.create({
+            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+            max_tokens: 1000, temperature: 0.3,
+            messages: [
+              { role: 'system', content: 'You are an expert at writing AI voice receptionist system prompts for UK clinics. Be concise and natural.' },
+              { role: 'user', content: `Write a complete system prompt for "${va.agentName}", AI receptionist at "${tenant.name}".${s.address ? ` Address: ${s.address}.` : ''} Hours: ${hoursStr}. Services:\n${svcList}${staffLines ? `\nTeam:\n${staffLines}` : ''}\nBooking rules: min ${rules.minNoticeHours ?? 2}h notice, max ${rules.maxFutureDays ?? 60} days ahead. ${va.clinicContext ? `About: ${va.clinicContext}` : ''}\nOpening greeting: "${va.greeting || `Hello! Thank you for calling ${tenant.name}.`}"\nInclude: identity, speaking style (short sentences, phone-friendly), bookings, pricing, hours, transfers, and firm rules. 600-900 words. UK English.` },
+            ],
+          });
+          prompt = completion.choices[0]?.message?.content?.trim();
+          if (prompt) {
+            isAiGenerated = true;
+            // Save async — don't block the response
+            prisma.tenant.update({ where: { id: tenantId }, data: { settings: { ...s, voiceAgent: { ...va, systemPrompt: prompt, systemPromptGeneratedAt: new Date().toISOString() } } } }).catch(() => {});
+          }
+        } catch { /* OpenAI unavailable — fall through */ }
+      }
+
+      // Ultimate fallback: build from settings template (always works, no API key needed)
+      if (!prompt) {
+        prompt = buildPromptFromSettings(tenant, va, tenant.services, staff);
+        isAiGenerated = false;
+      }
 
       return {
         prompt,
@@ -365,6 +403,145 @@ export default async function agentRoutes(fastify) {
     } catch (err) {
       fastify.log.error(err, 'PATCH toggle failed');
       return reply.status(500).send({ error: 'Failed to toggle agent', detail: err.message });
+    }
+  });
+
+  // ── POST regenerate system prompt via OpenAI ──────────────────────────────
+  // Called when user clicks "Regenerate" on the AI Settings tab.
+  // Builds context from all current DB data and calls GPT-4o-mini.
+  fastify.post('/api/tenants/:tenantId/agent-prompt/regenerate', { preHandler: [requireAuth] }, async (request, reply) => {
+    const { tenantId } = request.params;
+    try {
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: tenantId },
+        include: {
+          services: { where: { isActive: true }, select: { id: true, name: true, durationMins: true, priceCents: true, category: true } },
+        },
+      });
+      if (!tenant) return reply.status(404).send({ error: 'Tenant not found' });
+
+      const staff = await prisma.staff.findMany({
+        where: { tenantId, isActive: true },
+        select: { id: true, name: true, title: true },
+        orderBy: { name: 'asc' },
+      });
+
+      const s = tenant.settings ?? {};
+      const va = s.voiceAgent ?? {};
+
+      // Build context strings
+      const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+      const bh = normalizeBusinessHours(va.businessHours) ?? DEFAULT_BUSINESS_HOURS;
+      const hoursStr = days.map(d => {
+        const h = bh[d];
+        if (!h || !h.open) return `${d.charAt(0).toUpperCase()}${d.slice(1)}: Closed`;
+        return `${d.charAt(0).toUpperCase()}${d.slice(1)}: ${h.from}–${h.to}`;
+      }).join(', ');
+
+      const enabledIds = va.enabledServiceIds ?? [];
+      const filteredServices = enabledIds.length
+        ? tenant.services.filter(sv => enabledIds.includes(sv.id))
+        : tenant.services;
+
+      const servicesList = filteredServices.length
+        ? filteredServices.map(sv => `• ${sv.name}: ${sv.durationMins} min, £${(sv.priceCents / 100).toFixed(0)}`).join('\n')
+        : '• General appointments';
+
+      const staffList = staff.length
+        ? staff.map(m => `• ${m.name}${m.title ? ` — ${m.title}` : ''}`).join('\n')
+        : '';
+
+      const rules = va.bookingRules ?? DEFAULT_BOOKING_RULES;
+      const clinicName = tenant.name;
+      const agentName  = va.agentName || 'Sophie';
+      const address    = s.address || '';
+      const parking    = s.parking || '';
+      const phone      = s.phone   || '';
+      const context    = va.clinicContext || '';
+      const faqs       = (va.faqs ?? []).map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
+      const neverSay   = (va.neverSay ?? []).join(', ');
+      const transferNumber = va.transferNumber || '';
+      const transferMsg    = va.transferMessage || 'Of course, let me connect you now.';
+      const greeting       = va.greeting || `Hello! Thank you for calling ${clinicName}. I'm ${agentName}.`;
+
+      const userPrompt = `
+You are writing the complete system prompt for an AI voice receptionist named "${agentName}" at "${clinicName}".
+
+CLINIC INFORMATION:
+- Business name: ${clinicName}${address ? `\n- Address: ${address}` : ''}${phone ? `\n- Phone: ${phone}` : ''}${parking ? `\n- Parking: ${parking}` : ''}
+- Opening hours: ${hoursStr}
+
+SERVICES:
+${servicesList}
+${staffList ? `\nTEAM MEMBERS:\n${staffList}` : ''}
+
+BOOKING RULES:
+- Minimum notice for bookings: ${rules.minNoticeHours ?? 2} hours ahead
+- Maximum advance booking: ${rules.maxFutureDays ?? 60} days
+- New clients: ${rules.newClientPolicy === 'require_consultation' ? 'Must book a free consultation before treatments' : 'Can book any service directly'}
+- Rescheduling: ${rules.allowRescheduling ? 'allowed with notice' : 'refer to reception'}
+- Cancellations: ${rules.allowCancellation ? `allowed with ${rules.cancellationNoticeHours ?? 24}h notice` : 'refer to reception'}
+- Deposit: ${rules.requireDeposit ? `${rules.depositPercent ?? 25}% required at booking` : 'not required'}
+${context ? `\nABOUT THE CLINIC:\n${context}` : ''}
+${faqs ? `\nFAQs:\n${faqs}` : ''}
+${neverSay ? `\nNEVER use these words/phrases: ${neverSay}` : ''}
+
+CALL HANDLING:
+- Opening greeting (say this EXACTLY when answering): "${greeting}"
+- When transferring to a human: "${transferMsg}"${transferNumber ? ` then connect to ${transferNumber}` : ''}
+
+Write a complete, ready-to-use AI receptionist system prompt. Requirements:
+1. Written in second-person ("You are ${agentName}…")
+2. Covers: identity & greeting, speaking style (short phone-appropriate sentences, warm but efficient), booking, pricing & hours questions, transfers, and escalations
+3. Includes the exact greeting the agent must say verbatim
+4. Includes firm rules: never invent appointment slots, always confirm booking details before finalising, always get caller's full name
+5. Naturally includes the clinic's details, services, team, and hours — don't just list them, weave them into instructions
+6. Ends with a TODAY'S DATE placeholder line: "Today's date/time: {CURRENT_DATETIME}"
+
+Length: 600–900 words. Tone: warm, professional, UK English.
+`.trim();
+
+      let generatedPrompt;
+      if (process.env.OPENAI_API_KEY) {
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        const completion = await openai.chat.completions.create({
+          model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+          max_tokens: 1200,
+          temperature: 0.3,
+          messages: [
+            { role: 'system', content: 'You are an expert at writing highly effective AI voice receptionist system prompts for UK healthcare and beauty clinics. Write concisely and naturally.' },
+            { role: 'user', content: userPrompt },
+          ],
+        });
+        generatedPrompt = completion.choices[0]?.message?.content?.trim();
+      }
+
+      // Fall back to the template builder if OpenAI is unavailable or fails
+      if (!generatedPrompt) {
+        generatedPrompt = buildPromptFromSettings(tenant, va, filteredServices, staff);
+      }
+
+      // Persist
+      const updatedSettings = {
+        ...s,
+        voiceAgent: {
+          ...va,
+          systemPrompt: generatedPrompt,
+          systemPromptGeneratedAt: new Date().toISOString(),
+        },
+      };
+      await prisma.tenant.update({ where: { id: tenantId }, data: { settings: updatedSettings } });
+
+      return {
+        prompt: generatedPrompt,
+        isAiGenerated: !!process.env.OPENAI_API_KEY,
+        generatedAt: updatedSettings.voiceAgent.systemPromptGeneratedAt,
+        charCount: generatedPrompt.length,
+        tokenEstimate: Math.ceil(generatedPrompt.length / 4),
+      };
+    } catch (err) {
+      fastify.log.error(err, 'POST agent-prompt/regenerate failed');
+      return reply.status(500).send({ error: 'Failed to regenerate prompt', detail: err.message });
     }
   });
 
