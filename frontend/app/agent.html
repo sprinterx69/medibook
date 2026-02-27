@@ -102,7 +102,7 @@
     <div class="logo-mark">C</div>
     <span class="logo-text">Callora</span>
   </div>
-  <div class="sidebar-scroll"><a href="agent-onboarding.html" style="display:block;padding:12px;margin:10px;background:#d4a84b;color:#000;text-align:center;border-radius:8px;font-weight:600;text-decoration:none;">🚀 Launch Onboarding Wizard</a>
+  <div class="sidebar-scroll">
     <div class="nav-section">Clinic</div>
     <a href="dashboard.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</a>
     <a href="calendar.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>Calendar</a>
@@ -388,12 +388,12 @@
       <!-- System Prompt -->
       <div class="tab-panel" id="tab-prompt">
         <div class="section-header" style="margin-bottom:14px">
-          <div><div class="section-title">Live System Prompt Preview</div><div class="section-subtitle">This is the exact prompt sent to GPT-4o for every call — auto-generated from your settings above.</div></div>
-          <button class="btn btn-secondary btn-sm" onclick="refreshPrompt()">Refresh Preview</button>
+          <div><div class="section-title">System Prompt</div><div class="section-subtitle">AI-generated during setup. This is the instruction sent to GPT-4o for every call.</div></div>
+          <button class="btn btn-secondary btn-sm" onclick="refreshPrompt()">Refresh</button>
         </div>
         <div class="card">
           <div class="card-header">
-            <div><div class="card-title">Generated Prompt</div><div class="card-subtitle" id="promptMeta">Loading…</div></div>
+            <div><div class="card-title">Active Prompt</div><div class="card-subtitle" id="promptMeta">Loading…</div></div>
             <button class="btn-icon" onclick="copyPrompt()" title="Copy to clipboard">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </button>
@@ -434,6 +434,15 @@
 
 <!-- Toast -->
 <div class="toast-wrap"><div class="toast" id="toast"><span class="toast-icon" id="toastIcon">✓</span><div class="toast-content"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div></div>
+
+<!-- Onboarding gate — full-screen overlay shown while checking, hides once confirmed onboarded -->
+<div id="onboardingGate" style="position:fixed;inset:0;background:#f9f7f4;display:flex;align-items:center;justify-content:center;z-index:9999">
+  <div style="text-align:center">
+    <div style="width:40px;height:40px;border:3px solid #e8edf2;border-top-color:#0d9488;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px"></div>
+    <p style="font-size:14px;color:#8896a8;font-family:'Geist',sans-serif">Loading your agent…</p>
+  </div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
 <script>
 // ─── Auth & Config ───────────────────────────────────────────────────────────
@@ -500,17 +509,37 @@ const DEMO_SETTINGS = {
 
 // ─── Onboarding check — redirect if not yet set up ───────────────────────────
 async function checkOnboardingAndLoad() {
+  // If the user has already completed onboarding for this tenant (stored locally),
+  // skip the API round-trip and show the page immediately.
+  const localFlag = localStorage.getItem('onboarding_done_' + TENANT_ID);
+  if (localFlag === '1') {
+    document.getElementById('onboardingGate').style.display = 'none';
+    await loadSettings();
+    return;
+  }
+
   try {
     const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/onboarding/status`, { headers: authHeaders });
     if (res.ok) {
       const data = await res.json();
-      if (!data.onboarded) {
+      if (data.completed) {
+        // Cache the result so future loads skip the API check
+        localStorage.setItem('onboarding_done_' + TENANT_ID, '1');
+        document.getElementById('onboardingGate').style.display = 'none';
+        await loadSettings();
+      } else {
         window.location.href = '/app/agent-onboarding.html';
-        return;
       }
+    } else if (res.status === 401) {
+      location.href = '../pages/login.html';
+    } else {
+      // Non-ok (e.g. 404 new tenant) — send to onboarding
+      window.location.href = '/app/agent-onboarding.html';
     }
-  } catch { /* network error — continue to show agent page */ }
-  await loadSettings();
+  } catch {
+    // Network error — if we have no local flag, send to onboarding to be safe
+    window.location.href = '/app/agent-onboarding.html';
+  }
 }
 
 // ─── Fetch settings from API ──────────────────────────────────────────────────
@@ -865,19 +894,23 @@ function setPolicy(val) {
 async function refreshPrompt() {
   const box = document.getElementById('promptBox');
   const meta = document.getElementById('promptMeta');
-  box.textContent = 'Generating…';
+  box.textContent = 'Loading…';
   try {
     const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-prompt`, { headers: authHeaders });
     if (!res.ok) throw new Error();
     const data = await res.json();
     box.textContent = data.prompt;
-    meta.textContent = `${data.charCount} characters · ~${data.tokenEstimate} tokens`;
+    if (data.isAiGenerated) {
+      const when = data.generatedAt ? ` · Generated ${new Date(data.generatedAt).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}` : '';
+      meta.textContent = `AI-generated prompt${when} · ${data.charCount} chars · ~${data.tokenEstimate} tokens`;
+    } else {
+      meta.textContent = `Auto-built from your settings · ${data.charCount} chars · ~${data.tokenEstimate} tokens`;
+    }
   } catch {
-    // Build a local preview from current form state
     const name = document.getElementById('agentName').value || 'Aria';
     const greeting = document.getElementById('greetingText').value || '(greeting not set)';
     box.textContent = `You are ${name}, a professional AI receptionist.\n\nOPENING GREETING:\n"${greeting}"\n\n[Full prompt generated by backend using all saved settings above]`;
-    meta.textContent = 'Preview (backend offline — save settings to generate full prompt)';
+    meta.textContent = 'Preview (backend offline)';
   }
 }
 

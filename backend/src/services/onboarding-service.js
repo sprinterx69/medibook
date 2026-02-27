@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '../config/prisma.js';
+import OpenAI from 'openai';
 
 /**
  * Check if a tenant has completed the AI agent onboarding.
@@ -196,11 +197,108 @@ export async function completeOnboarding(tenantId, data) {
 
   await prisma.tenant.update({ where: { id: tenantId }, data: updateData });
 
+  // ── 7. Generate AI system prompt via OpenAI (non-blocking) ───────────────
+  generateAndStoreSystemPrompt(tenantId, {
+    clinicName,
+    businessType:   data.businessType   ?? '',
+    address:        data.address         ?? '',
+    parking:        data.parking         ?? '',
+    phone:          data.phone           ?? '',
+    agentName,
+    voiceGender:    data.voiceGender     ?? 'female',
+    services:       data.services        ?? [],
+    staff:          data.staff           ?? [],
+    businessHours:  data.businessHours   ?? {},
+    bookingRules,
+    clinicContext:  data.clinicContext   ?? '',
+  }).catch(() => {}); // fire-and-forget, never fail the onboarding response
+
   return {
     success:          true,
     servicesCreated:  createdServiceIds.length,
     staffCreated:     createdStaffIds.length,
   };
+}
+
+// ─── Generate AI system prompt via OpenAI and persist it ─────────────────────
+async function generateAndStoreSystemPrompt(tenantId, ctx) {
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+  const servicesList = ctx.services.length
+    ? ctx.services.map(s => `- ${s.name}${s.durationMins ? ` (${s.durationMins} mins` : ''}${s.priceCents ? `, £${(s.priceCents / 100).toFixed(0)})` : (s.durationMins ? ')' : '')}`).join('\n')
+    : '- General appointments';
+
+  const staffList = ctx.staff.length
+    ? ctx.staff.map(s => `- ${s.name}${s.role ? ` (${s.role})` : ''}`).join('\n')
+    : '';
+
+  const hoursStr = Object.entries(ctx.businessHours || {})
+    .map(([day, h]) => h.open ? `${day.charAt(0).toUpperCase() + day.slice(1)}: ${h.from}–${h.to}` : `${day.charAt(0).toUpperCase() + day.slice(1)}: Closed`)
+    .join(', ');
+
+  const userMsg = `
+You are writing the AI system prompt for a voice receptionist called "${ctx.agentName}" at a ${ctx.businessType || 'clinic'} named "${ctx.clinicName}".
+
+Clinic details:
+- Address: ${ctx.address || 'not provided'}
+- Parking: ${ctx.parking || 'not provided'}
+- Phone: ${ctx.phone || 'not provided'}
+- Opening hours: ${hoursStr || 'Mon–Fri 9am–5pm'}
+
+Services offered:
+${servicesList}
+
+${staffList ? `Team:\n${staffList}\n` : ''}
+Booking rules:
+- Minimum notice: ${ctx.bookingRules.cancellationNoticeHours ?? 24}h for cancellations
+- Advance booking: up to ${ctx.bookingRules.maxFutureDays ?? 60} days ahead
+- Deposit required: ${ctx.bookingRules.requireDeposit ? 'yes' : 'no'}
+
+${ctx.clinicContext ? `Additional context:\n${ctx.clinicContext}` : ''}
+
+Write a complete, natural, conversational AI receptionist system prompt. The agent should:
+1. Greet callers warmly by name (${ctx.agentName}), mention the clinic name
+2. Help with booking, rescheduling, and cancelling appointments
+3. Answer questions about services, pricing, hours, and parking
+4. Transfer to a human receptionist when asked (using [TRANSFER])
+5. Be concise (1–3 sentences per response) — this is a phone call
+6. Never invent appointment slots — always use tools to check availability first
+7. Always confirm full booking details before finalising
+
+Write the prompt in second-person (you are...) format, ready to use directly as a ChatGPT system message.
+`.trim();
+
+  const completion = await openai.chat.completions.create({
+    model:       'gpt-4o-mini',
+    max_tokens:  800,
+    temperature: 0.4,
+    messages: [
+      { role: 'system', content: 'You are an expert at writing concise, effective AI receptionist system prompts for UK healthcare and beauty clinics.' },
+      { role: 'user',   content: userMsg },
+    ],
+  });
+
+  const generatedPrompt = completion.choices[0]?.message?.content?.trim();
+  if (!generatedPrompt) return;
+
+  // Persist the generated prompt into voiceAgent.systemPrompt
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } });
+  if (!tenant) return;
+
+  const s = tenant.settings ?? {};
+  await prisma.tenant.update({
+    where: { id: tenantId },
+    data: {
+      settings: {
+        ...s,
+        voiceAgent: {
+          ...(s.voiceAgent ?? {}),
+          systemPrompt: generatedPrompt,
+          systemPromptGeneratedAt: new Date().toISOString(),
+        },
+      },
+    },
+  });
 }
 
 function _defaultBusinessHours() {
