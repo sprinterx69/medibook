@@ -154,77 +154,102 @@ TODAY'S DATE & TIME: ${new Date().toLocaleString('en-GB', { timeZone: 'Europe/Lo
 }
 
 export default async function agentRoutes(fastify) {
+
+  // Shared auth helper — verifies JWT and ensures token belongs to this tenant
+  const requireAuth = async (request, reply) => {
+    try {
+      await request.jwtVerify();
+      if (request.user?.tenantId !== request.params.tenantId) {
+        return reply.code(403).send({ error: 'Forbidden' });
+      }
+    } catch {
+      return reply.code(401).send({ error: 'Unauthorized' });
+    }
+  };
+
   // ── GET agent settings ────────────────────────────────────────────────────
+  // No auth required — used by the onboarding gate fallback without a token.
   fastify.get('/api/tenants/:tenantId/agent-settings', async (request, reply) => {
     const { tenantId } = request.params;
 
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
-      include: {
-        services: {
-          where: { isActive: true },
-          select: { id: true, name: true, durationMins: true, priceCents: true, category: true, description: true, depositCents: true },
-          orderBy: { name: 'asc' },
+    try {
+      // Fetch tenant base record + services
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: tenantId },
+        include: {
+          services: {
+            where: { isActive: true },
+            select: { id: true, name: true, durationMins: true, priceCents: true, category: true, description: true, depositCents: true },
+            orderBy: { name: 'asc' },
+          },
         },
-        staff: {
-          where: { isActive: true },
-          select: { id: true, name: true, title: true, email: true, color: true },
-          orderBy: { name: 'asc' },
-        },
-      },
-    });
+      });
 
-    if (!tenant) {
-      return reply.status(404).send({ error: 'Tenant not found' });
+      if (!tenant) {
+        return reply.status(404).send({ error: 'Tenant not found' });
+      }
+
+      // Fetch staff separately to keep the Prisma query simple and avoid
+      // potential issues with nested select + include in a single call.
+      const staff = await prisma.staff.findMany({
+        where: { tenantId, isActive: true },
+        select: { id: true, name: true, title: true, email: true, color: true },
+        orderBy: { name: 'asc' },
+      });
+
+      const settings = tenant.settings ?? {};
+      const va = settings.voiceAgent ?? {};
+
+      return {
+        tenantId: tenant.id,
+        tenantName: tenant.name,
+        // Business info (stored in settings root)
+        businessType: settings.businessType ?? '',
+        address:      settings.address      ?? '',
+        parking:      settings.parking      ?? '',
+        phone:        settings.phone        ?? '',
+        email:        settings.email        ?? '',
+        // Staff
+        staff,
+        // Identity
+        agentName:       va.agentName       ?? 'Aria',
+        voiceId:         va.voiceId         ?? '21m00Tcm4TlvDq8ikWAM',
+        voicePersonality: va.voicePersonality ?? 65,
+        isActive:        va.isActive        ?? true,
+        bankHolidayClosed: va.bankHolidayClosed ?? false,
+        // Greeting
+        greeting:          va.greeting          ?? `Hello! Thank you for calling ${tenant.name}. How can I help you today?`,
+        afterHoursMessage: va.afterHoursMessage ?? `Thank you for calling ${tenant.name}. We're currently closed. Please call back during business hours or leave a voicemail.`,
+        transferMessage:   va.transferMessage   ?? 'Of course, let me connect you with a member of our team. Please hold for just a moment.',
+        transferNumber:    va.transferNumber    ?? '',
+        businessHours:     normalizeBusinessHours(va.businessHours) ?? DEFAULT_BUSINESS_HOURS,
+        // Services
+        enabledServiceIds: va.enabledServiceIds ?? [],
+        // Knowledge base
+        faqs:         va.faqs         ?? [],
+        neverSay:     va.neverSay     ?? [],
+        clinicContext: va.clinicContext ?? '',
+        // Booking rules
+        bookingRules: va.bookingRules ?? DEFAULT_BOOKING_RULES,
+        // Available services (from DB)
+        services: tenant.services,
+      };
+    } catch (err) {
+      fastify.log.error(err, 'GET agent-settings failed');
+      return reply.status(500).send({ error: 'Failed to load agent settings', detail: err.message });
     }
-
-    const settings = tenant.settings ?? {};
-    const va = settings.voiceAgent ?? {};
-
-    return {
-      tenantId: tenant.id,
-      tenantName: tenant.name,
-      // Business info
-      businessType: settings.businessType ?? '',
-      address: settings.address ?? '',
-      parking: settings.parking ?? '',
-      phone: settings.phone ?? '',
-      email: settings.email ?? '',
-      // Staff from DB
-      staff: tenant.staff,
-      // Identity
-      agentName: va.agentName ?? 'Aria',
-      voiceId: va.voiceId ?? '21m00Tcm4TlvDq8ikWAM',
-      voicePersonality: va.voicePersonality ?? 65,
-      isActive: va.isActive ?? true,
-      // Greeting
-      greeting: va.greeting ?? `Hello! Thank you for calling ${tenant.name}. How can I help you today?`,
-      afterHoursMessage: va.afterHoursMessage ?? `Thank you for calling ${tenant.name}. We're currently closed. Our opening hours are Monday to Saturday, 9am to 7pm. Please call back during business hours or leave a voicemail.`,
-      transferMessage: va.transferMessage ?? 'Of course, let me connect you with a member of our team. Please hold for just a moment.',
-      transferNumber: va.transferNumber ?? '',
-      businessHours: normalizeBusinessHours(va.businessHours) ?? DEFAULT_BUSINESS_HOURS,
-      // Services
-      enabledServiceIds: va.enabledServiceIds ?? [],
-      // Knowledge base
-      faqs: va.faqs ?? [],
-      neverSay: va.neverSay ?? [],
-      clinicContext: va.clinicContext ?? '',
-      // Booking rules
-      bookingRules: va.bookingRules ?? DEFAULT_BOOKING_RULES,
-      // Available services (from DB)
-      services: tenant.services,
-    };
   });
 
   // ── PUT agent settings ────────────────────────────────────────────────────
-  fastify.put('/api/tenants/:tenantId/agent-settings', async (request, reply) => {
+  fastify.put('/api/tenants/:tenantId/agent-settings', { preHandler: [requireAuth] }, async (request, reply) => {
     const { tenantId } = request.params;
     const body = request.body;
 
-    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
-    if (!tenant) {
-      return reply.status(404).send({ error: 'Tenant not found' });
-    }
+    try {
+      const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+      if (!tenant) {
+        return reply.status(404).send({ error: 'Tenant not found' });
+      }
 
     const currentSettings = tenant.settings ?? {};
     const currentVoiceAgent = currentSettings.voiceAgent ?? {};
@@ -263,71 +288,84 @@ export default async function agentRoutes(fastify) {
       updateData.name = body.tenantName.trim();
     }
 
-    await prisma.tenant.update({ where: { id: tenantId }, data: updateData });
+      await prisma.tenant.update({ where: { id: tenantId }, data: updateData });
 
-    return { success: true, message: 'Agent settings saved successfully.' };
+      return { success: true, message: 'Agent settings saved successfully.' };
+    } catch (err) {
+      fastify.log.error(err, 'PUT agent-settings failed');
+      return reply.status(500).send({ error: 'Failed to save agent settings', detail: err.message });
+    }
   });
 
   // ── GET preview of generated system prompt ────────────────────────────────
   fastify.get('/api/tenants/:tenantId/agent-prompt', async (request, reply) => {
     const { tenantId } = request.params;
 
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
-      include: {
-        services: {
-          where: { isActive: true },
-          select: { id: true, name: true, durationMins: true, priceCents: true },
+    try {
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: tenantId },
+        include: {
+          services: {
+            where: { isActive: true },
+            select: { id: true, name: true, durationMins: true, priceCents: true },
+          },
         },
-        staff: {
-          where: { isActive: true },
-          select: { id: true, name: true, title: true },
-          orderBy: { name: 'asc' },
-        },
-      },
-    });
+      });
 
-    if (!tenant) {
-      return reply.status(404).send({ error: 'Tenant not found' });
+      if (!tenant) {
+        return reply.status(404).send({ error: 'Tenant not found' });
+      }
+
+      const staff = await prisma.staff.findMany({
+        where: { tenantId, isActive: true },
+        select: { id: true, name: true, title: true },
+        orderBy: { name: 'asc' },
+      });
+
+      const va = (tenant.settings ?? {}).voiceAgent ?? {};
+
+      // Prefer the AI-generated prompt (created during onboarding). Fall back to
+      // the dynamically-built prompt for tenants that haven't onboarded yet.
+      const prompt = va.systemPrompt || buildPromptFromSettings(tenant, va, tenant.services, staff);
+      const isAiGenerated = !!va.systemPrompt;
+
+      return {
+        prompt,
+        isAiGenerated,
+        generatedAt:   va.systemPromptGeneratedAt ?? null,
+        charCount:     prompt.length,
+        tokenEstimate: Math.ceil(prompt.length / 4),
+      };
+    } catch (err) {
+      fastify.log.error(err, 'GET agent-prompt failed');
+      return reply.status(500).send({ error: 'Failed to load prompt', detail: err.message });
     }
-
-    const va = (tenant.settings ?? {}).voiceAgent ?? {};
-
-    // Prefer the AI-generated prompt (created during onboarding). Fall back to
-    // the dynamically-built prompt for tenants that haven't onboarded yet.
-    const prompt = va.systemPrompt || buildPromptFromSettings(tenant, va, tenant.services, tenant.staff);
-    const isAiGenerated = !!va.systemPrompt;
-
-    return {
-      prompt,
-      isAiGenerated,
-      generatedAt:   va.systemPromptGeneratedAt ?? null,
-      charCount:     prompt.length,
-      tokenEstimate: Math.ceil(prompt.length / 4),
-    };
   });
 
   // ── PATCH toggle agent active state ──────────────────────────────────────
-  fastify.patch('/api/tenants/:tenantId/agent-settings/toggle', async (request, reply) => {
+  fastify.patch('/api/tenants/:tenantId/agent-settings/toggle', { preHandler: [requireAuth] }, async (request, reply) => {
     const { tenantId } = request.params;
 
-    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
-    if (!tenant) {
-      return reply.status(404).send({ error: 'Tenant not found' });
+    try {
+      const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+      if (!tenant) {
+        return reply.status(404).send({ error: 'Tenant not found' });
+      }
+
+      const settings = tenant.settings ?? {};
+      const va = settings.voiceAgent ?? {};
+      const newActive = !va.isActive;
+
+      await prisma.tenant.update({
+        where: { id: tenantId },
+        data: { settings: { ...settings, voiceAgent: { ...va, isActive: newActive } } },
+      });
+
+      return { isActive: newActive };
+    } catch (err) {
+      fastify.log.error(err, 'PATCH toggle failed');
+      return reply.status(500).send({ error: 'Failed to toggle agent', detail: err.message });
     }
-
-    const settings = tenant.settings ?? {};
-    const va = settings.voiceAgent ?? {};
-    const newActive = !va.isActive;
-
-    await prisma.tenant.update({
-      where: { id: tenantId },
-      data: {
-        settings: { ...settings, voiceAgent: { ...va, isActive: newActive } },
-      },
-    });
-
-    return { isActive: newActive };
   });
 
   // ── GET /api/tenants/:tenantId/me ─────────────────────────────────────────
