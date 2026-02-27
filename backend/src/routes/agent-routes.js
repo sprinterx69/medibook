@@ -327,6 +327,7 @@ export default async function agentRoutes(fastify) {
       hasPhoneNumber: !!settings.voiceAgentPhone,
     };
   });
+}
 
 // Export the prompt builder so llm.js can use the same logic
 export { buildPromptFromSettings };
