@@ -532,7 +532,7 @@ async function loadAgentStats(){
   }catch{document.getElementById('statsEmpty').style.display='';['statTotalCalls','statBookings','statResolution','statAvgDuration'].forEach(id=>document.getElementById(id).textContent='–');}
 }
 
-function populateForm(){console.log("🔍 POPULATE settings:",JSON.stringify(settings,null,2));
+function populateForm(){
   const s=settings,va=s;
   document.getElementById('agentName').value=va.agentName||'Aria';
   document.getElementById('toneSlider').value=va.voicePersonality??65;
