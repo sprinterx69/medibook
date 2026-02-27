@@ -515,8 +515,7 @@ const DEMO_SETTINGS = {
 
 // ─── Onboarding check — redirect if not yet set up ───────────────────────────
 async function checkOnboardingAndLoad() {
-  // If the user has already completed onboarding for this tenant (stored locally),
-  // skip the API round-trip and show the page immediately.
+  // Fast path: locally cached flag means we know they've onboarded.
   const localFlag = localStorage.getItem('onboarding_done_' + TENANT_ID);
   if (localFlag === '1') {
     document.getElementById('onboardingGate').style.display = 'none';
@@ -529,27 +528,44 @@ async function checkOnboardingAndLoad() {
     if (res.ok) {
       const data = await res.json();
       if (data.completed) {
-        // Cache the result so future loads skip the API check
         localStorage.setItem('onboarding_done_' + TENANT_ID, '1');
         document.getElementById('onboardingGate').style.display = 'none';
         await loadSettings();
       } else {
         window.location.href = '/app/agent-onboarding.html';
       }
-    } else if (res.status === 401) {
-      location.href = '../pages/login.html';
-    } else {
-      // Server error — don't blindly redirect to onboarding; show page and
-      // let loadSettings fall back gracefully if needed.
-      document.getElementById('onboardingGate').style.display = 'none';
-      await loadSettings();
+      return;
     }
+    if (res.status === 401) {
+      location.href = '../pages/login.html';
+      return;
+    }
+    // Non-200/non-401 (server error) — fall through to settings-based check
   } catch {
-    // Network error — show the agent page; only onboarding/status returning
-    // completed:false should redirect the user back to onboarding.
-    document.getElementById('onboardingGate').style.display = 'none';
-    await loadSettings();
+    // Network error — fall through to settings-based check
   }
+
+  // Status endpoint unavailable. Use agent-settings (no auth required) as a
+  // fallback signal: if the tenant has real services the onboarding has run.
+  try {
+    const r = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-settings`);
+    if (r.ok) {
+      const d = await r.json();
+      if (d.services?.length > 0 || d.clinicContext) {
+        // Has onboarding data — proceed
+        localStorage.setItem('onboarding_done_' + TENANT_ID, '1');
+        document.getElementById('onboardingGate').style.display = 'none';
+        settings = d;
+        populateForm();
+        loadSidebarUser();
+        loadAgentStats();
+        return;
+      }
+    }
+  } catch {}
+
+  // No evidence of onboarding — send to onboarding wizard.
+  window.location.href = '/app/agent-onboarding.html';
 }
 
 // ─── Fetch settings from API ──────────────────────────────────────────────────
