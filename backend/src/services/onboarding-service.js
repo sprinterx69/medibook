@@ -143,7 +143,7 @@ export async function completeOnboarding(tenantId, data) {
   // ── 4. Build booking rules ────────────────────────────────────────────────
   const rawRules = data.bookingRules ?? {};
   const bookingRules = {
-    minNoticeHours:          parseInt(rawRules.advanceBookingHours)       ?? 0,
+    minNoticeHours:          parseInt(rawRules.advanceBookingHours)       || 0,
     maxFutureDays:           60,
     slotIntervalMins:        15,
     bufferMins:              0,
@@ -152,7 +152,7 @@ export async function completeOnboarding(tenantId, data) {
     depositPercent:          rawRules.depositPercent ?? 0,
     allowRescheduling:       true,
     allowCancellation:       true,
-    cancellationNoticeHours: parseInt(rawRules.cancellationNoticeHours) ?? 24,
+    cancellationNoticeHours: parseInt(rawRules.cancellationNoticeHours) || 24,
   };
 
   // ── 5. Build voice agent settings ─────────────────────────────────────────
@@ -166,6 +166,7 @@ export async function completeOnboarding(tenantId, data) {
     voicePersonality: data.voicePersonality ?? 65,
     voiceGender:      data.voiceGender      ?? 'female',
     isActive:         true,
+    bankHolidayClosed: data.bankHolidayClosed ?? false,
     greeting:         `Hello! Thank you for calling ${clinicName}. I'm ${agentName}, your virtual receptionist. How can I help you today?`,
     afterHoursMessage: `Thank you for calling ${clinicName}. We're currently closed. Please call back during our opening hours or leave a voicemail and we'll get back to you shortly.`,
     transferMessage:  'Of course, let me connect you with a member of our team right away. Please hold for just a moment.',
