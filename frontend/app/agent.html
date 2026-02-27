@@ -6,97 +6,67 @@
 <title>AI Agent — Callora</title>
 <link rel="stylesheet" href="styles.css">
 <style>
-/* Page-specific styles */
-.agent-header { display: flex; align-items: center; gap: 14px; padding: 20px 24px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.agent-status-badge { display: flex; align-items: center; gap: 7px; padding: 6px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 600; }
-.agent-status-badge.live { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
-.agent-status-badge.paused { background: var(--surface-3); color: var(--text-muted); border: 1px solid var(--border); }
-.status-pulse { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-.agent-layout { display: flex; flex: 1; overflow: hidden; }
-.agent-main { flex: 1; overflow-y: auto; padding: 24px; }
-.agent-sidebar { width: 340px; flex-shrink: 0; border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-
-/* Voice cards */
-.voice-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.voice-card { padding: 14px; border: 2px solid var(--border); border-radius: var(--radius-lg); cursor: pointer; transition: all 0.15s; position: relative; }
-.voice-card:hover { border-color: var(--border-strong); background: var(--surface-2); }
-.voice-card.selected { border-color: var(--brand); background: var(--brand-dim); }
-.voice-card.selected .voice-name { color: var(--brand-text); }
-.voice-emoji { font-size: 24px; margin-bottom: 8px; }
-.voice-name { font-size: 13px; font-weight: 700; color: var(--text); }
-.voice-desc { font-size: 11px; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
-.voice-check { position: absolute; top: 10px; right: 10px; width: 18px; height: 18px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.15s; }
-.voice-card.selected .voice-check { opacity: 1; }
-
-/* Tone slider */
-.tone-slider-wrap { position: relative; margin: 8px 0 4px; }
-.tone-slider { width: 100%; -webkit-appearance: none; height: 6px; border-radius: 3px; background: linear-gradient(to right, var(--brand-dim), var(--brand)); outline: none; cursor: pointer; }
-.tone-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); border: 2px solid var(--brand); box-shadow: var(--shadow-sm); cursor: pointer; }
-.tone-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500; }
-
-/* Hours grid */
-.hours-grid { display: grid; gap: 0; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
-.hours-row { display: grid; grid-template-columns: 110px 1fr auto auto; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
-.hours-row:last-child { border-bottom: none; }
-.hours-row.closed { opacity: 0.5; }
-.hours-day { font-size: 13px; font-weight: 600; color: var(--text); }
-.hours-time { display: flex; align-items: center; gap: 8px; }
-.hours-time input { width: 90px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 13px; color: var(--text); outline: none; }
-.hours-time input:focus { border-color: var(--brand); }
-
-/* FAQ list */
-.faq-item { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 8px; }
-.faq-header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; background: var(--surface); user-select: none; }
-.faq-header:hover { background: var(--surface-2); }
-.faq-question-input { flex: 1; border: none; font-family: inherit; font-size: 13.5px; font-weight: 500; color: var(--text); background: transparent; outline: none; }
-.faq-body { padding: 12px 14px; border-top: 1px solid var(--border); background: var(--surface-2); }
-.faq-answer-input { width: 100%; border: none; font-family: inherit; font-size: 13.5px; color: var(--text-2); background: transparent; outline: none; resize: none; line-height: 1.6; min-height: 60px; }
-
-/* Never-say tags */
-.tag-wrap { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); min-height: 44px; cursor: text; background: var(--surface); }
-.tag { display: flex; align-items: center; gap: 4px; background: var(--surface-3); border: 1px solid var(--border); color: var(--text-2); padding: 3px 8px; border-radius: 20px; font-size: 12.5px; font-weight: 500; }
-.tag-del { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 13px; padding: 0; line-height: 1; }
-.tag-del:hover { color: var(--red); }
-.tag-input { border: none; outline: none; font-family: inherit; font-size: 13px; color: var(--text); background: transparent; flex: 1; min-width: 100px; }
-
-/* System prompt */
-.prompt-box { font-family: 'Courier New', monospace; font-size: 12px; background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; white-space: pre-wrap; color: var(--text-2); line-height: 1.7; max-height: 420px; overflow-y: auto; }
-
-/* Call simulator */
-.sim-header { padding: 16px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; background: var(--surface); }
-.sim-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: var(--surface-2); }
-.sim-msg { max-width: 90%; }
-.sim-msg.agent { align-self: flex-start; }
-.sim-msg.user { align-self: flex-end; }
-.sim-sender { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
-.sim-msg.user .sim-sender { text-align: right; }
-.sim-bubble { padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.6; }
-.sim-msg.agent .sim-bubble { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-bottom-left-radius: 4px; }
-.sim-msg.user .sim-bubble { background: var(--brand); color: #fff; border-bottom-right-radius: 4px; }
-.sim-msg.system .sim-bubble { background: var(--brand-dim); border: 1px solid var(--brand-border); color: var(--brand-text); font-size: 12px; text-align: center; width: 100%; border-radius: 8px; }
-.sim-tool { font-family: monospace; font-size: 11px; background: var(--gold-dim); border: 1px solid #fcd34d; color: var(--gold-text); padding: 6px 10px; border-radius: 6px; margin-top: 4px; }
-.sim-input-bar { padding: 12px 16px; border-top: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
-.sim-input { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-family: inherit; font-size: 13px; outline: none; transition: border-color 0.15s; }
-.sim-input:focus { border-color: var(--brand); }
-.quick-replies { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.qr-btn { padding: 5px 11px; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); border-radius: 20px; font-family: inherit; font-size: 12px; cursor: pointer; transition: all 0.15s; }
-.qr-btn:hover { background: var(--brand-dim); color: var(--brand-text); border-color: var(--brand-border); }
-.typing-dots { display: flex; gap: 4px; align-items: center; padding: 10px 14px; }
-.typing-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-light); animation: typing 1.4s infinite; }
-.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes typing { 0%,80%,100% { transform: scale(1); opacity: 0.5; } 40% { transform: scale(1.3); opacity: 1; } }
-
-.unsaved-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 24px; background: var(--gold-dim); border-bottom: 1px solid #fcd34d; font-size: 13px; color: var(--gold-text); gap: 12px; flex-shrink: 0; }
-.char-count { font-size: 11px; color: var(--text-muted); text-align: right; margin-top: 4px; }
+.agent-status-badge{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:20px;font-size:12.5px;font-weight:600}
+.agent-status-badge.live{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+.agent-status-badge.paused{background:var(--surface-3);color:var(--text-muted);border:1px solid var(--border)}
+.status-pulse{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.agent-tabs{display:flex;gap:2px;padding:0 24px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.agent-tab{padding:13px 18px;font-size:13.5px;font-weight:600;color:var(--text-muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.agent-tab:hover{color:var(--text-2)}
+.agent-tab.active{color:var(--brand);border-bottom-color:var(--brand)}
+.agent-panel{display:none;flex:1;overflow-y:auto;padding:28px 24px}
+.agent-panel.active{display:block}
+.voice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.voice-card{padding:14px;border:2px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;transition:all .15s;position:relative}
+.voice-card:hover{border-color:var(--border-strong);background:var(--surface-2)}
+.voice-card.selected{border-color:var(--brand);background:var(--brand-dim)}
+.voice-card.selected .voice-name{color:var(--brand-text)}
+.voice-emoji{font-size:22px;margin-bottom:7px}
+.voice-name{font-size:13px;font-weight:700;color:var(--text)}
+.voice-desc{font-size:11px;color:var(--text-muted);margin-top:3px;line-height:1.5}
+.voice-check{position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;background:var(--brand);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
+.voice-card.selected .voice-check{opacity:1}
+.tone-slider{width:100%;-webkit-appearance:none;height:6px;border-radius:3px;background:linear-gradient(to right,var(--brand-dim),var(--brand));outline:none;cursor:pointer}
+.tone-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--surface);border:2px solid var(--brand);box-shadow:var(--shadow-sm);cursor:pointer}
+.tone-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:6px;font-weight:500}
+.hours-grid{display:grid;gap:0;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.hours-row{display:grid;grid-template-columns:110px 1fr auto auto;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.hours-row:last-child{border-bottom:none}
+.hours-row.closed{opacity:.5}
+.hours-day{font-size:13px;font-weight:600;color:var(--text)}
+.hours-time{display:flex;align-items:center;gap:8px}
+.hours-time input{width:90px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;color:var(--text);outline:none}
+.hours-time input:focus{border-color:var(--brand)}
+.staff-card{display:flex;align-items:center;gap:14px;padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:8px;background:var(--surface)}
+.staff-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0}
+.staff-info{flex:1;min-width:0}
+.staff-name{font-size:13.5px;font-weight:600;color:var(--text)}
+.staff-title{font-size:12px;color:var(--text-muted);margin-top:1px}
+.staff-actions{display:flex;gap:6px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:center;justify-content:center}
+.modal{background:var(--surface);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg);width:460px;max-width:90vw;padding:28px}
+.modal-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:20px}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:24px}
+.faq-item{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:8px}
+.faq-header{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface)}
+.faq-q{flex:1;border:none;font-family:inherit;font-size:13.5px;font-weight:500;color:var(--text);background:transparent;outline:none}
+.faq-body{padding:12px 14px;border-top:1px solid var(--border);background:var(--surface-2)}
+.faq-a{width:100%;border:none;font-family:inherit;font-size:13.5px;color:var(--text-2);background:transparent;outline:none;resize:none;line-height:1.6;min-height:56px}
+.tag-wrap{display:flex;flex-wrap:wrap;gap:6px;padding:10px;border:1px solid var(--border);border-radius:var(--radius);min-height:44px;cursor:text;background:var(--surface)}
+.tag{display:flex;align-items:center;gap:4px;background:var(--surface-3);border:1px solid var(--border);color:var(--text-2);padding:3px 8px;border-radius:20px;font-size:12.5px;font-weight:500}
+.tag-del{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;padding:0;line-height:1}
+.tag-del:hover{color:var(--red)}
+.tag-input{border:none;outline:none;font-family:inherit;font-size:13px;color:var(--text);background:transparent;flex:1;min-width:100px}
+.prompt-box{font-family:'Courier New',monospace;font-size:12px;background:var(--surface-3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;white-space:pre-wrap;color:var(--text-2);line-height:1.7;max-height:460px;overflow-y:auto}
+.unsaved-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 24px;background:var(--gold-dim);border-bottom:1px solid #fcd34d;font-size:13px;color:var(--gold-text);gap:12px;flex-shrink:0}
+.color-swatch{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:border-color .15s}
+.color-swatch.selected{border-color:var(--text)}
+.char-count{font-size:11px;color:var(--text-muted);text-align:right;margin-top:4px}
 </style>
 </head>
 <body>
 <div class="app-shell">
-
-<!-- Sidebar -->
 <aside class="sidebar">
   <div class="sidebar-logo">
     <div class="logo-mark">C</div>
@@ -109,8 +79,8 @@
     <a href="clients.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Clients</a>
     <a href="payments.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payments</a>
     <a href="staff.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Staff</a>
-    <div class="nav-section">AI & Settings</div>
-    <a href="agent.html" class="nav-item active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.63 19a19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6.08 6.08l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>AI Agent<span class="nav-badge green">Live</span></a>
+    <div class="nav-section">AI &amp; Settings</div>
+    <a href="agent.html" class="nav-item active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.63 19a19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6.08 6.08l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>AI Agent<span class="nav-badge green" id="navBadge">Live</span></a>
     <a href="settings.html" class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Settings</a>
   </div>
   <div class="sidebar-footer">
@@ -122,10 +92,7 @@
   </div>
 </aside>
 
-<!-- Main -->
 <div class="main">
-
-  <!-- Topbar -->
   <div class="topbar">
     <div class="topbar-left">
       <span class="page-title">AI Voice Agent</span>
@@ -133,11 +100,11 @@
         <div class="status-pulse"></div>
         <span id="statusText">Live</span>
       </div>
-      <span class="breadcrumb" id="lastSaved" style="font-size:11.5px"></span>
+      <span id="lastSaved" style="font-size:11.5px;color:var(--text-muted)"></span>
     </div>
     <div class="topbar-right">
       <button class="btn btn-secondary" id="toggleBtn" onclick="toggleAgent()">Pause Agent</button>
-      <button class="btn btn-secondary" id="discardBtn" onclick="discardChanges()" style="display:none">Discard</button>
+      <button class="btn btn-secondary" id="discardBtn" style="display:none" onclick="discardChanges()">Discard</button>
       <button class="btn btn-primary" id="saveBtn" onclick="saveSettings()">
         <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Save Changes
@@ -145,132 +112,152 @@
     </div>
   </div>
 
-  <!-- Unsaved changes bar -->
   <div class="unsaved-bar" id="unsavedBar" style="display:none">
-    <span>⚠ You have unsaved changes</span>
+    <span>&#9888; You have unsaved changes</span>
     <div style="display:flex;gap:8px">
       <button class="btn btn-sm" style="background:white;border:1px solid #fcd34d;color:var(--gold-text)" onclick="discardChanges()">Discard</button>
       <button class="btn btn-sm" style="background:var(--gold);color:white;border-color:var(--gold)" onclick="saveSettings()">Save Now</button>
     </div>
   </div>
 
-  <!-- Agent area -->
-  <div class="agent-layout">
+  <div class="agent-tabs">
+    <button class="agent-tab active" onclick="switchTab('overview',this)">Overview</button>
+    <button class="agent-tab" onclick="switchTab('business',this)">Business</button>
+    <button class="agent-tab" onclick="switchTab('team',this)">Team &amp; Services</button>
+    <button class="agent-tab" onclick="switchTab('hours',this)">Hours &amp; Greeting</button>
+    <button class="agent-tab" onclick="switchTab('ai',this)">AI Settings</button>
+  </div>
 
-    <!-- Config panels -->
-    <div class="agent-main">
-      <!-- Tabs -->
-      <div class="tabs" id="agentTabs">
-        <button class="tab active" onclick="switchTab('identity',this)">🎙️ Identity & Voice</button>
-        <button class="tab" onclick="switchTab('greeting',this)">👋 Greeting</button>
-        <button class="tab" onclick="switchTab('services',this)">💆 Services</button>
-        <button class="tab" onclick="switchTab('knowledge',this)">🧠 Knowledge Base</button>
-        <button class="tab" onclick="switchTab('rules',this)">📋 Booking Rules</button>
-        <button class="tab" onclick="switchTab('prompt',this)">⚙️ System Prompt</button>
-      </div>
-
-      <!-- Identity & Voice -->
-      <div class="tab-panel active" id="tab-identity">
-        <div class="grid-2" style="gap:24px">
-          <div>
-            <div class="section" style="margin-bottom:24px">
-              <div class="section-header"><div><div class="section-title">Agent Identity</div><div class="section-subtitle">How your AI receptionist presents itself to callers</div></div></div>
-              <div class="card card-body">
-                <div class="form-group">
-                  <label class="form-label">Agent Name</label>
-                  <input class="input" type="text" id="agentName" placeholder="e.g. Aria" onchange="markDirty()">
-                  <div class="form-hint">This is how the agent introduces itself on calls.</div>
-                </div>
-                <div class="form-group" style="margin-bottom:0">
-                  <label class="form-label">Personality Tone</label>
-                  <input class="tone-slider" type="range" min="0" max="100" id="toneSlider" oninput="updateToneLabel(this.value);markDirty()">
-                  <div class="tone-labels"><span>Warm &amp; Caring</span><span id="toneLabel">Balanced</span><span>Crisp &amp; Efficient</span></div>
-                </div>
-              </div>
-            </div>
-
-            <div class="section">
-              <div class="section-header"><div><div class="section-title">Voice Selection</div><div class="section-subtitle">Powered by ElevenLabs — 6 voices available</div></div></div>
-              <div class="voice-grid" id="voiceGrid"></div>
-            </div>
+  <!-- OVERVIEW -->
+  <div class="agent-panel active" id="tab-overview">
+    <div class="grid-2" style="gap:24px">
+      <div>
+        <div class="section" style="margin-bottom:24px">
+          <div class="section-header">
+            <div><div class="section-title">Agent Identity</div><div class="section-subtitle">How your AI receptionist introduces itself to callers</div></div>
           </div>
-
-          <div>
-            <div class="card" style="position:sticky;top:0">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">Agent Statistics</div>
-                  <div class="card-subtitle" id="statsSubtitle">Last 30 days</div>
-                </div>
-              </div>
-              <div class="card-body" id="statsCardBody">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-                  <div><div class="stat-val" id="statTotalCalls" style="font-size:24px;font-weight:700;color:var(--text)">–</div><div style="font-size:12px;color:var(--text-muted);font-weight:600">Total Calls</div></div>
-                  <div><div class="stat-val" id="statBookings" style="font-size:24px;font-weight:700;color:var(--brand)">–</div><div style="font-size:12px;color:var(--text-muted);font-weight:600">Bookings Made</div></div>
-                  <div><div class="stat-val" id="statResolution" style="font-size:24px;font-weight:700;color:var(--green)">–</div><div style="font-size:12px;color:var(--text-muted);font-weight:600">Resolution Rate</div></div>
-                  <div><div class="stat-val" id="statAvgDuration" style="font-size:24px;font-weight:700;color:var(--text)">–</div><div style="font-size:12px;color:var(--text-muted);font-weight:600">Avg. Duration</div></div>
-                </div>
-                <div id="statsEmptyNote" style="display:none;margin-top:16px;padding:14px;background:var(--surface-2);border-radius:8px;font-size:13px;color:var(--text-muted);text-align:center">
-                  No call data yet. Statistics will appear once your AI agent starts receiving calls.
-                </div>
-              </div>
+          <div class="card card-body">
+            <div class="form-group">
+              <label class="form-label">Agent Name</label>
+              <input class="input" type="text" id="agentName" placeholder="e.g. Aria" onchange="markDirty()">
+              <div class="form-hint">Spoken when the agent picks up and introduces itself.</div>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Personality Tone <span id="toneLabel" style="font-weight:400;color:var(--text-muted)">— Balanced</span></label>
+              <input class="tone-slider" type="range" min="0" max="100" id="toneSlider" oninput="updateToneLabel(this.value);markDirty()">
+              <div class="tone-labels"><span>Warm &amp; Caring</span><span>Crisp &amp; Efficient</span></div>
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Greeting -->
-      <div class="tab-panel" id="tab-greeting">
-        <div class="grid-2" style="gap:24px">
-          <div>
-            <div class="card card-body" style="margin-bottom:16px">
-              <div class="form-group">
-                <label class="form-label">Opening Greeting</label>
-                <textarea class="textarea" id="greetingText" rows="4" placeholder="Hello! Thank you for calling Lumière Aesthetics…" oninput="countChars(this,'greetingCount',300);markDirty()"></textarea>
-                <div class="char-count"><span id="greetingCount">0</span> / 300 characters</div>
-                <div class="form-hint">This exact phrase is spoken when the agent answers a call.</div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">After-Hours Message</label>
-                <textarea class="textarea" id="afterHoursText" rows="3" placeholder="Thank you for calling. We're currently closed…" oninput="countChars(this,'afterCount',400);markDirty()"></textarea>
-                <div class="char-count"><span id="afterCount">0</span> / 400 characters</div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Human Transfer Phrase</label>
-                <input class="input" type="text" id="transferText" placeholder="Of course, let me connect you with a team member…" onchange="markDirty()">
-                <div class="form-hint">Spoken before transferring a caller to your front desk.</div>
-              </div>
-              <div class="form-group" style="margin-bottom:0">
-                <label class="form-label">Transfer Phone Number</label>
-                <input class="input" type="tel" id="transferNumber" placeholder="+44 20 XXXX XXXX" onchange="markDirty()">
-                <div class="form-hint">When a caller asks to speak to a human, the AI transfers them to this number.</div>
-              </div>
-            </div>
+        <div class="section">
+          <div class="section-header">
+            <div><div class="section-title">Voice Selection</div><div class="section-subtitle">Powered by ElevenLabs</div></div>
           </div>
-
-          <div>
-            <div class="card" style="margin-bottom:16px">
-              <div class="card-header"><div class="card-title">Business Hours</div></div>
-              <div class="hours-grid" id="hoursGrid"></div>
-            </div>
-          </div>
+          <div class="voice-grid" id="voiceGrid"></div>
         </div>
       </div>
-
-      <!-- Services -->
-      <div class="tab-panel" id="tab-services">
-        <div class="card" style="margin-bottom:16px">
+      <div>
+        <div class="card" style="position:sticky;top:0">
           <div class="card-header">
-            <div><div class="card-title">Bookable Services</div><div class="card-subtitle">Toggle which services the AI can accept phone bookings for</div></div>
+            <div><div class="card-title">Agent Statistics</div><div class="card-subtitle">Last 30 days</div></div>
           </div>
           <div class="card-body">
-            <div id="servicesList"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:16px">
+              <div><div style="font-size:26px;font-weight:700;color:var(--text)" id="statTotalCalls">–</div><div style="font-size:12px;color:var(--text-muted);font-weight:600">Total Calls</div></div>
+              <div><div style="font-size:26px;font-weight:700;color:var(--brand)" id="statBookings">–</div><div style="font-size:12px;color:var(--text-muted);font-weight:600">Bookings Made</div></div>
+              <div><div style="font-size:26px;font-weight:700;color:var(--green)" id="statResolution">–</div><div style="font-size:12px;color:var(--text-muted);font-weight:600">Resolution Rate</div></div>
+              <div><div style="font-size:26px;font-weight:700;color:var(--text)" id="statAvgDuration">–</div><div style="font-size:12px;color:var(--text-muted);font-weight:600">Avg. Duration</div></div>
+            </div>
+            <div id="statsEmpty" style="display:none;padding:14px;background:var(--surface-2);border-radius:8px;font-size:13px;color:var(--text-muted);text-align:center">
+              No call data yet. Statistics will appear once your agent starts receiving calls.
+            </div>
           </div>
         </div>
-        <div class="card card-body">
-          <div class="section-title" style="margin-bottom:14px">Deposit Settings</div>
-          <div class="toggle-row">
-            <div><div class="toggle-label">Require deposit at time of booking</div><div class="toggle-desc">Callers will be told a deposit is required — you follow up to collect payment.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUSINESS -->
+  <div class="agent-panel" id="tab-business">
+    <div style="max-width:680px">
+      <div class="section-header" style="margin-bottom:20px">
+        <div><div class="section-title">Business Information</div><div class="section-subtitle">Used by the AI agent to answer questions about your clinic</div></div>
+      </div>
+      <div class="card card-body" style="margin-bottom:16px">
+        <div class="grid-2" style="gap:16px">
+          <div class="form-group">
+            <label class="form-label">Clinic / Business Name</label>
+            <input class="input" type="text" id="tenantName" placeholder="e.g. Lumiere Aesthetics" onchange="markDirty()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Business Type</label>
+            <select class="select" id="businessType" onchange="markDirty()">
+              <option value="">Select type…</option>
+              <option value="aesthetics">Aesthetics Clinic</option>
+              <option value="dental">Dental Practice</option>
+              <option value="physiotherapy">Physiotherapy</option>
+              <option value="gp">GP / Medical Clinic</option>
+              <option value="mental_health">Mental Health Practice</option>
+              <option value="chiropractic">Chiropractic / Osteopathy</option>
+              <option value="beauty">Beauty Salon</option>
+              <option value="spa">Spa &amp; Wellness</option>
+              <option value="hair">Hair Salon</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Address</label>
+          <input class="input" type="text" id="address" placeholder="e.g. 12 Harley Street, London, W1G 9PG" onchange="markDirty()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Parking Information</label>
+          <input class="input" type="text" id="parking" placeholder="e.g. NCP car park on Wimpole Street, 3-minute walk" onchange="markDirty()">
+          <div class="form-hint">Shared with callers who ask about parking.</div>
+        </div>
+        <div class="grid-2" style="gap:16px;margin-bottom:0">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Phone Number</label>
+            <input class="input" type="tel" id="clinicPhone" placeholder="+44 20 XXXX XXXX" onchange="markDirty()">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Email Address</label>
+            <input class="input" type="email" id="clinicEmail" placeholder="hello@yourclinic.com" onchange="markDirty()">
+          </div>
+        </div>
+      </div>
+      <div class="card card-body">
+        <div class="section-title" style="margin-bottom:4px">Bank Holidays</div>
+        <div class="form-hint" style="margin-bottom:14px">Controls how the agent handles calls on UK public holidays.</div>
+        <div class="toggle-row" style="border-bottom:none">
+          <div><div class="toggle-label">Automatically closed on UK bank holidays</div><div class="toggle-desc">Agent will play the after-hours message on bank holidays.</div></div>
+          <label class="toggle"><input type="checkbox" id="bankHolidayClosed" onchange="markDirty()"><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEAM & SERVICES -->
+  <div class="agent-panel" id="tab-team">
+    <div class="grid-2" style="gap:24px">
+      <div>
+        <div class="section-header" style="margin-bottom:16px">
+          <div><div class="section-title">Team Members</div><div class="section-subtitle">Staff the agent can mention when booking</div></div>
+          <button class="btn btn-brand-outline btn-sm" onclick="openStaffModal()">+ Add Member</button>
+        </div>
+        <div id="staffList"><div style="color:var(--text-muted);font-size:13.5px;padding:12px 0">Loading team…</div></div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <div><div class="card-title">Bookable Services</div><div class="card-subtitle">Toggle which services the AI can book</div></div>
+          </div>
+          <div class="card-body"><div id="servicesList"><div style="color:var(--text-muted);font-size:13.5px">Loading services…</div></div></div>
+        </div>
+        <div class="card card-body" style="margin-bottom:16px">
+          <div class="section-title" style="margin-bottom:14px">Deposit Policy</div>
+          <div class="toggle-row" style="border-bottom:none;padding-bottom:0">
+            <div><div class="toggle-label">Require deposit at booking</div><div class="toggle-desc">Callers will be told a deposit is required. You collect it separately.</div></div>
             <label class="toggle"><input type="checkbox" id="depositToggle" onchange="toggleDeposit();markDirty()"><span class="toggle-slider"></span></label>
           </div>
           <div id="depositAmountRow" style="display:none;margin-top:14px">
@@ -281,128 +268,142 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Knowledge Base -->
-      <div class="tab-panel" id="tab-knowledge">
-        <div class="grid-2" style="gap:24px">
-          <div>
-            <div class="card card-body" style="margin-bottom:16px">
-              <div class="form-group">
-                <label class="form-label">Clinic Context</label>
-                <textarea class="textarea" id="clinicContext" rows="5" placeholder="Add any additional context the agent should know about your clinic: specialties, awards, key practitioners, what makes you unique…" oninput="markDirty()"></textarea>
-                <div class="form-hint">This text is included in the agent's training context to help it answer questions about your clinic.</div>
-              </div>
-              <div class="form-group" style="margin-bottom:0">
-                <label class="form-label">Never Say These Words / Phrases</label>
-                <div class="tag-wrap" id="neverSayWrap" onclick="document.getElementById('neverSayInput').focus()">
-                  <input class="tag-input" id="neverSayInput" placeholder="Type a phrase and press Enter…" onkeydown="handleTagInput(event)">
-                </div>
-                <div class="form-hint">The agent will avoid using these words or phrases in any response.</div>
-              </div>
+        <div class="card card-body">
+          <div class="section-title" style="margin-bottom:16px">Booking Rules</div>
+          <div class="form-group">
+            <label class="form-label">Minimum Booking Notice</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input class="input" type="number" id="minNotice" min="0" max="168" value="2" style="width:90px" onchange="markDirty()">
+              <span style="color:var(--text-muted);font-size:13px">hours before appointment</span>
             </div>
           </div>
-
-          <div>
-            <div class="section-header" style="margin-bottom:12px">
-              <div><div class="section-title">FAQ Library</div><div class="section-subtitle">Questions the agent should know how to answer</div></div>
-              <button class="btn btn-brand-outline btn-sm" onclick="addFaq()">+ Add FAQ</button>
-            </div>
-            <div id="faqList"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Booking Rules -->
-      <div class="tab-panel" id="tab-rules">
-        <div class="grid-2" style="gap:24px">
-          <div class="card card-body">
-            <div class="section-title" style="margin-bottom:16px">Scheduling Constraints</div>
-            <div class="form-group">
-              <label class="form-label">Minimum Booking Notice</label>
-              <div style="display:flex;align-items:center;gap:8px">
-                <input class="input" type="number" id="minNotice" min="0" max="168" value="2" style="width:100px" onchange="markDirty()">
-                <span style="color:var(--text-muted)">hours before appointment</span>
-              </div>
-              <div class="form-hint">Callers cannot book appointments with less than this much notice.</div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Maximum Advance Booking Window</label>
-              <div style="display:flex;align-items:center;gap:8px">
-                <input class="input" type="number" id="maxFuture" min="1" max="365" value="60" style="width:100px" onchange="markDirty()">
-                <span style="color:var(--text-muted)">days in advance</span>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Appointment Slot Interval</label>
-              <select class="select" id="slotInterval" onchange="markDirty()">
-                <option value="15">15 minutes</option>
-                <option value="30">30 minutes</option>
-                <option value="60">60 minutes</option>
-              </select>
-            </div>
-            <div class="form-group" style="margin-bottom:0">
-              <label class="form-label">Buffer Between Appointments</label>
-              <select class="select" id="bufferTime" onchange="markDirty()">
-                <option value="0">No buffer</option>
-                <option value="5">5 minutes</option>
-                <option value="10">10 minutes</option>
-                <option value="15">15 minutes</option>
-              </select>
+          <div class="form-group">
+            <label class="form-label">Maximum Advance Booking</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input class="input" type="number" id="maxFuture" min="1" max="365" value="60" style="width:90px" onchange="markDirty()">
+              <span style="color:var(--text-muted);font-size:13px">days in advance</span>
             </div>
           </div>
-
-          <div>
-            <div class="card card-body" style="margin-bottom:16px">
-              <div class="section-title" style="margin-bottom:14px">New Client Policy</div>
-              <div style="display:flex;flex-direction:column;gap:8px">
-                <label style="display:flex;gap:12px;padding:12px;border:2px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;transition:all 0.15s" id="policyCard1" onclick="setPolicy('book_directly')">
-                  <input type="radio" name="newClientPolicy" id="policyDirect" value="book_directly" style="margin-top:2px;accent-color:var(--brand)">
-                  <div><div style="font-size:13.5px;font-weight:600">Book directly</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px">New callers can book any treatment in one call — no consultation required.</div></div>
-                </label>
-                <label style="display:flex;gap:12px;padding:12px;border:2px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;transition:all 0.15s" id="policyCard2" onclick="setPolicy('require_consultation')">
-                  <input type="radio" name="newClientPolicy" id="policyConsult" value="require_consultation" style="margin-top:2px;accent-color:var(--brand)">
-                  <div><div style="font-size:13.5px;font-weight:600">Require consultation first</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px">New clients must book a free consultation before booking any treatment.</div></div>
-                </label>
-              </div>
-            </div>
-
-            <div class="card card-body">
-              <div class="section-title" style="margin-bottom:14px">Caller Options</div>
-              <div>
-                <div class="toggle-row">
-                  <div><div class="toggle-label">Allow rescheduling by phone</div><div class="toggle-desc">Agent can move existing appointments to a new time.</div></div>
-                  <label class="toggle"><input type="checkbox" id="allowReschedule" onchange="markDirty()" checked><span class="toggle-slider"></span></label>
-                </div>
-                <div class="toggle-row">
-                  <div><div class="toggle-label">Allow cancellations by phone</div><div class="toggle-desc">Agent can cancel appointments on behalf of the caller.</div></div>
-                  <label class="toggle"><input type="checkbox" id="allowCancel" onchange="markDirty()" checked><span class="toggle-slider"></span></label>
-                </div>
-                <div class="toggle-row" style="border-bottom:none">
-                  <div><div class="toggle-label">Cancellation notice required</div></div>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <input class="input" type="number" id="cancelNotice" min="0" max="168" value="24" style="width:80px" onchange="markDirty()">
-                    <span style="font-size:13px;color:var(--text-muted)">hours</span>
-                  </div>
-                </div>
-              </div>
+          <div class="form-group">
+            <label class="form-label">Appointment Slot Interval</label>
+            <select class="select" id="slotInterval" onchange="markDirty()">
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+              <option value="60">60 minutes</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Buffer Between Appointments</label>
+            <select class="select" id="bufferTime" onchange="markDirty()">
+              <option value="0">No buffer</option>
+              <option value="5">5 minutes</option>
+              <option value="10">10 minutes</option>
+              <option value="15">15 minutes</option>
+            </select>
+          </div>
+          <div class="section-title" style="margin-bottom:12px;margin-top:4px">New Client Policy</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+            <label style="display:flex;gap:12px;padding:12px;border:2px solid var(--border);border-radius:var(--radius-lg);cursor:pointer" id="policyCard1" onclick="setPolicy('book_directly')">
+              <input type="radio" name="newClientPolicy" id="policyDirect" value="book_directly" style="margin-top:2px;accent-color:var(--brand)">
+              <div><div style="font-size:13px;font-weight:600">Book directly</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px">New callers book any treatment in one call.</div></div>
+            </label>
+            <label style="display:flex;gap:12px;padding:12px;border:2px solid var(--border);border-radius:var(--radius-lg);cursor:pointer" id="policyCard2" onclick="setPolicy('require_consultation')">
+              <input type="radio" name="newClientPolicy" id="policyConsult" value="require_consultation" style="margin-top:2px;accent-color:var(--brand)">
+              <div><div style="font-size:13px;font-weight:600">Require consultation first</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px">New clients must book a consultation first.</div></div>
+            </label>
+          </div>
+          <div class="section-title" style="margin-bottom:12px">Caller Options</div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Allow rescheduling by phone</div></div>
+            <label class="toggle"><input type="checkbox" id="allowReschedule" onchange="markDirty()" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Allow cancellations by phone</div></div>
+            <label class="toggle"><input type="checkbox" id="allowCancel" onchange="markDirty()" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row" style="border-bottom:none">
+            <div><div class="toggle-label">Cancellation notice required</div></div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input class="input" type="number" id="cancelNotice" min="0" max="168" value="24" style="width:80px" onchange="markDirty()">
+              <span style="font-size:13px;color:var(--text-muted)">hours</span>
             </div>
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- System Prompt -->
-      <div class="tab-panel" id="tab-prompt">
-        <div class="section-header" style="margin-bottom:14px">
-          <div><div class="section-title">System Prompt</div><div class="section-subtitle">AI-generated during setup. This is the instruction sent to GPT-4o for every call.</div></div>
-          <button class="btn btn-secondary btn-sm" onclick="refreshPrompt()">Refresh</button>
+  <!-- HOURS & GREETING -->
+  <div class="agent-panel" id="tab-hours">
+    <div class="grid-2" style="gap:24px">
+      <div>
+        <div class="section-header" style="margin-bottom:16px">
+          <div><div class="section-title">Business Hours</div><div class="section-subtitle">When your agent treats callers as in-hours vs after-hours</div></div>
         </div>
+        <div class="hours-grid" id="hoursGrid"></div>
+      </div>
+      <div>
+        <div class="card card-body">
+          <div class="form-group">
+            <label class="form-label">Opening Greeting</label>
+            <textarea class="textarea" id="greetingText" rows="4" placeholder="Hello! Thank you for calling…" oninput="countChars(this,'greetingCount',300);markDirty()"></textarea>
+            <div class="char-count"><span id="greetingCount">0</span> / 300 chars</div>
+            <div class="form-hint">Spoken verbatim when the agent answers a call.</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">After-Hours Message</label>
+            <textarea class="textarea" id="afterHoursText" rows="3" placeholder="Thank you for calling. We're currently closed…" oninput="countChars(this,'afterCount',400);markDirty()"></textarea>
+            <div class="char-count"><span id="afterCount">0</span> / 400 chars</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Human Transfer Phrase</label>
+            <input class="input" type="text" id="transferText" placeholder="Of course, let me connect you with a team member…" onchange="markDirty()">
+            <div class="form-hint">Spoken before the call is transferred to your front desk.</div>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Transfer Phone Number</label>
+            <input class="input" type="tel" id="transferNumber" placeholder="+44 20 XXXX XXXX" onchange="markDirty()">
+            <div class="form-hint">When a caller asks for a human, the AI transfers them here.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI SETTINGS -->
+  <div class="agent-panel" id="tab-ai">
+    <div class="grid-2" style="gap:24px">
+      <div>
+        <div class="card card-body" style="margin-bottom:16px">
+          <div class="form-group">
+            <label class="form-label">Clinic Context</label>
+            <textarea class="textarea" id="clinicContext" rows="5" placeholder="Add anything the agent should know: specialties, awards, key practitioners, what makes you unique…" oninput="markDirty()"></textarea>
+            <div class="form-hint">Included verbatim in the agent's system prompt.</div>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Never Say These Words / Phrases</label>
+            <div class="tag-wrap" id="neverSayWrap" onclick="document.getElementById('neverSayInput').focus()">
+              <input class="tag-input" id="neverSayInput" placeholder="Type a phrase and press Enter…" onkeydown="handleTagInput(event)">
+            </div>
+            <div class="form-hint">The agent will avoid these words in every response.</div>
+          </div>
+        </div>
+        <div class="section-header" style="margin-bottom:12px">
+          <div><div class="section-title">FAQ Library</div><div class="section-subtitle">Questions the agent should know how to answer</div></div>
+          <button class="btn btn-brand-outline btn-sm" onclick="addFaq()">+ Add FAQ</button>
+        </div>
+        <div id="faqList"></div>
+      </div>
+      <div>
         <div class="card">
           <div class="card-header">
-            <div><div class="card-title">Active Prompt</div><div class="card-subtitle" id="promptMeta">Loading…</div></div>
-            <button class="btn-icon" onclick="copyPrompt()" title="Copy to clipboard">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            </button>
+            <div><div class="card-title">System Prompt Preview</div><div class="card-subtitle" id="promptMeta">Loading…</div></div>
+            <div style="display:flex;gap:8px">
+              <button class="btn-icon" onclick="copyPrompt()" title="Copy to clipboard">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="refreshPrompt()">Regenerate</button>
+            </div>
           </div>
           <div class="card-body" style="padding:0">
             <div class="prompt-box" id="promptBox">Loading system prompt…</div>
@@ -410,709 +411,421 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+</div>
 
-    <!-- Call Simulator sidebar -->
-    <div class="agent-sidebar">
-      <div class="sim-header">
-        <div>
-          <div style="font-size:14px;font-weight:700;color:var(--text)">📞 Call Simulator</div>
-          <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">Test your agent configuration</div>
-        </div>
-        <button class="btn btn-sm btn-secondary" onclick="resetSim()">Reset</button>
-      </div>
-      <div class="sim-messages" id="simMessages"></div>
-      <div class="sim-input-bar">
-        <div class="quick-replies" id="quickReplies">
-          <button class="qr-btn" onclick="sendSim(this.textContent)">Book an appointment</button>
-          <button class="qr-btn" onclick="sendSim(this.textContent)">What are your prices?</button>
-          <button class="qr-btn" onclick="sendSim(this.textContent)">Are you open Saturday?</button>
-          <button class="qr-btn" onclick="sendSim(this.textContent)">Cancel my booking</button>
-          <button class="qr-btn" onclick="sendSim(this.textContent)">Speak to a human</button>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <input class="sim-input" type="text" id="simInput" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendSim(this.value)">
-          <button class="btn btn-primary btn-sm" onclick="sendSim(document.getElementById('simInput').value)">Send</button>
-        </div>
-      </div>
+<div class="toast-wrap"><div class="toast" id="toast"><span class="toast-icon" id="toastIcon">&#10003;</span><div class="toast-content"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div></div>
+
+<div class="modal-backdrop" id="staffModal" style="display:none" onclick="if(event.target===this)closeStaffModal()">
+  <div class="modal">
+    <div class="modal-title" id="staffModalTitle">Add Team Member</div>
+    <input type="hidden" id="staffModalId">
+    <div class="form-group">
+      <label class="form-label">Full Name *</label>
+      <input class="input" type="text" id="staffModalName" placeholder="e.g. Dr. Sarah Chen">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Job Title</label>
+      <input class="input" type="text" id="staffModalTitle" placeholder="e.g. Lead Aesthetician">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="input" type="email" id="staffModalEmail" placeholder="sarah@yourclinic.com">
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">Colour</label>
+      <div id="staffColorPicker" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeStaffModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStaffMember()" id="staffModalSaveBtn">Add Member</button>
     </div>
   </div>
 </div>
 
-<!-- Toast -->
-<div class="toast-wrap"><div class="toast" id="toast"><span class="toast-icon" id="toastIcon">✓</span><div class="toast-content"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div></div>
-
-<!-- Onboarding gate — full-screen overlay shown while checking, hides once confirmed onboarded -->
 <div id="onboardingGate" style="position:fixed;inset:0;background:#f9f7f4;display:flex;align-items:center;justify-content:center;z-index:9999">
   <div style="text-align:center">
     <div style="width:40px;height:40px;border:3px solid #e8edf2;border-top-color:#0d9488;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px"></div>
-    <p style="font-size:14px;color:#8896a8;font-family:'Geist',sans-serif">Loading your agent…</p>
+    <p style="font-size:14px;color:#8896a8">Loading your agent…</p>
   </div>
 </div>
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
 <script>
-// ─── Auth & Config ───────────────────────────────────────────────────────────
-const TOKEN_KEY = 'medibook_token';
-const TENANT_KEY = 'medibook_tenant_id';
-const _token = localStorage.getItem(TOKEN_KEY);
-const TENANT_ID = localStorage.getItem(TENANT_KEY) || new URLSearchParams(window.location.search).get('tenantId') || '';
-if (!_token || !TENANT_ID) { location.href = '../pages/login.html'; }
-const authHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${_token}` };
+const TOKEN_KEY='medibook_token',TENANT_KEY='medibook_tenant_id';
+const _token=localStorage.getItem(TOKEN_KEY);
+const TENANT_ID=localStorage.getItem(TENANT_KEY)||new URLSearchParams(location.search).get('tenantId')||'';
+if(!_token||!TENANT_ID)location.href='../pages/login.html';
+const authHeaders={'Content-Type':'application/json',Authorization:`Bearer ${_token}`};
+const API_BASE='';
+let settings={},staffList=[],isDirty=false;
 
-// API base — same origin in production (served by Fastify)
-const API_BASE = '';
-
-// ─── State ───────────────────────────────────────────────────────────────────
-let settings = {};
-let isDirty = false;
-let typingEl = null;
-
-const VOICES = [
-  { id:'21m00Tcm4TlvDq8ikWAM', emoji:'🎙️', name:'Aria', desc:'Warm, British\nProfessional', lang:'en-GB' },
-  { id:'AZnzlk1XvdvUeBnXmlld', emoji:'💎', name:'Demi',  desc:'Clear, neutral\nConfident',   lang:'en-US' },
-  { id:'EXAVITQu4vr4xnSDxMaL', emoji:'🌟', name:'Bella', desc:'Friendly, soft\nApproachable',lang:'en-GB' },
-  { id:'MF3mGyEYCl7XYWbV9V6O', emoji:'🔮', name:'Elli',  desc:'Crisp, formal\nEfficient',    lang:'en-GB' },
-  { id:'TxGEqnHWrfWFTfGW9XjX', emoji:'🌊', name:'Josh',  desc:'Deep, calm\nReassuring',      lang:'en-US' },
-  { id:'VR6AewLTigWG4xSOukaG', emoji:'⚡', name:'Sam',   desc:'Energetic, warm\nEngaging',   lang:'en-US' },
+const VOICES=[
+  {id:'21m00Tcm4TlvDq8ikWAM',emoji:'🎙️',name:'Aria',desc:'Warm, British\nProfessional',lang:'en-GB'},
+  {id:'AZnzlk1XvdvUeBnXmlld',emoji:'💎',name:'Demi',desc:'Clear, neutral\nConfident',lang:'en-US'},
+  {id:'EXAVITQu4vr4xnSDxMaL',emoji:'🌟',name:'Bella',desc:'Friendly, soft\nApproachable',lang:'en-GB'},
+  {id:'MF3mGyEYCl7XYWbV9V6O',emoji:'🔮',name:'Elli',desc:'Crisp, formal\nEfficient',lang:'en-GB'},
+  {id:'TxGEqnHWrfWFTfGW9XjX',emoji:'🌊',name:'Josh',desc:'Deep, calm\nReassuring',lang:'en-US'},
+  {id:'VR6AewLTigWG4xSOukaG',emoji:'⚡',name:'Sam',desc:'Energetic, warm\nEngaging',lang:'en-US'},
 ];
+const STAFF_COLORS=['#0d9488','#2563eb','#7c3aed','#dc2626','#d97706','#16a34a','#db2777','#ea580c','#0891b2','#4f46e5'];
 
-const DEMO_SETTINGS = {
-  agentName: 'Aria',
-  voiceId: '21m00Tcm4TlvDq8ikWAM',
-  voicePersonality: 65,
-  isActive: true,
-  greeting: "Hello! Thank you for calling Lumière Aesthetics. I'm Aria, your virtual receptionist. How can I help you today?",
-  afterHoursMessage: "Thank you for calling Lumière Aesthetics. We're currently closed. Our opening hours are Monday to Saturday, 9am to 7pm. Please call back during business hours, or visit our website to book online.",
-  transferMessage: "Of course, let me connect you with a member of our team. Please hold for just a moment.",
-  businessHours: {
-    monday: { open:true, from:'09:00', to:'19:00' },
-    tuesday: { open:true, from:'09:00', to:'19:00' },
-    wednesday: { open:true, from:'09:00', to:'19:00' },
-    thursday: { open:true, from:'09:00', to:'19:00' },
-    friday: { open:true, from:'09:00', to:'19:00' },
-    saturday: { open:true, from:'10:00', to:'16:00' },
-    sunday: { open:false, from:'10:00', to:'14:00' },
-  },
-  enabledServiceIds: [],
-  faqs: [
-    { question: 'Do you offer parking?', answer: 'Yes, there\'s an NCP car park on Wimpole Street, a 3-minute walk from the clinic. Street parking is also available nearby.' },
-    { question: 'What should I do before my treatment?', answer: 'Please arrive with a clean face, free from makeup. Avoid alcohol for 24 hours before injectable treatments.' },
-    { question: 'What payment methods do you accept?', answer: 'We accept all major credit and debit cards, Apple Pay, and bank transfer. We do not accept cash.' },
-    { question: 'Do you offer a patch test?', answer: 'Yes, we recommend a patch test 48 hours before any laser or skin treatment. It\'s free of charge.' },
-  ],
-  neverSay: ['cheap', 'discount', 'cheap treatment'],
-  clinicContext: 'Lumière Aesthetics is an award-winning medical aesthetics clinic in Marylebone, London. We specialise in natural-looking results using the latest techniques. All treatments are carried out by GMC-registered practitioners.',
-  bookingRules: { minNoticeHours:2, maxFutureDays:60, slotIntervalMins:15, bufferMins:10, newClientPolicy:'book_directly', requireDeposit:false, depositPercent:25, allowRescheduling:true, allowCancellation:true, cancellationNoticeHours:24 },
-  services: [
-    { id:'svc-1', name:'Hydrafacial', durationMins:60, priceCents:18000 },
-    { id:'svc-2', name:'Botox',        durationMins:45, priceCents:28000 },
-    { id:'svc-3', name:'Laser Treatment',durationMins:90,priceCents:32000 },
-    { id:'svc-4', name:'Dermal Filler',durationMins:60, priceCents:42000 },
-    { id:'svc-5', name:'Chemical Peel',durationMins:60, priceCents:15000 },
-    { id:'svc-6', name:'Consultation', durationMins:30, priceCents:9000  },
-  ],
-};
-
-// ─── Onboarding check — redirect if not yet set up ───────────────────────────
-async function checkOnboardingAndLoad() {
-  // Fast path: locally cached flag means we know they've onboarded.
-  const localFlag = localStorage.getItem('onboarding_done_' + TENANT_ID);
-  if (localFlag === '1') {
-    document.getElementById('onboardingGate').style.display = 'none';
-    await loadSettings();
-    return;
-  }
-
-  try {
-    const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/onboarding/status`, { headers: authHeaders });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.completed) {
-        localStorage.setItem('onboarding_done_' + TENANT_ID, '1');
-        document.getElementById('onboardingGate').style.display = 'none';
-        await loadSettings();
-      } else {
-        window.location.href = '/app/agent-onboarding.html';
-      }
-      return;
-    }
-    if (res.status === 401) {
-      location.href = '../pages/login.html';
-      return;
-    }
-    // Non-200/non-401 (server error) — fall through to settings-based check
-  } catch {
-    // Network error — fall through to settings-based check
-  }
-
-  // Status endpoint unavailable. Use agent-settings (no auth required) as a
-  // fallback signal: if the tenant has real services the onboarding has run.
-  try {
-    const r = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-settings`);
-    if (r.ok) {
-      const d = await r.json();
-      if (d.services?.length > 0 || d.clinicContext) {
-        // Has onboarding data — proceed
-        localStorage.setItem('onboarding_done_' + TENANT_ID, '1');
-        document.getElementById('onboardingGate').style.display = 'none';
-        settings = d;
-        populateForm();
-        loadSidebarUser();
-        loadAgentStats();
-        return;
-      }
-    }
-  } catch {}
-
-  // No evidence of onboarding — send to onboarding wizard.
-  window.location.href = '/app/agent-onboarding.html';
+async function checkOnboardingAndLoad(){
+  const localFlag=localStorage.getItem('onboarding_done_'+TENANT_ID);
+  if(localFlag==='1'){document.getElementById('onboardingGate').style.display='none';await loadSettings();return;}
+  try{
+    const res=await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/onboarding/status`,{headers:authHeaders});
+    if(res.ok){const data=await res.json();if(data.completed){localStorage.setItem('onboarding_done_'+TENANT_ID,'1');document.getElementById('onboardingGate').style.display='none';await loadSettings();}else{window.location.href='/app/agent-onboarding.html';}return;}
+    if(res.status===401){location.href='../pages/login.html';return;}
+  }catch{}
+  try{
+    const r=await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-settings`);
+    if(r.ok){const d=await r.json();if(d.services?.length>0||d.clinicContext){localStorage.setItem('onboarding_done_'+TENANT_ID,'1');document.getElementById('onboardingGate').style.display='none';settings=d;populateForm();loadSidebarUser();loadAgentStats();loadStaff();return;}}
+  }catch{}
+  window.location.href='/app/agent-onboarding.html';
 }
 
-// ─── Fetch settings from API ──────────────────────────────────────────────────
-async function loadSettings() {
-  try {
-    const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-settings`, { headers: authHeaders });
-    if (!res.ok) throw new Error('API not available');
-    settings = await res.json();
-    document.getElementById('lastSaved').textContent = 'Saved to database';
-  } catch {
-    // Fall back to demo data when backend is not running
-    settings = { ...DEMO_SETTINGS };
-    document.getElementById('lastSaved').textContent = 'Demo mode (backend offline)';
-  }
-  populateForm();
-  loadSidebarUser();
-  loadAgentStats();
+async function loadSettings(){
+  try{
+    const res=await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-settings`,{headers:authHeaders});
+    if(!res.ok)throw new Error();
+    settings=await res.json();
+    document.getElementById('lastSaved').textContent='Synced with database';
+  }catch{document.getElementById('lastSaved').textContent='Could not reach backend';}
+  populateForm();loadSidebarUser();loadAgentStats();loadStaff();
 }
 
-// ─── Sidebar user info ────────────────────────────────────────────────────────
-async function loadSidebarUser() {
-  try {
-    const r = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/me`, { headers: authHeaders });
-    if (!r.ok) return;
-    const u = await r.json();
-    const initials = (u.fullName || u.email || '?').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
-    document.getElementById('sidebarAvatar').textContent = initials;
-    document.getElementById('sidebarName').textContent = u.fullName || u.email;
-    document.getElementById('sidebarRole').textContent = u.role ?? '';
-  } catch {}
+async function loadSidebarUser(){
+  try{
+    const r=await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/me`,{headers:authHeaders});
+    if(!r.ok)return;const u=await r.json();
+    const initials=(u.fullName||u.email||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('sidebarAvatar').textContent=initials;
+    document.getElementById('sidebarName').textContent=u.fullName||u.email;
+    document.getElementById('sidebarRole').textContent=u.role??'';
+  }catch{}
 }
 
-// ─── Agent statistics ─────────────────────────────────────────────────────────
-async function loadAgentStats() {
-  try {
-    const r = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/activity?type=AI_CALL&limit=200`, { headers: authHeaders });
-    if (!r.ok) throw new Error();
-    const data = await r.json();
-    const calls = (data.activities ?? data ?? []);
-    const total = calls.length;
-
-    if (total === 0) {
-      document.getElementById('statsEmptyNote').style.display = '';
-      ['statTotalCalls','statBookings','statResolution','statAvgDuration'].forEach(id => {
-        document.getElementById(id).textContent = '0';
-      });
-      return;
-    }
-
-    const bookings = calls.filter(c => c.metadata?.booked || c.type === 'AI_BOOKING').length;
-    const resolutionPct = total > 0 ? Math.round((calls.filter(c => !c.metadata?.transferred).length / total) * 100) : 0;
-
-    document.getElementById('statTotalCalls').textContent = total;
-    document.getElementById('statBookings').textContent = bookings;
-    document.getElementById('statResolution').textContent = resolutionPct + '%';
-    document.getElementById('statAvgDuration').textContent = '–';
-    document.getElementById('statsEmptyNote').style.display = 'none';
-  } catch {
-    // Stats not available — show empty state gracefully
-    document.getElementById('statsEmptyNote').style.display = '';
-    ['statTotalCalls','statBookings','statResolution','statAvgDuration'].forEach(id => {
-      document.getElementById(id).textContent = '–';
-    });
-  }
+async function loadAgentStats(){
+  try{
+    const r=await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/activity?type=AI_CALL&limit=200`,{headers:authHeaders});
+    if(!r.ok)throw new Error();
+    const data=await r.json();const calls=data.activities??data??[];const total=calls.length;
+    if(total===0){document.getElementById('statsEmpty').style.display='';['statTotalCalls','statBookings','statResolution','statAvgDuration'].forEach(id=>document.getElementById(id).textContent='0');return;}
+    const bookings=calls.filter(c=>c.metadata?.booked||c.type==='AI_BOOKING').length;
+    const resolution=Math.round((calls.filter(c=>!c.metadata?.transferred).length/total)*100);
+    document.getElementById('statTotalCalls').textContent=total;
+    document.getElementById('statBookings').textContent=bookings;
+    document.getElementById('statResolution').textContent=resolution+'%';
+    document.getElementById('statAvgDuration').textContent='–';
+    document.getElementById('statsEmpty').style.display='none';
+  }catch{document.getElementById('statsEmpty').style.display='';['statTotalCalls','statBookings','statResolution','statAvgDuration'].forEach(id=>document.getElementById(id).textContent='–');}
 }
 
-// ─── Save settings to API ─────────────────────────────────────────────────────
-async function saveSettings() {
-  const btn = document.getElementById('saveBtn');
-  btn.textContent = 'Saving…';
-  btn.disabled = true;
-
-  const payload = collectFormData();
-
-  try {
-    const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-settings`, {
-      method: 'PUT',
-      headers: authHeaders,
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) throw new Error('Save failed');
-    settings = { ...settings, ...payload };
-    isDirty = false;
-    document.getElementById('unsavedBar').style.display = 'none';
-    document.getElementById('discardBtn').style.display = 'none';
-    document.getElementById('lastSaved').textContent = 'Saved just now';
-    showToast('success', 'Settings saved', 'Your AI agent configuration has been updated.');
-  } catch {
-    showToast('error', 'Save failed', 'Backend is offline. Settings saved locally only.');
-    // Store in localStorage as fallback
-    localStorage.setItem('agentSettings_' + TENANT_ID, JSON.stringify(payload));
-    isDirty = false;
-    document.getElementById('unsavedBar').style.display = 'none';
-  } finally {
-    btn.textContent = 'Save Changes';
-    btn.disabled = false;
-  }
-}
-
-function collectFormData() {
-  // Collect neverSay tags
-  const tags = [...document.querySelectorAll('#neverSayWrap .tag')].map(t => t.dataset.value);
-  // Collect FAQs
-  const faqs = [...document.querySelectorAll('.faq-item')].map(item => ({
-    question: item.querySelector('.faq-question-input').value,
-    answer: item.querySelector('.faq-answer-input').value,
-  })).filter(f => f.question.trim());
-  // Collect enabled services
-  const enabledServiceIds = [...document.querySelectorAll('.svc-toggle:checked')].map(c => c.value);
-  // Collect business hours
-  const businessHours = {};
-  const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
-  days.forEach(d => {
-    businessHours[d] = {
-      open: document.getElementById('h-' + d + '-toggle')?.checked ?? false,
-      from: document.getElementById('h-' + d + '-from')?.value ?? '09:00',
-      to: document.getElementById('h-' + d + '-to')?.value ?? '18:00',
-    };
-  });
-
-  return {
-    agentName: document.getElementById('agentName').value,
-    voiceId: settings.voiceId,
-    voicePersonality: parseInt(document.getElementById('toneSlider').value),
-    isActive: settings.isActive,
-    greeting: document.getElementById('greetingText').value,
-    afterHoursMessage: document.getElementById('afterHoursText').value,
-    transferMessage: document.getElementById('transferText').value,
-    transferNumber: document.getElementById('transferNumber').value,
-    businessHours,
-    enabledServiceIds,
-    faqs,
-    neverSay: tags,
-    clinicContext: document.getElementById('clinicContext').value,
-    bookingRules: {
-      minNoticeHours: parseInt(document.getElementById('minNotice').value),
-      maxFutureDays: parseInt(document.getElementById('maxFuture').value),
-      slotIntervalMins: parseInt(document.getElementById('slotInterval').value),
-      bufferMins: parseInt(document.getElementById('bufferTime').value),
-      newClientPolicy: document.querySelector('input[name="newClientPolicy"]:checked')?.value || 'book_directly',
-      requireDeposit: document.getElementById('depositToggle').checked,
-      depositPercent: parseInt(document.getElementById('depositPct').value),
-      allowRescheduling: document.getElementById('allowReschedule').checked,
-      allowCancellation: document.getElementById('allowCancel').checked,
-      cancellationNoticeHours: parseInt(document.getElementById('cancelNotice').value),
-    },
-  };
-}
-
-// ─── Populate form from settings ─────────────────────────────────────────────
-function populateForm() {
-  const s = settings;
-  const va = s;
-
-  // Identity
-  document.getElementById('agentName').value = va.agentName || 'Aria';
-  document.getElementById('toneSlider').value = va.voicePersonality ?? 65;
-  updateToneLabel(va.voicePersonality ?? 65);
-
-  // Voices
+function populateForm(){
+  const s=settings,va=s;
+  document.getElementById('agentName').value=va.agentName||'Aria';
+  document.getElementById('toneSlider').value=va.voicePersonality??65;
+  updateToneLabel(va.voicePersonality??65);
   buildVoiceGrid(va.voiceId);
-
-  // Greeting
-  const greetingEl = document.getElementById('greetingText');
-  greetingEl.value = va.greeting || '';
-  countChars(greetingEl, 'greetingCount', 300);
-
-  const afterEl = document.getElementById('afterHoursText');
-  afterEl.value = va.afterHoursMessage || '';
-  countChars(afterEl, 'afterCount', 400);
-
-  document.getElementById('transferText').value = va.transferMessage || '';
-  document.getElementById('transferNumber').value = va.transferNumber || '';
-
-  // Hours
-  buildHoursGrid(va.businessHours);
-
-  // Services
-  buildServicesList(s.services, va.enabledServiceIds);
-
-  // Deposit
-  const rules = va.bookingRules || {};
-  document.getElementById('depositToggle').checked = rules.requireDeposit || false;
-  document.getElementById('depositPct').value = rules.depositPercent || 25;
+  document.getElementById('tenantName').value=s.tenantName||'';
+  document.getElementById('businessType').value=s.businessType||'';
+  document.getElementById('address').value=s.address||'';
+  document.getElementById('parking').value=s.parking||'';
+  document.getElementById('clinicPhone').value=s.phone||'';
+  document.getElementById('clinicEmail').value=s.email||'';
+  document.getElementById('bankHolidayClosed').checked=va.bankHolidayClosed??false;
+  buildServicesList(s.services,va.enabledServiceIds);
+  const rules=va.bookingRules||{};
+  document.getElementById('depositToggle').checked=rules.requireDeposit||false;
+  document.getElementById('depositPct').value=rules.depositPercent||25;
   toggleDeposit();
-
-  // Context + neverSay
-  document.getElementById('clinicContext').value = va.clinicContext || '';
-  buildNeverSayTags(va.neverSay || []);
-
-  // FAQs
-  buildFaqList(va.faqs || []);
-
-  // Rules
-  document.getElementById('minNotice').value = rules.minNoticeHours ?? 2;
-  document.getElementById('maxFuture').value = rules.maxFutureDays ?? 60;
-  document.getElementById('slotInterval').value = rules.slotIntervalMins ?? 15;
-  document.getElementById('bufferTime').value = rules.bufferMins ?? 10;
-  setPolicy(rules.newClientPolicy || 'book_directly');
-  document.getElementById('allowReschedule').checked = rules.allowRescheduling ?? true;
-  document.getElementById('allowCancel').checked = rules.allowCancellation ?? true;
-  document.getElementById('cancelNotice').value = rules.cancellationNoticeHours ?? 24;
-
-  // Status
-  updateStatusUI(va.isActive ?? true);
-
-  // Load prompt
+  document.getElementById('minNotice').value=rules.minNoticeHours??2;
+  document.getElementById('maxFuture').value=rules.maxFutureDays??60;
+  document.getElementById('slotInterval').value=rules.slotIntervalMins??15;
+  document.getElementById('bufferTime').value=rules.bufferMins??10;
+  setPolicy(rules.newClientPolicy||'book_directly');
+  document.getElementById('allowReschedule').checked=rules.allowRescheduling??true;
+  document.getElementById('allowCancel').checked=rules.allowCancellation??true;
+  document.getElementById('cancelNotice').value=rules.cancellationNoticeHours??24;
+  buildHoursGrid(va.businessHours);
+  const gEl=document.getElementById('greetingText');gEl.value=va.greeting||'';countChars(gEl,'greetingCount',300);
+  const aEl=document.getElementById('afterHoursText');aEl.value=va.afterHoursMessage||'';countChars(aEl,'afterCount',400);
+  document.getElementById('transferText').value=va.transferMessage||'';
+  document.getElementById('transferNumber').value=va.transferNumber||'';
+  document.getElementById('clinicContext').value=va.clinicContext||'';
+  buildNeverSayTags(va.neverSay||[]);
+  buildFaqList(va.faqs||[]);
+  updateStatusUI(va.isActive??true);
   refreshPrompt();
-
-  // Start sim
-  resetSim();
 }
 
-// ─── Voice grid ──────────────────────────────────────────────────────────────
-function buildVoiceGrid(selectedId) {
-  document.getElementById('voiceGrid').innerHTML = VOICES.map(v => `
-    <div class="voice-card ${v.id === selectedId ? 'selected' : ''}" onclick="selectVoice('${v.id}')" id="vc-${v.id}">
-      <div class="voice-check">✓</div>
+function buildVoiceGrid(selectedId){
+  document.getElementById('voiceGrid').innerHTML=VOICES.map(v=>`
+    <div class="voice-card ${v.id===selectedId?'selected':''}" onclick="selectVoice('${v.id}')" id="vc-${v.id}">
+      <div class="voice-check">&#10003;</div>
       <div class="voice-emoji">${v.emoji}</div>
       <div class="voice-name">${v.name}</div>
       <div class="voice-desc">${v.desc.replace('\n','<br>')}</div>
       <div style="margin-top:5px"><span class="badge badge-gray" style="font-size:10px">${v.lang}</span></div>
-      <button onclick="event.stopPropagation();previewVoice('${v.id}','${v.name}')" style="margin-top:8px;width:100%;padding:5px;border:1px solid var(--border);background:var(--surface);border-radius:5px;font-family:inherit;font-size:11px;color:var(--text-muted);cursor:pointer">▶ Preview</button>
     </div>`).join('');
 }
 
-function selectVoice(id) {
-  settings.voiceId = id;
-  document.querySelectorAll('.voice-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('vc-' + id).classList.add('selected');
-  markDirty();
-}
+function selectVoice(id){settings.voiceId=id;document.querySelectorAll('.voice-card').forEach(c=>c.classList.remove('selected'));document.getElementById('vc-'+id)?.classList.add('selected');markDirty();}
 
-function previewVoice(id, name) {
-  showToast('info', `Playing ${name} voice preview`, 'Audio preview requires ElevenLabs API key.');
-}
+function updateToneLabel(val){const v=parseInt(val);document.getElementById('toneLabel').textContent='— '+(v<30?'Warm & Caring':v<70?'Balanced':'Crisp & Efficient');}
 
-// ─── Tone ─────────────────────────────────────────────────────────────────────
-function updateToneLabel(val) {
-  const v = parseInt(val);
-  const label = v < 30 ? 'Warm & Caring' : v < 70 ? 'Balanced' : 'Crisp & Efficient';
-  document.getElementById('toneLabel').textContent = label;
-}
-
-// ─── Hours grid ──────────────────────────────────────────────────────────────
-function buildHoursGrid(hours) {
-  const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
-  const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-  const el = document.getElementById('hoursGrid');
-  el.innerHTML = days.map((d, i) => {
-    const h = hours?.[d] || { open: i < 5, from: '09:00', to: '19:00' };
+function buildHoursGrid(hours){
+  const days=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  const names=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  document.getElementById('hoursGrid').innerHTML=days.map((d,i)=>{
+    const h=hours?.[d]||{open:i<5,from:'09:00',to:'18:00'};
     return `<div class="hours-row ${h.open?'':'closed'}" id="hrow-${d}">
-      <span class="hours-day">${dayNames[i]}</span>
+      <span class="hours-day">${names[i]}</span>
       <div class="hours-time">
         <input type="time" id="h-${d}-from" value="${h.from}" ${h.open?'':'disabled'} onchange="markDirty()">
         <span style="color:var(--text-muted)">to</span>
-        <input type="time" id="h-${d}-to"   value="${h.to}"   ${h.open?'':'disabled'} onchange="markDirty()">
+        <input type="time" id="h-${d}-to" value="${h.to}" ${h.open?'':'disabled'} onchange="markDirty()">
       </div>
-      <span style="font-size:12.5px;color:${h.open?'var(--green)':'var(--text-light)'};font-weight:600">${h.open?'Open':'Closed'}</span>
+      <span style="font-size:12.5px;font-weight:600;color:${h.open?'var(--green)':'var(--text-light)'}">${h.open?'Open':'Closed'}</span>
       <label class="toggle"><input type="checkbox" id="h-${d}-toggle" ${h.open?'checked':''} onchange="toggleDay('${d}',this.checked);markDirty()"><span class="toggle-slider"></span></label>
     </div>`;
   }).join('');
 }
 
-function toggleDay(day, open) {
-  const row = document.getElementById('hrow-' + day);
-  row.classList.toggle('closed', !open);
-  row.querySelectorAll('input[type=time]').forEach(i => i.disabled = !open);
-  row.querySelector('span:last-of-type').textContent = open ? 'Open' : 'Closed';
-  row.querySelector('span:last-of-type').style.color = open ? 'var(--green)' : 'var(--text-light)';
+function toggleDay(day,open){
+  const row=document.getElementById('hrow-'+day);
+  row.classList.toggle('closed',!open);
+  row.querySelectorAll('input[type=time]').forEach(i=>i.disabled=!open);
+  const span=row.querySelector('span:last-of-type');
+  span.textContent=open?'Open':'Closed';span.style.color=open?'var(--green)':'var(--text-light)';
 }
 
-// ─── Services list ────────────────────────────────────────────────────────────
-function buildServicesList(services, enabledIds) {
-  if (!services?.length) { document.getElementById('servicesList').innerHTML = '<p style="color:var(--text-muted);font-size:13.5px">No services found. Add services in your clinic settings first.</p>'; return; }
-  document.getElementById('servicesList').innerHTML = services.map(s => `
-    <div class="toggle-row">
-      <div>
-        <div class="toggle-label">${s.name}</div>
-        <div class="toggle-desc">${s.durationMins} min · £${(s.priceCents/100).toFixed(0)}</div>
-      </div>
-      <label class="toggle"><input type="checkbox" class="svc-toggle" value="${s.id}" ${!enabledIds?.length || enabledIds.includes(s.id) ? 'checked' : ''} onchange="markDirty()"><span class="toggle-slider"></span></label>
-    </div>`).join('');
-}
-
-// ─── Deposit toggle ───────────────────────────────────────────────────────────
-function toggleDeposit() {
-  const show = document.getElementById('depositToggle').checked;
-  document.getElementById('depositAmountRow').style.display = show ? 'block' : 'none';
-}
-
-// ─── Never-say tags ───────────────────────────────────────────────────────────
-function buildNeverSayTags(tags) {
-  const wrap = document.getElementById('neverSayWrap');
-  // Remove existing tags
-  wrap.querySelectorAll('.tag').forEach(t => t.remove());
-  const input = document.getElementById('neverSayInput');
-  tags.forEach(tag => addTagEl(tag, wrap, input));
-}
-
-function addTagEl(val, wrap, input) {
-  const tag = document.createElement('div');
-  tag.className = 'tag';
-  tag.dataset.value = val;
-  tag.innerHTML = `${val}<button class="tag-del" onclick="this.parentElement.remove();markDirty()">×</button>`;
-  wrap.insertBefore(tag, input);
-}
-
-function handleTagInput(e) {
-  if (e.key === 'Enter' || e.key === ',') {
-    e.preventDefault();
-    const val = e.target.value.trim().replace(/,$/,'');
-    if (val) {
-      addTagEl(val, document.getElementById('neverSayWrap'), e.target);
-      e.target.value = '';
-      markDirty();
-    }
-  }
-}
-
-// ─── FAQ list ─────────────────────────────────────────────────────────────────
-function buildFaqList(faqs) {
-  document.getElementById('faqList').innerHTML = '';
-  faqs.forEach(f => addFaqEl(f.question, f.answer));
-}
-
-function addFaq() { addFaqEl('', ''); markDirty(); }
-
-function addFaqEl(q, a) {
-  const list = document.getElementById('faqList');
-  const item = document.createElement('div');
-  item.className = 'faq-item';
-  item.innerHTML = `
-    <div class="faq-header">
-      <input class="faq-question-input" type="text" placeholder="Question…" value="${q}" onchange="markDirty()">
-      <button onclick="this.closest('.faq-item').remove();markDirty()" style="background:none;border:none;color:var(--text-light);cursor:pointer;font-size:16px;padding:0;line-height:1" title="Remove FAQ">×</button>
-    </div>
-    <div class="faq-body">
-      <textarea class="faq-answer-input" placeholder="Answer…" oninput="markDirty()">${a}</textarea>
+function buildServicesList(services,enabledIds){
+  const el=document.getElementById('servicesList');
+  if(!services?.length){el.innerHTML='<p style="color:var(--text-muted);font-size:13.5px">No services found. Add services in clinic settings first.</p>';return;}
+  el.innerHTML=services.map(s=>{
+    const price=s.priceCents?`£${(s.priceCents/100).toFixed(0)}`:'';
+    const dur=s.durationMins?`${s.durationMins} min`:'';
+    const meta=[dur,price].filter(Boolean).join(' · ');
+    const checked=!enabledIds?.length||enabledIds.includes(s.id)?'checked':'';
+    return `<div class="toggle-row">
+      <div><div class="toggle-label">${s.name}</div>${meta?`<div class="toggle-desc">${meta}</div>`:''}</div>
+      <label class="toggle"><input type="checkbox" class="svc-toggle" value="${s.id}" ${checked} onchange="markDirty()"><span class="toggle-slider"></span></label>
     </div>`;
+  }).join('');
+}
+
+function toggleDeposit(){document.getElementById('depositAmountRow').style.display=document.getElementById('depositToggle').checked?'block':'none';}
+
+function setPolicy(val){
+  document.getElementById('policyDirect').checked=val==='book_directly';
+  document.getElementById('policyConsult').checked=val==='require_consultation';
+  document.getElementById('policyCard1').style.borderColor=val==='book_directly'?'var(--brand)':'var(--border)';
+  document.getElementById('policyCard2').style.borderColor=val==='require_consultation'?'var(--brand)':'var(--border)';
+}
+
+function buildNeverSayTags(tags){const wrap=document.getElementById('neverSayWrap'),input=document.getElementById('neverSayInput');wrap.querySelectorAll('.tag').forEach(t=>t.remove());tags.forEach(tag=>addTagEl(tag,wrap,input));}
+
+function addTagEl(val,wrap,input){const tag=document.createElement('div');tag.className='tag';tag.dataset.value=val;tag.innerHTML=`${val}<button class="tag-del" onclick="this.parentElement.remove();markDirty()">&times;</button>`;wrap.insertBefore(tag,input);}
+
+function handleTagInput(e){if(e.key==='Enter'||e.key===','){e.preventDefault();const val=e.target.value.trim().replace(/,$/,'');if(val){addTagEl(val,document.getElementById('neverSayWrap'),e.target);e.target.value='';markDirty();}}}
+
+function buildFaqList(faqs){document.getElementById('faqList').innerHTML='';faqs.forEach(f=>addFaqEl(f.question,f.answer));}
+function addFaq(){addFaqEl('','');markDirty();}
+function addFaqEl(q,a){
+  const list=document.getElementById('faqList'),item=document.createElement('div');
+  item.className='faq-item';
+  item.innerHTML=`<div class="faq-header"><input class="faq-q" type="text" placeholder="Question…" value="${q.replace(/"/g,'&quot;')}" onchange="markDirty()"><button onclick="this.closest('.faq-item').remove();markDirty()" style="background:none;border:none;color:var(--text-light);cursor:pointer;font-size:18px;padding:0;line-height:1">&times;</button></div><div class="faq-body"><textarea class="faq-a" placeholder="Answer…" oninput="markDirty()">${a}</textarea></div>`;
   list.appendChild(item);
 }
 
-// ─── Policy ───────────────────────────────────────────────────────────────────
-function setPolicy(val) {
-  document.getElementById('policyDirect').checked = val === 'book_directly';
-  document.getElementById('policyConsult').checked = val === 'require_consultation';
-  document.getElementById('policyCard1').style.borderColor = val === 'book_directly' ? 'var(--brand)' : 'var(--border)';
-  document.getElementById('policyCard2').style.borderColor = val === 'require_consultation' ? 'var(--brand)' : 'var(--border)';
-}
-
-// ─── Prompt preview ───────────────────────────────────────────────────────────
-async function refreshPrompt() {
-  const box = document.getElementById('promptBox');
-  const meta = document.getElementById('promptMeta');
-  box.textContent = 'Loading…';
-  try {
-    const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-prompt`, { headers: authHeaders });
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-    box.textContent = data.prompt;
-    if (data.isAiGenerated) {
-      const when = data.generatedAt ? ` · Generated ${new Date(data.generatedAt).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}` : '';
-      meta.textContent = `AI-generated prompt${when} · ${data.charCount} chars · ~${data.tokenEstimate} tokens`;
-    } else {
-      meta.textContent = `Auto-built from your settings · ${data.charCount} chars · ~${data.tokenEstimate} tokens`;
-    }
-  } catch {
-    const name = document.getElementById('agentName').value || 'Aria';
-    const greeting = document.getElementById('greetingText').value || '(greeting not set)';
-    box.textContent = `You are ${name}, a professional AI receptionist.\n\nOPENING GREETING:\n"${greeting}"\n\n[Full prompt generated by backend using all saved settings above]`;
-    meta.textContent = 'Preview (backend offline)';
+async function refreshPrompt(){
+  const box=document.getElementById('promptBox'),meta=document.getElementById('promptMeta');
+  box.textContent='Loading…';
+  try{
+    const res=await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-prompt`,{headers:authHeaders});
+    if(!res.ok)throw new Error();
+    const data=await res.json();box.textContent=data.prompt;
+    meta.textContent=data.isAiGenerated?`AI-generated · ${data.charCount} chars · ~${data.tokenEstimate} tokens`:`Auto-built from settings · ${data.charCount} chars · ~${data.tokenEstimate} tokens`;
+  }catch{
+    box.textContent=`You are ${document.getElementById('agentName').value||'Aria'}, a professional AI receptionist.\n\nOPENING GREETING:\n"${document.getElementById('greetingText').value||'(not set)'}"\n\n[Full prompt generated by backend from all saved settings]`;
+    meta.textContent='Preview (backend offline)';
   }
 }
+function copyPrompt(){navigator.clipboard?.writeText(document.getElementById('promptBox').textContent);showToast('success','Copied!','System prompt copied to clipboard.');}
 
-function copyPrompt() {
-  const text = document.getElementById('promptBox').textContent;
-  navigator.clipboard?.writeText(text);
-  showToast('success', 'Copied!', 'System prompt copied to clipboard.');
+async function loadStaff(){
+  if(settings.staff){staffList=settings.staff;renderStaff();return;}
+  try{const r=await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/staff`,{headers:authHeaders});if(!r.ok)throw new Error();const d=await r.json();staffList=d.staff??d??[];}catch{staffList=[];}
+  renderStaff();
 }
 
-// ─── Tabs ─────────────────────────────────────────────────────────────────────
-function switchTab(id, btn) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + id).classList.add('active');
-  btn.classList.add('active');
-  if (id === 'prompt') refreshPrompt();
+function renderStaff(){
+  const el=document.getElementById('staffList');
+  if(!staffList.length){el.innerHTML=`<div style="color:var(--text-muted);font-size:13.5px;padding:12px 0">No team members yet. Add your first one.</div>`;return;}
+  el.innerHTML=staffList.map(m=>{
+    const initials=m.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const color=m.color||'#0d9488';
+    return `<div class="staff-card" id="sc-${m.id}">
+      <div class="staff-av" style="background:${color}">${initials}</div>
+      <div class="staff-info"><div class="staff-name">${m.name}</div><div class="staff-title">${m.title||''}${m.email?(m.title?' · ':'')+m.email:''}</div></div>
+      <div class="staff-actions">
+        <button class="btn-icon" title="Edit" onclick="openStaffModal('${m.id}')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="btn-icon" title="Delete" style="color:var(--red)" onclick="deleteStaff('${m.id}','${m.name.replace(/'/g,"\\'")}')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-// ─── Dirty state ─────────────────────────────────────────────────────────────
-function markDirty() {
-  if (!isDirty) {
-    isDirty = true;
-    document.getElementById('unsavedBar').style.display = 'flex';
-    document.getElementById('discardBtn').style.display = 'inline-flex';
+let _selColor=STAFF_COLORS[0];
+function openStaffModal(staffId){
+  document.getElementById('staffColorPicker').innerHTML=STAFF_COLORS.map(c=>`<div class="color-swatch ${c===_selColor?'selected':''}" style="background:${c}" onclick="selColor('${c}',this)"></div>`).join('');
+  if(staffId){
+    const m=staffList.find(s=>s.id===staffId);if(!m)return;
+    document.getElementById('staffModalTitle').textContent='Edit Team Member';
+    document.getElementById('staffModalSaveBtn').textContent='Save Changes';
+    document.getElementById('staffModalId').value=m.id;
+    document.getElementById('staffModalName').value=m.name;
+    document.getElementById('staffModalTitle').value=m.title||'';
+    document.getElementById('staffModalEmail').value=m.email||'';
+    _selColor=m.color||STAFF_COLORS[0];
+  }else{
+    document.getElementById('staffModalTitle').textContent='Add Team Member';
+    document.getElementById('staffModalSaveBtn').textContent='Add Member';
+    ['staffModalId','staffModalName','staffModalTitle','staffModalEmail'].forEach(id=>document.getElementById(id).value='');
+    _selColor=STAFF_COLORS[0];
   }
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.toggle('selected',s.style.background===_selColor||s.style.backgroundColor===_selColor));
+  document.getElementById('staffModal').style.display='flex';
+}
+function selColor(c,el){_selColor=c;document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));el.classList.add('selected');}
+function closeStaffModal(){document.getElementById('staffModal').style.display='none';}
+
+async function saveStaffMember(){
+  const id=document.getElementById('staffModalId').value;
+  const name=document.getElementById('staffModalName').value.trim();
+  if(!name){showToast('error','Name required','Please enter a name.');return;}
+  const payload={name,title:document.getElementById('staffModalTitle').value.trim(),email:document.getElementById('staffModalEmail').value.trim(),color:_selColor};
+  const btn=document.getElementById('staffModalSaveBtn');btn.disabled=true;btn.textContent='Saving…';
+  try{
+    const res=id
+      ?await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/staff/${id}`,{method:'PUT',headers:authHeaders,body:JSON.stringify(payload)})
+      :await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/staff`,{method:'POST',headers:authHeaders,body:JSON.stringify(payload)});
+    if(!res.ok)throw new Error();
+    const saved=await res.json();
+    if(id){staffList=staffList.map(s=>s.id===id?{...s,...payload}:s);}else{staffList.push(saved.staff??saved);}
+    renderStaff();closeStaffModal();showToast('success',id?'Team member updated':'Team member added',name);
+  }catch{showToast('error','Could not save','Check your connection and try again.');}
+  finally{btn.disabled=false;btn.textContent=id?'Save Changes':'Add Member';}
 }
 
-function discardChanges() {
-  isDirty = false;
-  document.getElementById('unsavedBar').style.display = 'none';
-  document.getElementById('discardBtn').style.display = 'none';
-  populateForm();
-  showToast('info', 'Changes discarded', 'Settings reverted to last saved state.');
+async function deleteStaff(id,name){
+  if(!confirm(`Remove ${name} from the team?`))return;
+  try{
+    const res=await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/staff/${id}`,{method:'DELETE',headers:authHeaders});
+    if(!res.ok)throw new Error();
+    staffList=staffList.filter(s=>s.id!==id);renderStaff();showToast('success','Team member removed',name);
+  }catch{showToast('error','Could not delete','Check your connection and try again.');}
 }
 
-// ─── Agent toggle ─────────────────────────────────────────────────────────────
-async function toggleAgent() {
-  try {
-    const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-settings/toggle`, { method:'PATCH', headers: authHeaders });
-    if (res.ok) {
-      const data = await res.json();
-      settings.isActive = data.isActive;
-      updateStatusUI(data.isActive);
-      showToast(data.isActive ? 'success' : 'info', data.isActive ? 'Agent is now live' : 'Agent paused', data.isActive ? 'Your AI receptionist is answering calls.' : 'Calls will go to voicemail.');
-      return;
-    }
-  } catch {}
-  // Toggle locally for demo
-  settings.isActive = !settings.isActive;
-  updateStatusUI(settings.isActive);
-  showToast(settings.isActive ? 'success' : 'info', settings.isActive ? 'Agent live (demo)' : 'Agent paused (demo)', '');
+function collectFormData(){
+  const tags=[...document.querySelectorAll('#neverSayWrap .tag')].map(t=>t.dataset.value);
+  const faqs=[...document.querySelectorAll('.faq-item')].map(item=>({question:item.querySelector('.faq-q').value,answer:item.querySelector('.faq-a').value})).filter(f=>f.question.trim());
+  const enabledServiceIds=[...document.querySelectorAll('.svc-toggle:checked')].map(c=>c.value);
+  const days=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  const businessHours={};
+  days.forEach(d=>{businessHours[d]={open:document.getElementById('h-'+d+'-toggle')?.checked??false,from:document.getElementById('h-'+d+'-from')?.value??'09:00',to:document.getElementById('h-'+d+'-to')?.value??'18:00'};});
+  return{
+    tenantName:document.getElementById('tenantName').value,
+    businessType:document.getElementById('businessType').value,
+    address:document.getElementById('address').value,
+    parking:document.getElementById('parking').value,
+    phone:document.getElementById('clinicPhone').value,
+    email:document.getElementById('clinicEmail').value,
+    bankHolidayClosed:document.getElementById('bankHolidayClosed').checked,
+    agentName:document.getElementById('agentName').value,
+    voiceId:settings.voiceId,
+    voicePersonality:parseInt(document.getElementById('toneSlider').value),
+    isActive:settings.isActive,
+    greeting:document.getElementById('greetingText').value,
+    afterHoursMessage:document.getElementById('afterHoursText').value,
+    transferMessage:document.getElementById('transferText').value,
+    transferNumber:document.getElementById('transferNumber').value,
+    businessHours,enabledServiceIds,faqs,
+    neverSay:tags,
+    clinicContext:document.getElementById('clinicContext').value,
+    bookingRules:{
+      minNoticeHours:parseInt(document.getElementById('minNotice').value),
+      maxFutureDays:parseInt(document.getElementById('maxFuture').value),
+      slotIntervalMins:parseInt(document.getElementById('slotInterval').value),
+      bufferMins:parseInt(document.getElementById('bufferTime').value),
+      newClientPolicy:document.querySelector('input[name="newClientPolicy"]:checked')?.value||'book_directly',
+      requireDeposit:document.getElementById('depositToggle').checked,
+      depositPercent:parseInt(document.getElementById('depositPct').value),
+      allowRescheduling:document.getElementById('allowReschedule').checked,
+      allowCancellation:document.getElementById('allowCancel').checked,
+      cancellationNoticeHours:parseInt(document.getElementById('cancelNotice').value),
+    },
+  };
 }
 
-function updateStatusUI(active) {
-  const badge = document.getElementById('statusBadge');
-  const btn = document.getElementById('toggleBtn');
-  badge.className = 'agent-status-badge ' + (active ? 'live' : 'paused');
-  document.getElementById('statusText').textContent = active ? 'Live' : 'Paused';
-  badge.querySelector('.status-pulse').style.display = active ? 'block' : 'none';
-  btn.textContent = active ? 'Pause Agent' : 'Resume Agent';
-  // Update sidebar badge
-  const navBadge = document.querySelector('.nav-item.active .nav-badge');
-  if (navBadge) { navBadge.textContent = active ? 'Live' : 'Paused'; navBadge.className = 'nav-badge ' + (active ? 'green' : ''); }
+async function saveSettings(){
+  const btn=document.getElementById('saveBtn');btn.textContent='Saving…';btn.disabled=true;
+  try{
+    const res=await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-settings`,{method:'PUT',headers:authHeaders,body:JSON.stringify(collectFormData())});
+    if(!res.ok)throw new Error();
+    settings={...settings,...collectFormData()};isDirty=false;
+    document.getElementById('unsavedBar').style.display='none';
+    document.getElementById('discardBtn').style.display='none';
+    document.getElementById('lastSaved').textContent='Saved just now';
+    showToast('success','Settings saved','Your AI agent has been updated.');
+  }catch{showToast('error','Save failed','Could not reach the backend.');}
+  finally{btn.textContent='Save Changes';btn.disabled=false;}
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-function countChars(el, countId, max) {
-  document.getElementById(countId).textContent = el.value.length;
+function discardChanges(){isDirty=false;document.getElementById('unsavedBar').style.display='none';document.getElementById('discardBtn').style.display='none';populateForm();showToast('info','Changes discarded','Settings reverted to last saved state.');}
+
+function markDirty(){if(!isDirty){isDirty=true;document.getElementById('unsavedBar').style.display='flex';document.getElementById('discardBtn').style.display='inline-flex';}}
+
+async function toggleAgent(){
+  try{
+    const res=await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-settings/toggle`,{method:'PATCH',headers:authHeaders});
+    if(res.ok){const data=await res.json();settings.isActive=data.isActive;updateStatusUI(data.isActive);showToast(data.isActive?'success':'info',data.isActive?'Agent is now live':'Agent paused','');return;}
+  }catch{}
+  settings.isActive=!settings.isActive;updateStatusUI(settings.isActive);
 }
 
-// ─── Call Simulator ───────────────────────────────────────────────────────────
-let simStarted = false;
-
-function resetSim() {
-  document.getElementById('simMessages').innerHTML = '';
-  simStarted = false;
-  addSimMsg('system', '📞 New call started — say something to test your agent');
-  const agentName = document.getElementById('agentName')?.value || settings.agentName || 'Aria';
-  const greeting = document.getElementById('greetingText')?.value || settings.greeting || `Hello! Thank you for calling. How can I help you today?`;
-  setTimeout(() => { addSimMsg('agent', greeting, agentName); simStarted = true; }, 600);
+function updateStatusUI(active){
+  const badge=document.getElementById('statusBadge');
+  badge.className='agent-status-badge '+(active?'live':'paused');
+  badge.querySelector('.status-pulse').style.display=active?'block':'none';
+  document.getElementById('statusText').textContent=active?'Live':'Paused';
+  document.getElementById('toggleBtn').textContent=active?'Pause Agent':'Resume Agent';
+  const nb=document.getElementById('navBadge');if(nb){nb.textContent=active?'Live':'Paused';nb.className='nav-badge '+(active?'green':'');}
 }
 
-function sendSim(text) {
-  if (!text?.trim()) return;
-  const input = document.getElementById('simInput');
-  input.value = '';
-  addSimMsg('user', text.trim());
-  showTyping();
-  const agentName = document.getElementById('agentName')?.value || 'Aria';
-  setTimeout(() => {
-    removeTyping();
-    const resp = generateResponse(text.toLowerCase());
-    if (resp.tool) addSimTool(resp.tool);
-    addSimMsg('agent', resp.text, agentName);
-  }, 800 + Math.random() * 700);
+function countChars(el,countId){document.getElementById(countId).textContent=el.value.length;}
+
+function switchTab(id,btn){
+  document.querySelectorAll('.agent-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.agent-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');btn.classList.add('active');
+  if(id==='ai')refreshPrompt();
 }
 
-function generateResponse(t) {
-  const svcNames = (settings.services || []).slice(0,3).map(s => s.name).join(', ');
-  if (t.includes('book') || t.includes('appointment') || t.includes('schedule'))
-    return { tool:'check_availability({ service: "Hydrafacial", date: "tomorrow" })', text:`Of course, I'd be happy to book you in! We offer ${svcNames || 'a range of treatments'}. Which service were you interested in, and do you have a preferred date?` };
-  if (t.includes('price') || t.includes('cost') || t.includes('how much'))
-    return { tool:'get_clinic_info({ topic: "pricing" })', text:`Our most popular treatments are: Hydrafacial from £180, Botox from £280, Dermal Fillers from £420, and Laser Treatment from £320. All include a complimentary follow-up. Would you like to book?` };
-  if (t.includes('available') || t.includes('tomorrow') || t.includes('slot'))
-    return { tool:'check_availability({ date: "2026-02-23" })', text:`I have availability tomorrow: 10:00 AM with Dr. Chen, 11:30 AM with Dr. Patel, and 2:00 PM with Dr. Chen. Which would suit you best?` };
-  if (t.includes('cancel'))
-    return { tool:'cancel_appointment({ clientPhone: caller_id })', text:`I can help you cancel your appointment. Could I take your name and the phone number you booked with, so I can find your booking?` };
-  if (t.includes('open') || t.includes('hour') || t.includes('saturday'))
-    return { tool:'get_clinic_info({ topic: "hours" })', text:`We're open Monday to Friday 9am–7pm, and Saturday 10am–4pm. We're closed on Sundays. Would you like to book an appointment?` };
-  if (t.includes('speak') || t.includes('human') || t.includes('person'))
-    return { text:`Of course, let me connect you with a member of our team right now. Please hold for just a moment. [TRANSFER]` };
-  return { text:`Thank you for that. I want to make sure I give you the best help I can. Could you tell me a little more about what you're looking for, or shall I book you a complimentary consultation?` };
+let _toastTimer;
+function showToast(type,title,msg){
+  const icons={success:'&#10003;',error:'&#10005;',info:'&#8505;'};
+  document.getElementById('toastIcon').innerHTML=icons[type]||'&#10003;';
+  document.getElementById('toastTitle').textContent=title;
+  document.getElementById('toastMsg').textContent=msg||'';
+  const t=document.getElementById('toast');t.className='toast '+type+' show';
+  clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>t.classList.remove('show'),4000);
 }
 
-function addSimMsg(role, text, sender='') {
-  const msgs = document.getElementById('simMessages');
-  const el = document.createElement('div');
-  el.className = `sim-msg ${role}`;
-  if (role === 'system') {
-    el.innerHTML = `<div class="sim-bubble" style="background:var(--brand-dim);border:1px solid var(--brand-border);color:var(--brand-text);text-align:center;border-radius:8px;font-size:12px">${text}</div>`;
-  } else {
-    const s = role === 'agent' ? sender || 'Agent' : 'You (testing)';
-    el.innerHTML = `<div class="sim-sender">${s}</div><div class="sim-bubble">${text}</div>`;
-  }
-  msgs.appendChild(el);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function addSimTool(code) {
-  const msgs = document.getElementById('simMessages');
-  const el = document.createElement('div');
-  el.className = 'sim-msg agent';
-  el.innerHTML = `<div class="sim-tool">🔧 ${code}</div>`;
-  msgs.appendChild(el);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function showTyping() {
-  const msgs = document.getElementById('simMessages');
-  typingEl = document.createElement('div');
-  typingEl.className = 'sim-msg agent';
-  typingEl.innerHTML = `<div class="sim-sender">Agent</div><div class="sim-bubble" style="padding:8px 14px"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
-  msgs.appendChild(typingEl);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function removeTyping() { typingEl?.remove(); typingEl = null; }
-
-// ─── Toast ────────────────────────────────────────────────────────────────────
-let toastTimer;
-function showToast(type, title, msg='') {
-  const icons = { success:'✓', error:'✕', info:'ℹ' };
-  document.getElementById('toastIcon').textContent = icons[type] || '✓';
-  document.getElementById('toastTitle').textContent = title;
-  document.getElementById('toastMsg').textContent = msg;
-  const t = document.getElementById('toast');
-  t.className = 'toast ' + type + ' show';
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
-}
-
-// ─── Init ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', checkOnboardingAndLoad);
-
-// URL hash support
-window.addEventListener('load', () => {
-  const hash = location.hash.slice(1);
-  if (hash === 'simulator') {
-    // Scroll to simulator
-  } else if (['identity','greeting','services','knowledge','rules','prompt'].includes(hash)) {
-    const tab = document.querySelector(`[onclick*="'${hash}'"]`);
-    if (tab) switchTab(hash, tab);
-  }
-});
+document.addEventListener('DOMContentLoaded',checkOnboardingAndLoad);
 </script>
 </body>
 </html>
