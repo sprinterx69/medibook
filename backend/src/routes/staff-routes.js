@@ -2,11 +2,14 @@
 // routes/staff-routes.js
 //
 // Staff endpoints:
-//   GET /api/tenants/:tenantId/staff              — all active staff
-//   GET /api/tenants/:tenantId/staff/on-duty      — staff + today's appt counts
+//   GET    /api/tenants/:tenantId/staff              — all active staff
+//   GET    /api/tenants/:tenantId/staff/on-duty      — staff + today's appt counts
+//   POST   /api/tenants/:tenantId/staff              — create staff member
+//   PUT    /api/tenants/:tenantId/staff/:staffId     — update staff member
+//   DELETE /api/tenants/:tenantId/staff/:staffId     — soft-delete staff member
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { getStaffOnDuty, getAllStaff } from '../services/staff-service.js';
+import { getStaffOnDuty, getAllStaff, createStaff, updateStaff, deleteStaff } from '../services/staff-service.js';
 
 export default async function staffRoutes(fastify) {
 
@@ -41,6 +44,47 @@ export default async function staffRoutes(fastify) {
         staff,
         onlineCount: staff.filter(s => s.isAvailable).length,
       };
+    },
+  );
+
+  // Create new staff member
+  fastify.post(
+    '/api/tenants/:tenantId/staff',
+    { preHandler: [requireAuth] },
+    async (request, reply) => {
+      try {
+        const staff = await createStaff(request.params.tenantId, request.body ?? {});
+        return reply.code(201).send({ success: true, staff });
+      } catch (err) {
+        return reply.code(400).send({ error: err.message });
+      }
+    },
+  );
+
+  // Update staff member
+  fastify.put(
+    '/api/tenants/:tenantId/staff/:staffId',
+    { preHandler: [requireAuth] },
+    async (request, reply) => {
+      try {
+        const staff = await updateStaff(request.params.tenantId, request.params.staffId, request.body ?? {});
+        return { success: true, staff };
+      } catch (err) {
+        return reply.code(400).send({ error: err.message });
+      }
+    },
+  );
+
+  // Soft-delete staff member
+  fastify.delete(
+    '/api/tenants/:tenantId/staff/:staffId',
+    { preHandler: [requireAuth] },
+    async (request, reply) => {
+      try {
+        return await deleteStaff(request.params.tenantId, request.params.staffId);
+      } catch (err) {
+        return reply.code(400).send({ error: err.message });
+      }
     },
   );
 }

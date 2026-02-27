@@ -62,3 +62,43 @@ export async function getAllStaff(tenantId) {
     orderBy: { name: 'asc' },
   });
 }
+
+export async function createStaff(tenantId, { name, email, title, color }) {
+  if (!name?.trim()) throw new Error('name is required');
+  const safeName  = name.trim();
+  const safeEmail = email?.trim()
+    || `${safeName.toLowerCase().replace(/[^a-z0-9]/g, '.')}@noemail.local`;
+
+  return prisma.staff.create({
+    data: {
+      tenantId,
+      name:     safeName,
+      email:    safeEmail,
+      title:    title ?? null,
+      role:     'STAFF',
+      color:    color ?? '#60a5fa',
+      isActive: true,
+    },
+  });
+}
+
+export async function updateStaff(tenantId, staffId, updates) {
+  const staff = await prisma.staff.findFirst({ where: { id: staffId, tenantId } });
+  if (!staff) throw new Error('Staff member not found');
+
+  const patch = {};
+  if (updates.name  !== undefined) patch.name  = updates.name.trim();
+  if (updates.email !== undefined) patch.email = updates.email.trim();
+  if (updates.title !== undefined) patch.title = updates.title;
+  if (updates.color !== undefined) patch.color = updates.color;
+  if (updates.isAvailable !== undefined) patch.isAvailable = Boolean(updates.isAvailable);
+
+  return prisma.staff.update({ where: { id: staffId }, data: patch });
+}
+
+export async function deleteStaff(tenantId, staffId) {
+  const staff = await prisma.staff.findFirst({ where: { id: staffId, tenantId } });
+  if (!staff) throw new Error('Staff member not found');
+  await prisma.staff.update({ where: { id: staffId }, data: { isActive: false } });
+  return { deleted: true };
+}
