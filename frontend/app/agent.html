@@ -193,16 +193,17 @@
             <label class="form-label">Business Type</label>
             <select class="select" id="businessType" onchange="markDirty()">
               <option value="">Select type…</option>
-              <option value="aesthetics">Aesthetics Clinic</option>
-              <option value="dental">Dental Practice</option>
-              <option value="physiotherapy">Physiotherapy</option>
-              <option value="gp">GP / Medical Clinic</option>
-              <option value="mental_health">Mental Health Practice</option>
-              <option value="chiropractic">Chiropractic / Osteopathy</option>
-              <option value="beauty">Beauty Salon</option>
-              <option value="spa">Spa &amp; Wellness</option>
-              <option value="hair">Hair Salon</option>
-              <option value="other">Other</option>
+              <option value="Aesthetics">Aesthetics Clinic</option>
+              <option value="Dental">Dental Practice</option>
+              <option value="Hair Salon">Hair Salon</option>
+              <option value="Spa & Wellness">Spa &amp; Wellness</option>
+              <option value="Barbershop">Barbershop</option>
+              <option value="Medical">Medical / GP Clinic</option>
+              <option value="Wellness">Wellness Studio</option>
+              <option value="Physiotherapy">Physiotherapy</option>
+              <option value="Chiropractic">Chiropractic / Osteopathy</option>
+              <option value="Beauty">Beauty Salon</option>
+              <option value="Other">Other</option>
             </select>
           </div>
         </div>
@@ -495,7 +496,8 @@ async function loadSettings(){
       throw new Error(`${res.status}: ${err.error||'unknown'}`);
     }
     settings=await res.json();
-    console.log("🔍 DEBUG agent-settings:",JSON.stringify(settings,null,2),{agentName:settings.agentName,services:settings.services?.length,staff:settings.staff?.length,hasHours:!!settings.businessHours});
+    console.log('✅ agent-settings loaded',{agentName:settings.agentName,businessType:settings.businessType,address:settings.address,phone:settings.phone,services:settings.services?.length,staff:settings.staff?.length,hasHours:!!settings.businessHours,hasVoiceId:!!settings.voiceId});
+    console.log('🔍 DEBUG full settings:',JSON.stringify(settings,null,2));
     document.getElementById('lastSaved').textContent='Synced with database';
   }catch(e){
     console.error('loadSettings error',e);
@@ -533,13 +535,22 @@ async function loadAgentStats(){
 }
 
 function populateForm(){
+  try{
   const s=settings,va=s;
+  console.log('populateForm called, settings keys:', Object.keys(s));
   document.getElementById('agentName').value=va.agentName||'Aria';
   document.getElementById('toneSlider').value=va.voicePersonality??65;
   updateToneLabel(va.voicePersonality??65);
   buildVoiceGrid(va.voiceId);
   document.getElementById('tenantName').value=s.tenantName||'';
-  document.getElementById('businessType').value=s.businessType||'';
+  // businessType: match case-insensitively for backward compat with older saved values
+  const btEl=document.getElementById('businessType');
+  const btVal=s.businessType||'';
+  btEl.value=btVal;
+  if(btEl.value!==btVal){
+    const lo=btVal.toLowerCase();
+    for(const opt of btEl.options){if(opt.value.toLowerCase()===lo){btEl.value=opt.value;break;}}
+  }
   document.getElementById('address').value=s.address||'';
   document.getElementById('parking').value=s.parking||'';
   document.getElementById('clinicPhone').value=s.phone||'';
@@ -568,6 +579,7 @@ function populateForm(){
   buildFaqList(va.faqs||[]);
   updateStatusUI(va.isActive??true);
   refreshPrompt();
+  }catch(e){console.error('populateForm error',e);}
 }
 
 function buildVoiceGrid(selectedId){
