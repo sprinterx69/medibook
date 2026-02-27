@@ -308,6 +308,7 @@ export default async function agentRoutes(fastify) {
     if (!user) return reply.code(404).send({ error: 'Not found' });
     return user;
   });
+
 }
 
 // Export the prompt builder so llm.js can use the same logic
