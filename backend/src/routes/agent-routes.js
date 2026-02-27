@@ -202,9 +202,13 @@ export default async function agentRoutes(fastify) {
     }
 
     const currentSettings = tenant.settings ?? {};
+    const currentVoiceAgent = currentSettings.voiceAgent ?? {};
     const updatedSettings = {
       ...currentSettings,
       voiceAgent: {
+        // Preserve fields set during onboarding that aren't in the agent page form
+        ...currentVoiceAgent,
+        // Overwrite only the fields the agent page manages
         agentName: body.agentName,
         voiceId: body.voiceId,
         voicePersonality: body.voicePersonality,
