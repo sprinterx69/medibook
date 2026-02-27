@@ -913,7 +913,7 @@ textarea{resize:vertical;min-height:100px;line-height:1.6}
     </div>
   </div>
   <div class="success-actions">
-    <a href="/app/agent-settings.html" class="btn btn-gold">Go to Agent Settings →</a>
+    <a href="/app/agent.html" class="btn btn-gold" id="editSettingsBtn">Edit Settings →</a>
     <a href="/app/dashboard.html" class="btn btn-ghost">Open Dashboard</a>
   </div>
 </div>
@@ -1853,6 +1853,8 @@ async function submitOnboarding() {
       body: JSON.stringify(payload),
     });
     if (res.ok) {
+      // Mark onboarding complete in localStorage so agent.html skips the status check
+      localStorage.setItem('onboarding_done_' + auth.tenantId, '1');
       showSuccess();
     } else {
       showToast('Save failed — please try again','error');

@@ -255,9 +255,19 @@ export default async function agentRoutes(fastify) {
     }
 
     const va = (tenant.settings ?? {}).voiceAgent ?? {};
-    const prompt = buildPromptFromSettings(tenant, va, tenant.services, tenant.staff);
 
-    return { prompt, charCount: prompt.length, tokenEstimate: Math.ceil(prompt.length / 4) };
+    // Prefer the AI-generated prompt (created during onboarding). Fall back to
+    // the dynamically-built prompt for tenants that haven't onboarded yet.
+    const prompt = va.systemPrompt || buildPromptFromSettings(tenant, va, tenant.services, tenant.staff);
+    const isAiGenerated = !!va.systemPrompt;
+
+    return {
+      prompt,
+      isAiGenerated,
+      generatedAt:   va.systemPromptGeneratedAt ?? null,
+      charCount:     prompt.length,
+      tokenEstimate: Math.ceil(prompt.length / 4),
+    };
   });
 
   // ── PATCH toggle agent active state ──────────────────────────────────────
