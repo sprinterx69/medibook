@@ -299,34 +299,6 @@ export default async function agentRoutes(fastify) {
     return user;
   });
 
-  // ── GET onboarding status ────────────────────────────────────────────────
-  fastify.get('/api/tenants/:tenantId/onboarding/status', async (request, reply) => {
-    const { tenantId } = request.params;
-    
-    try {
-      await request.jwtVerify();
-    } catch {
-      return reply.code(401).send({ error: 'Unauthorized' });
-    }
-
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
-      select: { settings: true },
-    });
-
-    if (!tenant) {
-      return reply.status(404).send({ error: 'Tenant not found' });
-    }
-
-    const settings = tenant.settings ?? {};
-    const isOnboarded = !!settings.aiOnboarded;
-
-    return { 
-      onboarded: isOnboarded,
-      hasVoiceAgent: !!settings.voiceAgent,
-      hasPhoneNumber: !!settings.voiceAgentPhone,
-    };
-  });
 }
 
 // Export the prompt builder so llm.js can use the same logic
