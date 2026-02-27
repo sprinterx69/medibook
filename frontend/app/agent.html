@@ -504,7 +504,7 @@ async function checkOnboardingAndLoad() {
     const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/onboarding/status`, { headers: authHeaders });
     if (res.ok) {
       const data = await res.json();
-      if (!data.completed) {
+      if (!data.onboarded) {
         window.location.href = '/app/agent-onboarding.html';
         return;
       }
