@@ -234,10 +234,15 @@
                 <textarea class="textarea" id="afterHoursText" rows="3" placeholder="Thank you for calling. We're currently closed…" oninput="countChars(this,'afterCount',400);markDirty()"></textarea>
                 <div class="char-count"><span id="afterCount">0</span> / 400 characters</div>
               </div>
-              <div class="form-group" style="margin-bottom:0">
+              <div class="form-group">
                 <label class="form-label">Human Transfer Phrase</label>
                 <input class="input" type="text" id="transferText" placeholder="Of course, let me connect you with a team member…" onchange="markDirty()">
                 <div class="form-hint">Spoken before transferring a caller to your front desk.</div>
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">Transfer Phone Number</label>
+                <input class="input" type="tel" id="transferNumber" placeholder="+44 20 XXXX XXXX" onchange="markDirty()">
+                <div class="form-hint">When a caller asks to speak to a human, the AI transfers them to this number.</div>
               </div>
             </div>
           </div>
@@ -669,6 +674,7 @@ function collectFormData() {
     greeting: document.getElementById('greetingText').value,
     afterHoursMessage: document.getElementById('afterHoursText').value,
     transferMessage: document.getElementById('transferText').value,
+    transferNumber: document.getElementById('transferNumber').value,
     businessHours,
     enabledServiceIds,
     faqs,
@@ -712,6 +718,7 @@ function populateForm() {
   countChars(afterEl, 'afterCount', 400);
 
   document.getElementById('transferText').value = va.transferMessage || '';
+  document.getElementById('transferNumber').value = va.transferNumber || '';
 
   // Hours
   buildHoursGrid(va.businessHours);

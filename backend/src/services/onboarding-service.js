@@ -170,7 +170,7 @@ export async function completeOnboarding(tenantId, data) {
     afterHoursMessage: `Thank you for calling ${clinicName}. We're currently closed. Please call back during our opening hours or leave a voicemail and we'll get back to you shortly.`,
     transferMessage:  'Of course, let me connect you with a member of our team right away. Please hold for just a moment.',
     transferNumber:   data.transferNumber   ?? '',
-    businessHours:    data.businessHours    ?? _defaultBusinessHours(),
+    businessHours:    _normalizeBusinessHours(data.businessHours),
     enabledServiceIds: createdServiceIds,
     faqs:             [],
     neverSay:         [],
@@ -299,6 +299,17 @@ Write the prompt in second-person (you are...) format, ready to use directly as 
       },
     },
   });
+}
+
+// Onboarding sends 3-letter keys (Mon/Tue/…); agent page expects full names (monday/tuesday/…)
+const _DAY_KEY = { Mon:'monday', Tue:'tuesday', Wed:'wednesday', Thu:'thursday', Fri:'friday', Sat:'saturday', Sun:'sunday' };
+function _normalizeBusinessHours(hours) {
+  if (!hours || !Object.keys(hours).length) return _defaultBusinessHours();
+  const out = {};
+  for (const [k, v] of Object.entries(hours)) {
+    out[_DAY_KEY[k] ?? k.toLowerCase()] = v;
+  }
+  return out;
 }
 
 function _defaultBusinessHours() {
