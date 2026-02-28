@@ -326,6 +326,12 @@ export default async function agentRoutes(fastify) {
       });
 
   // ── DEBUG: Check what's saved in database ────────────────────────────────
+    } catch (err) {
+      console.error("Error fetching agent settings:", err);
+      return reply.status(500).send({ error: "Failed to load agent settings" });
+    }
+  });
+
   fastify.get('/api/tenants/:tenantId/debug/settings', async (request, reply) => {
     const { tenantId } = request.params;
     await request.jwtVerify();
