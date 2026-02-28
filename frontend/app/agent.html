@@ -535,6 +535,11 @@ async function loadAgentStats(){
 }
 
 function populateForm(){
+    console.log('🔍 POPULATE START - settings:', JSON.stringify(settings, null, 2));
+    console.log('🔍 POPULATE - voiceAgent:', JSON.stringify(settings?.voiceAgent, null, 2));
+    console.log('🔍 POPULATE - businessType:', settings?.businessType);
+    console.log('🔍 POPULATE - address:', settings?.address);
+    console.log('🔍 POPULATE - services count:', settings?.services?.length);
   try{
   const s=settings,va=s;
   console.log('populateForm called, settings keys:', Object.keys(s));
