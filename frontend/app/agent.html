@@ -216,15 +216,20 @@
           <input class="input" type="text" id="parking" placeholder="e.g. NCP car park on Wimpole Street, 3-minute walk" onchange="markDirty()">
           <div class="form-hint">Shared with callers who ask about parking.</div>
         </div>
-        <div class="grid-2" style="gap:16px;margin-bottom:0">
+        <div class="grid-2" style="gap:16px">
           <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Phone Number</label>
+            <label class="form-label">Clinic Phone Number</label>
             <input class="input" type="tel" id="clinicPhone" placeholder="+44 20 XXXX XXXX" onchange="markDirty()">
           </div>
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label">Email Address</label>
             <input class="input" type="email" id="clinicEmail" placeholder="hello@yourclinic.com" onchange="markDirty()">
           </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">AI Agent Phone Number <span style="font-size:11px;color:var(--text-muted);font-weight:400">(Twilio number callers ring)</span></label>
+          <input class="input" type="tel" id="voiceAgentPhone" placeholder="+44 20 XXXX XXXX" onchange="markDirty()">
+          <div class="form-hint">Inbound calls to this number are answered by your AI agent.</div>
         </div>
       </div>
       <div class="card card-body">
@@ -560,6 +565,7 @@ function populateForm(){
   document.getElementById('parking').value=s.parking||'';
   document.getElementById('clinicPhone').value=s.phone||'';
   document.getElementById('clinicEmail').value=s.email||'';
+  document.getElementById('voiceAgentPhone').value=s.voiceAgentPhone||'';
   document.getElementById('bankHolidayClosed').checked=va.bankHolidayClosed??false;
   buildServicesList(s.services,va.enabledServiceIds);
   const rules=va.bookingRules||{};
@@ -802,6 +808,7 @@ function collectFormData(){
     parking:document.getElementById('parking').value,
     phone:document.getElementById('clinicPhone').value,
     email:document.getElementById('clinicEmail').value,
+    voiceAgentPhone:document.getElementById('voiceAgentPhone').value,
     bankHolidayClosed:document.getElementById('bankHolidayClosed').checked,
     agentName:document.getElementById('agentName').value,
     voiceId:settings.voiceId,
@@ -842,7 +849,7 @@ async function saveSettings(){
     document.getElementById('unsavedBar').style.display='none';
     document.getElementById('discardBtn').style.display='none';
     document.getElementById('lastSaved').textContent='Saved just now';
-    showToast('success','Settings saved','Your AI agent has been updated.');
+    showToast('success','Settings saved','Your agent configuration has been updated. Use "Regenerate" in the AI Prompt tab to rebuild the prompt with your new data.');
   }catch(e){
     console.error('saveSettings error',e);
     showToast('error','Save failed',e.message||'Could not reach the backend.');

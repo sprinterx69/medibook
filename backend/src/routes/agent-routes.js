@@ -67,90 +67,108 @@ function formatHoursForPrompt(hours) {
 function buildPromptFromSettings(tenant, voiceAgent, services, staffList = []) {
   const name         = tenant.name;
   const agentName    = voiceAgent.agentName    || 'Aria';
-  const hours        = formatHoursForPrompt(voiceAgent.businessHours || DEFAULT_BUSINESS_HOURS);
   const location     = tenant.settings?.address || '';
   const parking      = tenant.settings?.parking  || '';
   const clinicPhone  = tenant.settings?.phone    || '';
-  const greeting     = voiceAgent.greeting     || `Hello! Thank you for calling ${name}.`;
+  const businessType = tenant.settings?.businessType || '';
   const clinicContext = voiceAgent.clinicContext || '';
   const neverSay     = voiceAgent.neverSay     || [];
   const rules        = voiceAgent.bookingRules || DEFAULT_BOOKING_RULES;
   const transferNumber = voiceAgent.transferNumber || '';
+  const transferMsg    = voiceAgent.transferMessage || 'Of course, let me connect you with a member of our team. Please hold.';
+  const hours          = formatHoursForPrompt(voiceAgent.businessHours || DEFAULT_BUSINESS_HOURS);
 
   // Build services list (only enabled ones if configured)
   const enabledIds = voiceAgent.enabledServiceIds || [];
   const availableServices = enabledIds.length > 0
     ? services.filter(s => enabledIds.includes(s.id))
     : services;
-  const servicesList = availableServices
-    .map(s => `- ${s.name}: ${s.durationMins} mins, £${(s.priceCents / 100).toFixed(0)}`)
-    .join('\n') || '- General appointments';
+  const servicesBlock = availableServices.length
+    ? availableServices.map(s => `* ${s.name}${s.durationMins ? ` — ${s.durationMins} mins` : ''}${s.priceCents ? `, £${(s.priceCents / 100).toFixed(0)}` : ''}`).join('\n')
+    : '* General appointments — please enquire for pricing and duration';
 
-  // Build staff section
-  const staffSection = staffList.length > 0
-    ? `\nTEAM MEMBERS:\n${staffList.map(s => `- ${s.name}${s.title ? ` (${s.title})` : ''}`).join('\n')}`
+  const staffBlock = staffList.length
+    ? `\nOur team:\n${staffList.map(s => `* ${s.name}${s.title ? ` — ${s.title}` : ''}`).join('\n')}`
     : '';
 
-  // Build FAQ section
-  const faqLines = (voiceAgent.faqs || [])
-    .map(f => `Q: ${f.question}\nA: ${f.answer}`)
-    .join('\n\n');
-
-  // Build never-say section
-  const neverSayLine = neverSay.length > 0
-    ? `\n- NEVER use these words or phrases: ${neverSay.join(', ')}`
+  const faqBlock = (voiceAgent.faqs || []).length
+    ? `\n\nFrequently asked questions:\n${(voiceAgent.faqs).map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n')}`
     : '';
 
-  const depositText = rules.requireDeposit
+  const neverSayBlock = neverSay.length
+    ? `* Never use these words or phrases: ${neverSay.join(', ')}` : '';
+
+  const depositNote = rules.requireDeposit
     ? `A deposit of ${rules.depositPercent ?? 25}% is required at booking.`
-    : 'No deposit required — full payment on the day.';
+    : 'No deposit required — full payment is taken on the day.';
 
-  return `You are ${agentName}, the warm and professional AI receptionist for ${name}.
+  const newClientNote = rules.newClientPolicy === 'require_consultation'
+    ? 'New clients must book a free consultation before any treatment.'
+    : 'New clients can book any service directly.';
 
-SPEAKING STYLE — THIS IS CRITICAL:
-- You are calm, patient, and genuinely helpful. Never rush the caller.
-- Speak naturally and conversationally — as a friendly human receptionist would.
-- Keep every response SHORT: 1–3 sentences maximum. This is a phone call, not a chat.
-- Never read bullet points or lists aloud. Weave information naturally into sentences.
-- Use natural spoken phrases: "Of course", "Absolutely", "Let me just check that for you…"
-- If a caller is confused or repeating themselves, stay patient and gently guide them.
-- Always wait for the caller to finish before responding.
-- If you mishear or are unsure, politely ask: "I'm sorry, could you say that again?"
+  const clinicDetails = [
+    location   && `* Address: ${location}`,
+    clinicPhone && `* Phone: ${clinicPhone}`,
+    parking    && `* Parking: ${parking}`,
+  ].filter(Boolean).join('\n');
 
-OPENING GREETING — say this EXACTLY when you answer:
-"${greeting}"
+  return `# Personality
+You are ${agentName}, the professional and warm AI receptionist for ${name}${businessType ? `, a ${businessType.toLowerCase()} clinic` : ''}${location ? ` located at ${location}` : ''}. You are knowledgeable about the clinic's services, treatments, pricing, and team. You are approachable, calm, and always aim to provide a friendly yet professional experience for every caller.${clinicContext ? `\n\n${clinicContext}` : ''}
 
-YOUR JOB:
-- Book, reschedule, and cancel appointments.
-- Answer questions about services, prices, opening hours, parking, and the clinic.
-- Transfer callers to a human receptionist when they ask.
+# Environment
+You are answering calls over the phone through an AI voice system. You have access to the clinic's calendar and booking system in real time. Callers typically enquire about services, treatments, pricing, or call to book, reschedule, or cancel appointments.
 
-CLINIC DETAILS:
-- Clinic name: ${name}${location ? `\n- Address: ${location}` : ''}${clinicPhone ? `\n- Phone: ${clinicPhone}` : ''}${parking ? `\n- Parking: ${parking}` : ''}
-- Opening hours: ${hours}
+Clinic details:
+${clinicDetails || `* ${name}`}
+* Opening hours: ${hours}
 
-SERVICES AVAILABLE:
-${servicesList}
-${staffSection}
+# Tone
+Your communication style is professional, warm, and approachable. Speak naturally as a human receptionist would — never robotic or scripted. Keep every response short: 1–3 sentences maximum. This is a phone call, not a chat. Never read out bullet points or lists aloud; weave information naturally into spoken sentences. Use phrases like "Of course", "Absolutely", "Let me just check that for you".
 
-BOOKING POLICY:
-- Minimum booking notice: ${rules.minNoticeHours} hour${rules.minNoticeHours !== 1 ? 's' : ''} ahead
-- Furthest ahead you can book: ${rules.maxFutureDays} days
-- New clients: ${rules.newClientPolicy === 'require_consultation' ? 'must book a free consultation before treatments' : 'can book any service directly'}
-- Deposits: ${depositText}
-- Rescheduling: ${rules.allowRescheduling ? `allowed with ${rules.cancellationNoticeHours}h notice` : 'not available by phone — direct to reception'}
-- Cancellation: ${rules.allowCancellation ? `allowed with ${rules.cancellationNoticeHours}h notice` : 'not available by phone — direct to reception'}
-${clinicContext ? `\nABOUT THE CLINIC:\n${clinicContext}` : ''}
+# Goal
+Your primary goal is to efficiently answer enquiries and book appointments for ${name}. Follow these steps on every call:
 
-RULES YOU MUST ALWAYS FOLLOW:
+1. **Greeting** — Greet the caller warmly and introduce yourself. Ask how you can help them today.
+
+2. **Answer questions** — If the caller asks about services, treatments, prices, or hours, provide accurate information from the knowledge base below. Do not guess or invent details.
+
+3. **Check availability** — If the caller wants to book, use the calendar integration tool to check real availability. Clearly state the available slots.
+
+4. **Book the appointment** — Once the caller confirms a slot, use the calendar tool to create the booking. Confirm the service, date, time, and practitioner name before finalising.
+
+5. **Close the call** — Thank the caller for contacting ${name}. Offer any additional help. End the call politely.
+
+# Knowledge Base
+
+## Services
+${servicesBlock}
+${staffBlock}${faqBlock}
+
+## Booking rules
+* Minimum notice: ${rules.minNoticeHours ?? 2} hour${(rules.minNoticeHours ?? 2) !== 1 ? 's' : ''} in advance
+* Maximum advance booking: ${rules.maxFutureDays ?? 60} days ahead
+* ${newClientNote}
+* Deposits: ${depositNote}
+* Rescheduling: ${rules.allowRescheduling !== false ? `allowed with ${rules.cancellationNoticeHours ?? 24}h notice` : 'not available by phone — direct to reception'}
+* Cancellations: ${rules.allowCancellation !== false ? `allowed with ${rules.cancellationNoticeHours ?? 24}h notice` : 'not available by phone — direct to reception'}
+
+# Guardrails
+* Do not provide medical advice or clinical recommendations outside the knowledge base above.
+* Do not book appointments outside of confirmed available time slots.
+* Do not engage in conversations unrelated to the clinic's services or booking process.
+* If a caller asks about something you don't know, say "Let me check that for you" and use a tool, or offer to take a message for the team.
+* If a caller becomes distressed or the situation is beyond your scope, offer to transfer them to a human member of staff.${neverSayBlock ? `\n* ${neverSayBlock}` : ''}
+
+# Tools
+* **Calendar Integration** — Check real-time availability and book, reschedule, or cancel appointments. Always use this before confirming any time slot — never guess or invent availability.
+* **Transfer** — If the caller explicitly asks for a human, say "${transferMsg}" then end your turn with [TRANSFER]${transferNumber ? ` to ${transferNumber}` : ''}.
+
+# Rules you must always follow
 1. Always confirm the caller's full name before creating any booking.
-2. Always use check_availability before confirming a time slot — never guess or invent slots.
-3. Always read back the full booking details (service, date, time, practitioner) and ask the caller to confirm before finalising.
-4. If the caller asks for a human or to be transferred: say "${voiceAgent.transferMessage || 'Of course, let me connect you now.'}" then end with [TRANSFER]${transferNumber ? ` to ${transferNumber}` : ''}.
-5. For medical or clinical questions: "I'd recommend speaking with one of our practitioners for that."
-6. Never discuss competitor clinics or make negative comparisons.
-7. If you don't know something: say "Let me check that for you" and use a tool.${neverSayLine}
-${faqLines ? `\nFREQUENTLY ASKED QUESTIONS:\n${faqLines}` : ''}
+2. Always use the calendar tool to check availability — never invent a free slot.
+3. Always read back the full booking details (service, date, time, practitioner) and get the caller's verbal confirmation before finalising.
+4. For any clinical or medical question beyond the knowledge base: "I'd recommend speaking with one of our practitioners directly — I can book you a consultation."
+5. Never mention competitor clinics or make comparisons.
 
 TODAY'S DATE & TIME: ${new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })}`;
 }
@@ -206,11 +224,12 @@ export default async function agentRoutes(fastify) {
         tenantId: tenant.id,
         tenantName: tenant.name,
         // Business info (stored in settings root)
-        businessType: settings.businessType ?? '',
-        address:      settings.address      ?? '',
-        parking:      settings.parking      ?? '',
-        phone:        settings.phone        ?? '',
-        email:        settings.email        ?? '',
+        businessType:    settings.businessType    ?? '',
+        address:         settings.address         ?? '',
+        parking:         settings.parking         ?? '',
+        phone:           settings.phone           ?? '',
+        email:           settings.email           ?? '',
+        voiceAgentPhone: settings.voiceAgentPhone ?? '',
         // Staff
         staff,
         // Identity
@@ -249,51 +268,64 @@ export default async function agentRoutes(fastify) {
     const body = request.body;
 
     try {
-      const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: tenantId },
+        include: {
+          services: { where: { isActive: true }, select: { id: true, name: true, durationMins: true, priceCents: true } },
+        },
+      });
       if (!tenant) {
         return reply.status(404).send({ error: 'Tenant not found' });
       }
 
-    const currentSettings = tenant.settings ?? {};
-    const currentVoiceAgent = currentSettings.voiceAgent ?? {};
-    const updatedSettings = {
-      ...currentSettings,
-      // Business info (top-level in tenant.settings)
-      businessType: body.businessType ?? currentSettings.businessType,
-      address:      body.address      ?? currentSettings.address,
-      parking:      body.parking      ?? currentSettings.parking,
-      phone:        body.phone        ?? currentSettings.phone,
-      email:        body.email        ?? currentSettings.email,
-      voiceAgent: {
+      const currentSettings = tenant.settings ?? {};
+      const currentVoiceAgent = currentSettings.voiceAgent ?? {};
+      const updatedVoiceAgent = {
         ...currentVoiceAgent,
-        agentName: body.agentName,
-        voiceId: body.voiceId,
-        voicePersonality: body.voicePersonality,
-        isActive: body.isActive,
-        greeting: body.greeting,
-        afterHoursMessage: body.afterHoursMessage,
-        transferMessage: body.transferMessage,
-        transferNumber: body.transferNumber,
-        businessHours: body.businessHours,
-        enabledServiceIds: body.enabledServiceIds,
-        faqs: body.faqs,
-        neverSay: body.neverSay,
-        clinicContext: body.clinicContext,
-        bankHolidayClosed: body.bankHolidayClosed,
-        bookingRules: body.bookingRules,
+        // Use ?? to fall back to existing values if body field is undefined
+        agentName:         body.agentName         ?? currentVoiceAgent.agentName,
+        voiceId:           body.voiceId           ?? currentVoiceAgent.voiceId,
+        voicePersonality:  body.voicePersonality  ?? currentVoiceAgent.voicePersonality,
+        isActive:          body.isActive          ?? currentVoiceAgent.isActive,
+        greeting:          body.greeting          ?? currentVoiceAgent.greeting,
+        afterHoursMessage: body.afterHoursMessage ?? currentVoiceAgent.afterHoursMessage,
+        transferMessage:   body.transferMessage   ?? currentVoiceAgent.transferMessage,
+        transferNumber:    body.transferNumber    ?? currentVoiceAgent.transferNumber,
+        businessHours:     body.businessHours     ?? currentVoiceAgent.businessHours,
+        enabledServiceIds: body.enabledServiceIds ?? currentVoiceAgent.enabledServiceIds,
+        faqs:              body.faqs              ?? currentVoiceAgent.faqs,
+        neverSay:          body.neverSay          ?? currentVoiceAgent.neverSay,
+        clinicContext:     body.clinicContext      ?? currentVoiceAgent.clinicContext,
+        bankHolidayClosed: body.bankHolidayClosed ?? currentVoiceAgent.bankHolidayClosed,
+        bookingRules:      body.bookingRules       ?? currentVoiceAgent.bookingRules,
+        // Preserve existing prompt — will be regenerated async below
+        systemPrompt:            currentVoiceAgent.systemPrompt,
+        systemPromptGeneratedAt: currentVoiceAgent.systemPromptGeneratedAt,
         updatedAt: new Date().toISOString(),
-      },
-    };
+      };
 
-    const updateData = { settings: updatedSettings };
-    // Also update the tenant name if changed
-    if (body.tenantName && body.tenantName.trim() && body.tenantName !== tenant.name) {
-      updateData.name = body.tenantName.trim();
-    }
+      const updatedSettings = {
+        ...currentSettings,
+        businessType:    body.businessType    ?? currentSettings.businessType,
+        address:         body.address         ?? currentSettings.address,
+        parking:         body.parking         ?? currentSettings.parking,
+        phone:           body.phone           ?? currentSettings.phone,
+        email:           body.email           ?? currentSettings.email,
+        voiceAgentPhone: body.voiceAgentPhone ?? currentSettings.voiceAgentPhone,
+        voiceAgent:      updatedVoiceAgent,
+      };
+
+      const updateData = { settings: updatedSettings };
+      if (body.tenantName?.trim() && body.tenantName !== tenant.name) {
+        updateData.name = body.tenantName.trim();
+      }
 
       await prisma.tenant.update({ where: { id: tenantId }, data: updateData });
 
-      return { success: true, message: 'Agent settings saved successfully.' };
+      // The system prompt is intentionally NOT regenerated here.
+      // It is generated once at onboarding and only when the user explicitly
+      // clicks "Regenerate" in the AI Prompt tab.
+      return { success: true, message: 'Agent settings saved.' };
     } catch (err) {
       fastify.log.error(err, 'PUT agent-settings failed');
       return reply.status(500).send({ error: 'Failed to save agent settings', detail: err.message });
