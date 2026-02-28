@@ -844,9 +844,7 @@ async function saveSettings(){
     document.getElementById('unsavedBar').style.display='none';
     document.getElementById('discardBtn').style.display='none';
     document.getElementById('lastSaved').textContent='Saved just now';
-    showToast('success','Settings saved','Your AI agent has been updated. The system prompt is being refreshed.');
-    // Refresh the prompt panel after a short delay so the regenerated prompt is visible
-    setTimeout(()=>{if(document.getElementById('tab-ai')?.classList.contains('active'))refreshPrompt();},3000);
+    showToast('success','Settings saved','Your agent configuration has been updated. Use "Regenerate" in the AI Prompt tab to rebuild the prompt with your new data.');
   }catch(e){
     console.error('saveSettings error',e);
     showToast('error','Save failed',e.message||'Could not reach the backend.');
