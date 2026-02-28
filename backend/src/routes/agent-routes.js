@@ -227,7 +227,7 @@ export default async function agentRoutes(fastify) {
         businessHours:     normalizeBusinessHours(va.businessHours) ?? DEFAULT_BUSINESS_HOURS,
         // Services
         enabledServiceIds: va.enabledServiceIds ?? [],
-      console.log("🔍 DEBUG agent-settings:", JSON.stringify({businessType, address, servicesCount: tenant.services?.length})),
+      
         // Knowledge base
         faqs:         va.faqs         ?? [],
         neverSay:     va.neverSay     ?? [],
