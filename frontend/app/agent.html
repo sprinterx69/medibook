@@ -464,7 +464,11 @@ const _token=localStorage.getItem(TOKEN_KEY);
 const TENANT_ID=localStorage.getItem(TENANT_KEY)||new URLSearchParams(location.search).get('tenantId')||'';
 if(!_token||!TENANT_ID)location.href='../pages/login.html';
 const authHeaders={'Content-Type':'application/json',Authorization:`Bearer ${_token}`};
-const API_BASE='';
+// Use absolute backend URL so this page works whether served from the same
+// origin as the API or from a separate static-hosting / CDN domain.
+const API_BASE=(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1')
+  ?'http://localhost:3001'
+  :'https://medibook-backend-production-dfb2.up.railway.app';
 let settings={},staffList=[],isDirty=false;
 
 const VOICES=[
