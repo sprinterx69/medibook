@@ -158,6 +158,22 @@ export async function completeOnboarding(tenantId, data) {
   // ── 5. Build voice agent settings ─────────────────────────────────────────
   const agentName = data.agentName?.trim() || 'Sophie';
   const clinicName = data.clinicName?.trim() || tenant.name;
+  const normalizedHours = _normalizeBusinessHours(data.businessHours);
+
+  // Build template system prompt immediately (always works, no API key needed)
+  const templatePrompt = _buildTemplatePrompt({
+    clinicName, agentName,
+    businessType:   data.businessType   ?? '',
+    address:        data.address        ?? '',
+    parking:        data.parking        ?? '',
+    phone:          data.phone          ?? '',
+    services:       data.services       ?? [],
+    staff:          data.staff          ?? [],
+    businessHours:  normalizedHours,
+    bookingRules,
+    clinicContext:  data.clinicContext  ?? '',
+    transferNumber: data.transferNumber ?? '',
+  });
 
   const voiceAgent = {
     ...(currentSettings.voiceAgent ?? {}),
@@ -171,13 +187,16 @@ export async function completeOnboarding(tenantId, data) {
     afterHoursMessage: `Thank you for calling ${clinicName}. We're currently closed. Please call back during our opening hours or leave a voicemail and we'll get back to you shortly.`,
     transferMessage:  'Of course, let me connect you with a member of our team right away. Please hold for just a moment.',
     transferNumber:   data.transferNumber   ?? '',
-    businessHours:    _normalizeBusinessHours(data.businessHours),
+    businessHours:    normalizedHours,
     enabledServiceIds: createdServiceIds,
     faqs:             [],
     neverSay:         [],
     clinicContext:    data.clinicContext     ?? '',
     bookingRules,
-    updatedAt:        new Date().toISOString(),
+    // Store template prompt immediately — calls work even if OpenAI upgrade fails
+    systemPrompt:            templatePrompt,
+    systemPromptGeneratedAt: new Date().toISOString(),
+    updatedAt:               new Date().toISOString(),
   };
 
   // ── 6. Update tenant ──────────────────────────────────────────────────────
@@ -188,6 +207,8 @@ export async function completeOnboarding(tenantId, data) {
     phone:                 data.phone                ?? currentSettings.phone   ?? '',
     email:                 data.email                ?? currentSettings.email   ?? '',
     parking:               data.parking              ?? '',
+    // Persist selected Twilio number so inbound calls route to this tenant
+    voiceAgentPhone:       data.selectedPhone        ?? currentSettings.voiceAgentPhone ?? '',
     voiceAgent,
     onboardingCompleted:   true,
     onboardingCompletedAt: new Date().toISOString(),
@@ -198,7 +219,9 @@ export async function completeOnboarding(tenantId, data) {
 
   await prisma.tenant.update({ where: { id: tenantId }, data: updateData });
 
-  // ── 7. Generate AI system prompt via OpenAI (non-blocking) ───────────────
+  // ── 7. Upgrade system prompt via OpenAI asynchronously (non-blocking) ────
+  // Template prompt is already saved above. This upgrades it to an AI-written
+  // version when OPENAI_API_KEY is available — never blocks the response.
   generateAndStoreSystemPrompt(tenantId, {
     clinicName,
     businessType:   data.businessType   ?? '',
@@ -212,7 +235,7 @@ export async function completeOnboarding(tenantId, data) {
     businessHours:  data.businessHours   ?? {},
     bookingRules,
     clinicContext:  data.clinicContext   ?? '',
-  }).catch(() => {}); // fire-and-forget, never fail the onboarding response
+  }).catch(() => {}); // fire-and-forget — template prompt already saved
 
   return {
     success:          true,
@@ -300,6 +323,80 @@ Write the prompt in second-person (you are...) format, ready to use directly as 
       },
     },
   });
+}
+
+// ─── Template-based system prompt builder (no API key required) ──────────────
+function _buildTemplatePrompt(ctx) {
+  const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const hoursStr = days
+    .map((d, i) => {
+      const h = (ctx.businessHours ?? {})[d];
+      if (!h || !h.open) return `${dayNames[i]}: Closed`;
+      return `${dayNames[i]}: ${h.from}–${h.to}`;
+    })
+    .join(', ');
+
+  const servicesList = (ctx.services ?? []).length
+    ? ctx.services.map(s =>
+        `- ${s.name}${s.durationMins ? ` (${s.durationMins} min` : ''}${s.priceCents ? `, £${(s.priceCents / 100).toFixed(0)})` : (s.durationMins ? ')' : '')}`
+      ).join('\n')
+    : '- General appointments';
+
+  const staffSection = (ctx.staff ?? []).length
+    ? `\nTEAM MEMBERS:\n${ctx.staff.map(s => `- ${s.name}${s.role ? ` (${s.role})` : ''}`).join('\n')}`
+    : '';
+
+  const rules = ctx.bookingRules ?? {};
+  const depositNote = rules.requireDeposit
+    ? `A deposit of ${rules.depositPercent ?? 25}% is required at booking.`
+    : 'No deposit required — full payment on the day.';
+
+  return `You are ${ctx.agentName}, the warm and professional AI receptionist for ${ctx.clinicName}${ctx.businessType ? ` — a ${ctx.businessType.toLowerCase()} practice` : ''}.
+
+SPEAKING STYLE — CRITICAL:
+- You are calm, patient, and genuinely helpful. Never rush the caller.
+- Speak naturally — as a friendly human receptionist would.
+- Keep every response SHORT: 1–3 sentences maximum. This is a phone call, not a chat.
+- Never read bullet points aloud. Weave information naturally into sentences.
+- Use natural spoken phrases: "Of course", "Absolutely", "Let me just check that for you…"
+- Always wait for the caller to finish before responding.
+- If unsure, ask: "I'm sorry, could you say that again?"
+
+OPENING GREETING — say this EXACTLY when you answer:
+"Hello! Thank you for calling ${ctx.clinicName}. I'm ${ctx.agentName}, your virtual receptionist. How can I help you today?"
+
+YOUR JOB:
+- Book, reschedule, and cancel appointments
+- Answer questions about services, prices, opening hours, and the clinic
+- Transfer callers to a human when they ask
+
+CLINIC DETAILS:
+- Name: ${ctx.clinicName}${ctx.address ? `\n- Address: ${ctx.address}` : ''}${ctx.phone ? `\n- Phone: ${ctx.phone}` : ''}${ctx.parking ? `\n- Parking: ${ctx.parking}` : ''}
+- Opening hours: ${hoursStr}
+
+SERVICES AVAILABLE:
+${servicesList}
+${staffSection}
+
+BOOKING POLICY:
+- Minimum booking notice: ${rules.minNoticeHours ?? 2} hour${(rules.minNoticeHours ?? 2) !== 1 ? 's' : ''} ahead
+- Furthest ahead you can book: ${rules.maxFutureDays ?? 60} days
+- Deposits: ${depositNote}
+- Rescheduling: ${rules.allowRescheduling !== false ? `allowed with ${rules.cancellationNoticeHours ?? 24}h notice` : 'not available by phone — direct to reception'}
+- Cancellations: ${rules.allowCancellation !== false ? `allowed with ${rules.cancellationNoticeHours ?? 24}h notice` : 'not available by phone — direct to reception'}
+${ctx.clinicContext ? `\nABOUT THE CLINIC:\n${ctx.clinicContext}` : ''}
+
+RULES YOU MUST ALWAYS FOLLOW:
+1. Always confirm the caller's full name before creating any booking.
+2. Always use check_availability before confirming a time slot — never guess or invent slots.
+3. Always read back booking details (service, date, time, practitioner) and ask the caller to confirm.
+4. If the caller asks for a human or transfer: say "Of course, let me connect you with a member of our team. Please hold." then end with [TRANSFER]${ctx.transferNumber ? ` to ${ctx.transferNumber}` : ''}.
+5. For medical or clinical questions: "I'd recommend speaking with one of our practitioners for that."
+6. Never discuss competitor clinics or make negative comparisons.
+7. If you don't know something: say "Let me check that for you" and use a tool.
+
+TODAY'S DATE & TIME: ${new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })}`;
 }
 
 // Onboarding sends 3-letter keys (Mon/Tue/…); agent page expects full names (monday/tuesday/…)

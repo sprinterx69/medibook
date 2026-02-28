@@ -226,7 +226,11 @@ export async function mediaStreamHandler(connection, request) {
   // ─── Initial greeting ─────────────────────────────────────────────────────
   async function greetCaller(sess, conn, sid, logger) {
     const businessName = sess.tenantContext?.name ?? 'the clinic';
-    const greeting = `Hello, thank you for calling ${businessName}. I'm the virtual assistant. I can help you book an appointment, check availability, or answer questions about our services. How can I help you today?`;
+    const va = sess.tenantContext?.voiceAgent ?? {};
+    // Use the clinic-specific greeting saved during onboarding/agent settings,
+    // falling back to a generic greeting if none is configured yet.
+    const greeting = va.greeting?.trim()
+      || `Hello, thank you for calling ${businessName}. I'm ${va.agentName || 'your virtual assistant'}. How can I help you today?`;
 
     logger.info({ businessName }, 'Sending greeting');
 

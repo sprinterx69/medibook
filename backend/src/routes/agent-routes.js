@@ -155,6 +155,76 @@ ${faqLines ? `\nFREQUENTLY ASKED QUESTIONS:\n${faqLines}` : ''}
 TODAY'S DATE & TIME: ${new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })}`;
 }
 
+// ─── Async: rebuild system prompt after settings are saved ───────────────────
+// Called fire-and-forget from PUT handler. Builds a template prompt immediately,
+// saves it, then optionally upgrades to OpenAI if API key is available.
+async function _regeneratePromptAfterSave(fastify, prisma, tenantId, tenant, voiceAgent, services) {
+  try {
+    const staff = await prisma.staff.findMany({
+      where: { tenantId, isActive: true },
+      select: { id: true, name: true, title: true },
+    });
+    const newPrompt = buildPromptFromSettings(tenant, voiceAgent, services, staff);
+
+    // Re-read settings to avoid clobbering concurrent writes
+    const fresh = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } });
+    if (!fresh) return;
+    const fs = fresh.settings ?? {};
+    await prisma.tenant.update({
+      where: { id: tenantId },
+      data: {
+        settings: {
+          ...fs,
+          voiceAgent: {
+            ...(fs.voiceAgent ?? {}),
+            systemPrompt: newPrompt,
+            systemPromptGeneratedAt: new Date().toISOString(),
+          },
+        },
+      },
+    });
+
+    // Optionally upgrade with OpenAI
+    if (process.env.OPENAI_API_KEY) {
+      try {
+        const { default: OpenAI } = await import('openai');
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        const va = voiceAgent;
+        const s  = tenant.settings ?? {};
+        const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+        const bh = normalizeBusinessHours(va.businessHours) ?? DEFAULT_BUSINESS_HOURS;
+        const hoursStr = days.map(d => { const h = bh[d]; return h?.open ? `${d[0].toUpperCase()}${d.slice(1)}: ${h.from}–${h.to}` : `${d[0].toUpperCase()}${d.slice(1)}: Closed`; }).join(', ');
+        const enabledIds = va.enabledServiceIds ?? [];
+        const svcList = (enabledIds.length ? services.filter(sv => enabledIds.includes(sv.id)) : services)
+          .map(sv => `• ${sv.name}: ${sv.durationMins} min, £${(sv.priceCents / 100).toFixed(0)}`).join('\n') || '• General appointments';
+        const staffLines = staff.map(m => `• ${m.name}${m.title ? ` — ${m.title}` : ''}`).join('\n');
+        const rules = va.bookingRules ?? DEFAULT_BOOKING_RULES;
+        const completion = await openai.chat.completions.create({
+          model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+          max_tokens: 900, temperature: 0.3,
+          messages: [
+            { role: 'system', content: 'You are an expert at writing AI voice receptionist system prompts for UK clinics. Be concise and natural.' },
+            { role: 'user', content: `Write a complete system prompt for "${va.agentName || 'Aria'}", AI receptionist at "${tenant.name}".${s.address ? ` Address: ${s.address}.` : ''} Hours: ${hoursStr}. Services:\n${svcList}${staffLines ? `\nTeam:\n${staffLines}` : ''}\nBooking rules: min ${rules.minNoticeHours ?? 2}h notice, max ${rules.maxFutureDays ?? 60} days ahead. ${va.clinicContext ? `About: ${va.clinicContext}` : ''}\nOpening greeting: "${va.greeting || `Hello! Thank you for calling ${tenant.name}.`}"\nInclude: identity, speaking style (short sentences, phone-friendly), bookings, pricing, hours, transfers, and firm rules. 600-900 words. UK English.` },
+          ],
+        });
+        const aiPrompt = completion.choices[0]?.message?.content?.trim();
+        if (aiPrompt) {
+          const freshAgain = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } });
+          if (freshAgain) {
+            const fa = freshAgain.settings ?? {};
+            await prisma.tenant.update({
+              where: { id: tenantId },
+              data: { settings: { ...fa, voiceAgent: { ...(fa.voiceAgent ?? {}), systemPrompt: aiPrompt, systemPromptGeneratedAt: new Date().toISOString() } } },
+            });
+          }
+        }
+      } catch { /* OpenAI upgrade failed — template prompt already saved */ }
+    }
+  } catch (err) {
+    fastify.log.warn(err, 'prompt regeneration after settings save failed');
+  }
+}
+
 export default async function agentRoutes(fastify) {
 
   // Shared auth helper — verifies JWT and ensures token belongs to this tenant
@@ -206,11 +276,12 @@ export default async function agentRoutes(fastify) {
         tenantId: tenant.id,
         tenantName: tenant.name,
         // Business info (stored in settings root)
-        businessType: settings.businessType ?? '',
-        address:      settings.address      ?? '',
-        parking:      settings.parking      ?? '',
-        phone:        settings.phone        ?? '',
-        email:        settings.email        ?? '',
+        businessType:    settings.businessType    ?? '',
+        address:         settings.address         ?? '',
+        parking:         settings.parking         ?? '',
+        phone:           settings.phone           ?? '',
+        email:           settings.email           ?? '',
+        voiceAgentPhone: settings.voiceAgentPhone ?? '',
         // Staff
         staff,
         // Identity
@@ -248,51 +319,69 @@ export default async function agentRoutes(fastify) {
     const body = request.body;
 
     try {
-      const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: tenantId },
+        include: {
+          services: { where: { isActive: true }, select: { id: true, name: true, durationMins: true, priceCents: true } },
+        },
+      });
       if (!tenant) {
         return reply.status(404).send({ error: 'Tenant not found' });
       }
 
-    const currentSettings = tenant.settings ?? {};
-    const currentVoiceAgent = currentSettings.voiceAgent ?? {};
-    const updatedSettings = {
-      ...currentSettings,
-      // Business info (top-level in tenant.settings)
-      businessType: body.businessType ?? currentSettings.businessType,
-      address:      body.address      ?? currentSettings.address,
-      parking:      body.parking      ?? currentSettings.parking,
-      phone:        body.phone        ?? currentSettings.phone,
-      email:        body.email        ?? currentSettings.email,
-      voiceAgent: {
+      const currentSettings = tenant.settings ?? {};
+      const currentVoiceAgent = currentSettings.voiceAgent ?? {};
+      const updatedVoiceAgent = {
         ...currentVoiceAgent,
-        agentName: body.agentName,
-        voiceId: body.voiceId,
-        voicePersonality: body.voicePersonality,
-        isActive: body.isActive,
-        greeting: body.greeting,
-        afterHoursMessage: body.afterHoursMessage,
-        transferMessage: body.transferMessage,
-        transferNumber: body.transferNumber,
-        businessHours: body.businessHours,
-        enabledServiceIds: body.enabledServiceIds,
-        faqs: body.faqs,
-        neverSay: body.neverSay,
-        clinicContext: body.clinicContext,
-        bankHolidayClosed: body.bankHolidayClosed,
-        bookingRules: body.bookingRules,
+        // Use ?? to fall back to existing values if body field is undefined
+        agentName:         body.agentName         ?? currentVoiceAgent.agentName,
+        voiceId:           body.voiceId           ?? currentVoiceAgent.voiceId,
+        voicePersonality:  body.voicePersonality  ?? currentVoiceAgent.voicePersonality,
+        isActive:          body.isActive          ?? currentVoiceAgent.isActive,
+        greeting:          body.greeting          ?? currentVoiceAgent.greeting,
+        afterHoursMessage: body.afterHoursMessage ?? currentVoiceAgent.afterHoursMessage,
+        transferMessage:   body.transferMessage   ?? currentVoiceAgent.transferMessage,
+        transferNumber:    body.transferNumber    ?? currentVoiceAgent.transferNumber,
+        businessHours:     body.businessHours     ?? currentVoiceAgent.businessHours,
+        enabledServiceIds: body.enabledServiceIds ?? currentVoiceAgent.enabledServiceIds,
+        faqs:              body.faqs              ?? currentVoiceAgent.faqs,
+        neverSay:          body.neverSay          ?? currentVoiceAgent.neverSay,
+        clinicContext:     body.clinicContext      ?? currentVoiceAgent.clinicContext,
+        bankHolidayClosed: body.bankHolidayClosed ?? currentVoiceAgent.bankHolidayClosed,
+        bookingRules:      body.bookingRules       ?? currentVoiceAgent.bookingRules,
+        // Preserve existing prompt — will be regenerated async below
+        systemPrompt:            currentVoiceAgent.systemPrompt,
+        systemPromptGeneratedAt: currentVoiceAgent.systemPromptGeneratedAt,
         updatedAt: new Date().toISOString(),
-      },
-    };
+      };
 
-    const updateData = { settings: updatedSettings };
-    // Also update the tenant name if changed
-    if (body.tenantName && body.tenantName.trim() && body.tenantName !== tenant.name) {
-      updateData.name = body.tenantName.trim();
-    }
+      const updatedSettings = {
+        ...currentSettings,
+        businessType:    body.businessType    ?? currentSettings.businessType,
+        address:         body.address         ?? currentSettings.address,
+        parking:         body.parking         ?? currentSettings.parking,
+        phone:           body.phone           ?? currentSettings.phone,
+        email:           body.email           ?? currentSettings.email,
+        voiceAgentPhone: body.voiceAgentPhone ?? currentSettings.voiceAgentPhone,
+        voiceAgent:      updatedVoiceAgent,
+      };
+
+      const updateData = { settings: updatedSettings };
+      if (body.tenantName?.trim() && body.tenantName !== tenant.name) {
+        updateData.name = body.tenantName.trim();
+      }
 
       await prisma.tenant.update({ where: { id: tenantId }, data: updateData });
 
-      return { success: true, message: 'Agent settings saved successfully.' };
+      // Async: rebuild system prompt from updated settings so calls use fresh data
+      _regeneratePromptAfterSave(
+        fastify, prisma, tenantId,
+        { ...tenant, name: updateData.name || tenant.name, settings: updatedSettings },
+        updatedVoiceAgent,
+        tenant.services,
+      );
+
+      return { success: true, message: 'Agent settings saved.' };
     } catch (err) {
       fastify.log.error(err, 'PUT agent-settings failed');
       return reply.status(500).send({ error: 'Failed to save agent settings', detail: err.message });
