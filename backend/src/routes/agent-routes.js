@@ -357,7 +357,23 @@ export default async function agentRoutes(fastify) {
         orderBy: { name: 'asc' },
       });
 
-  // ── DEBUG: Check what's saved in database ────────────────────────────────
+      const s = tenant.settings ?? {};
+      const va = s.voiceAgent ?? {};
+
+      // Use the saved prompt if available; otherwise build from settings template.
+      // The template generates the full structured format (# Personality, # Goal, etc.)
+      // and is always available without an API key. Use the Regenerate endpoint to
+      // create or refresh an OpenAI-generated version.
+      const prompt = va.systemPrompt || buildPromptFromSettings(tenant, va, tenant.services, staff);
+      const isAiGenerated = !!va.systemPrompt;
+
+      return {
+        prompt,
+        isAiGenerated,
+        generatedAt:   va.systemPromptGeneratedAt ?? null,
+        charCount:     prompt.length,
+        tokenEstimate: Math.ceil(prompt.length / 4),
+      };
     } catch (err) {
       console.error("Error fetching agent settings:", err);
       return reply.status(500).send({ error: "Failed to load agent settings" });
@@ -383,6 +399,207 @@ export default async function agentRoutes(fastify) {
       serviceCount: tenant?.services?.length || 0
     };
   });
+
+  // ── PATCH toggle agent active state ──────────────────────────────────────
+  fastify.patch('/api/tenants/:tenantId/agent-settings/toggle', { preHandler: [requireAuth] }, async (request, reply) => {
+    const { tenantId } = request.params;
+
+    try {
+      const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+      if (!tenant) {
+        return reply.status(404).send({ error: 'Tenant not found' });
+      }
+
+      const settings = tenant.settings ?? {};
+      const va = settings.voiceAgent ?? {};
+      const newActive = !va.isActive;
+
+      await prisma.tenant.update({
+        where: { id: tenantId },
+        data: { settings: { ...settings, voiceAgent: { ...va, isActive: newActive } } },
+      });
+
+      return { isActive: newActive };
+    } catch (err) {
+      fastify.log.error(err, 'PATCH toggle failed');
+      return reply.status(500).send({ error: 'Failed to toggle agent', detail: err.message });
+    }
+  });
+
+  // ── POST regenerate system prompt via OpenAI ──────────────────────────────
+  // Called when user clicks "Regenerate" on the AI Settings tab.
+  // Builds context from all current DB data and calls GPT-4o-mini.
+  fastify.post('/api/tenants/:tenantId/agent-prompt/regenerate', { preHandler: [requireAuth] }, async (request, reply) => {
+    const { tenantId } = request.params;
+    try {
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: tenantId },
+        include: {
+          services: { where: { isActive: true }, select: { id: true, name: true, durationMins: true, priceCents: true, category: true } },
+        },
+      });
+      if (!tenant) return reply.status(404).send({ error: 'Tenant not found' });
+
+      const staff = await prisma.staff.findMany({
+        where: { tenantId, isActive: true },
+        select: { id: true, name: true, title: true },
+        orderBy: { name: 'asc' },
+      });
+
+      const s = tenant.settings ?? {};
+      const va = s.voiceAgent ?? {};
+
+      // Build context strings
+      const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+      const bh = normalizeBusinessHours(va.businessHours) ?? DEFAULT_BUSINESS_HOURS;
+      const hoursStr = days.map(d => {
+        const h = bh[d];
+        if (!h || !h.open) return `${d.charAt(0).toUpperCase()}${d.slice(1)}: Closed`;
+        return `${d.charAt(0).toUpperCase()}${d.slice(1)}: ${h.from}–${h.to}`;
+      }).join(', ');
+
+      const enabledIds = va.enabledServiceIds ?? [];
+      const filteredServices = enabledIds.length
+        ? tenant.services.filter(sv => enabledIds.includes(sv.id))
+        : tenant.services;
+
+      const servicesList = filteredServices.length
+        ? filteredServices.map(sv => `* ${sv.name}${sv.durationMins ? ` — ${sv.durationMins} mins` : ''}${sv.priceCents ? `, £${(sv.priceCents / 100).toFixed(0)}` : ''}`).join('\n')
+        : '* General appointments — please enquire for pricing';
+
+      const staffList = staff.length
+        ? staff.map(m => `* ${m.name}${m.title ? ` — ${m.title}` : ''}`).join('\n')
+        : '';
+
+      const rules = va.bookingRules ?? DEFAULT_BOOKING_RULES;
+      const clinicName = tenant.name;
+      const agentName  = va.agentName || 'Sophie';
+      const address    = s.address || '';
+      const parking    = s.parking || '';
+      const phone      = s.phone   || '';
+      const context    = va.clinicContext || '';
+      const faqs       = (va.faqs ?? []).map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
+      const neverSay   = (va.neverSay ?? []).join(', ');
+      const transferNumber = va.transferNumber || '';
+      const transferMsg    = va.transferMessage || 'Of course, let me connect you now.';
+      const greeting       = va.greeting || `Hello! Thank you for calling ${clinicName}. I'm ${agentName}.`;
+
+      const depositNote = rules.requireDeposit
+        ? `${rules.depositPercent ?? 25}% deposit required at booking`
+        : 'no deposit required';
+      const newClientNote = rules.newClientPolicy === 'require_consultation'
+        ? 'new clients must book a free consultation before treatments'
+        : 'new clients can book any service directly';
+
+      const userPrompt = `Write a complete AI voice receptionist system prompt using EXACTLY these section headings in this order. Do not add, skip, or rename any section.
+
+# Personality
+# Environment
+# Tone
+# Goal
+# Knowledge Base
+## Services
+## Booking rules
+# Guardrails
+# Tools
+# Rules you must always follow
+
+CLINIC DATA to weave into the sections:
+- Agent name: ${agentName}
+- Clinic: ${clinicName}${s.businessType ? ` (${s.businessType})` : ''}${address ? `\n- Address: ${address}` : ''}${phone ? `\n- Phone: ${phone}` : ''}${parking ? `\n- Parking: ${parking}` : ''}
+- Opening hours: ${hoursStr}
+- Greeting (say verbatim at call start): "${greeting}"
+- Transfer message: "${transferMsg}"${transferNumber ? ` then connect to ${transferNumber}` : ''}
+
+## Services
+${servicesList}${staffList ? `\n\nTeam members:\n${staffList}` : ''}
+
+## Booking rules
+* Min notice: ${rules.minNoticeHours ?? 2} hours
+* Max advance: ${rules.maxFutureDays ?? 60} days
+* ${newClientNote}
+* ${depositNote}
+* Rescheduling: ${rules.allowRescheduling !== false ? `allowed with ${rules.cancellationNoticeHours ?? 24}h notice` : 'not available by phone'}
+* Cancellations: ${rules.allowCancellation !== false ? `allowed with ${rules.cancellationNoticeHours ?? 24}h notice` : 'not available by phone'}
+${context ? `\nExtra context: ${context}` : ''}${faqs ? `\n\nFAQs:\n${faqs}` : ''}${neverSay ? `\n\nNever use these words/phrases: ${neverSay}` : ''}
+
+REQUIREMENTS for each section:
+- # Personality: who ${agentName} is, warm and professional, weave in clinic name and type
+- # Environment: answering calls via AI voice, real-time calendar access, typical caller enquiries
+- # Tone: short responses (1–3 sentences), natural, conversational, UK English, no bullet points aloud
+- # Goal: EXACTLY 5 numbered steps: 1. Greeting, 2. Answer questions, 3. Check availability, 4. Book appointment, 5. Close the call
+- # Knowledge Base > Services: list the services and team using the data above
+- # Knowledge Base > Booking rules: list the booking rules using the data above
+- # Guardrails: what the agent must never do (invent slots, give medical advice, go off-topic, etc.)
+- # Tools: Calendar Integration (check/book/reschedule/cancel via tool, never guess availability) and Transfer (say transfer message then output [TRANSFER])
+- # Rules you must always follow: 5 numbered firm rules including: confirm caller's name, always use calendar tool, read back booking details before finalising
+- Final line MUST be exactly: TODAY'S DATE & TIME: {CURRENT_DATETIME}`.trim();
+
+      // Try OpenAI first; fall back to the template builder
+      let generatedPrompt;
+      if (process.env.OPENAI_API_KEY) {
+        try {
+          const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+          const completion = await openai.chat.completions.create({
+            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+            max_tokens: 1600,
+            temperature: 0.3,
+            messages: [
+              { role: 'system', content: 'You are an expert at writing AI voice receptionist system prompts for UK healthcare and beauty clinics. You always follow the exact section structure provided and write in UK English.' },
+              { role: 'user', content: userPrompt },
+            ],
+          });
+          generatedPrompt = completion.choices[0]?.message?.content?.trim();
+        } catch (aiErr) {
+          fastify.log.warn(aiErr, 'OpenAI call failed — falling back to template');
+        }
+      }
+
+      // Fall back to the template builder if OpenAI is unavailable or fails
+      if (!generatedPrompt) {
+        generatedPrompt = buildPromptFromSettings(tenant, va, filteredServices, staff);
+      }
+
+      // Persist
+      const updatedSettings = {
+        ...s,
+        voiceAgent: {
+          ...va,
+          systemPrompt: generatedPrompt,
+          systemPromptGeneratedAt: new Date().toISOString(),
+        },
+      };
+      await prisma.tenant.update({ where: { id: tenantId }, data: { settings: updatedSettings } });
+
+      return {
+        prompt: generatedPrompt,
+        isAiGenerated: !!process.env.OPENAI_API_KEY,
+        generatedAt: updatedSettings.voiceAgent.systemPromptGeneratedAt,
+        charCount: generatedPrompt.length,
+        tokenEstimate: Math.ceil(generatedPrompt.length / 4),
+      };
+    } catch (err) {
+      fastify.log.error(err, 'POST agent-prompt/regenerate failed');
+      return reply.status(500).send({ error: 'Failed to regenerate prompt', detail: err.message });
+    }
+  });
+
+  // ── GET /api/tenants/:tenantId/me ─────────────────────────────────────────
+  fastify.get('/api/tenants/:tenantId/me', async (request, reply) => {
+    const { tenantId } = request.params;
+    try {
+      await request.jwtVerify();
+    } catch {
+      return reply.code(401).send({ error: 'Unauthorized' });
+    }
+    const user = await prisma.user.findFirst({
+      where: { tenantId },
+      select: { id: true, fullName: true, email: true, role: true },
+    });
+    if (!user) return reply.code(404).send({ error: 'Not found' });
+    return user;
+  });
 }
 
 export { buildPromptFromSettings };
+

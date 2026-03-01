@@ -246,58 +246,76 @@ export async function completeOnboarding(tenantId, data) {
 
 // ─── Generate AI system prompt via OpenAI and persist it ─────────────────────
 async function generateAndStoreSystemPrompt(tenantId, ctx) {
+  if (!process.env.OPENAI_API_KEY) return; // no key — template prompt already saved
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-  const servicesList = ctx.services.length
-    ? ctx.services.map(s => `- ${s.name}${s.durationMins ? ` (${s.durationMins} mins` : ''}${s.priceCents ? `, £${(s.priceCents / 100).toFixed(0)})` : (s.durationMins ? ')' : '')}`).join('\n')
-    : '- General appointments';
+  const servicesList = (ctx.services ?? []).length
+    ? ctx.services.map(s => `* ${s.name}${s.durationMins ? ` — ${s.durationMins} mins` : ''}${s.priceCents ? `, £${(s.priceCents / 100).toFixed(0)}` : ''}`).join('\n')
+    : '* General appointments — please enquire for pricing';
 
-  const staffList = ctx.staff.length
-    ? ctx.staff.map(s => `- ${s.name}${s.role ? ` (${s.role})` : ''}`).join('\n')
+  const staffBlock = (ctx.staff ?? []).length
+    ? `\nOur team:\n${ctx.staff.map(s => `* ${s.name}${s.role ? ` — ${s.role}` : ''}`).join('\n')}`
     : '';
 
   const hoursStr = Object.entries(ctx.businessHours || {})
-    .map(([day, h]) => h.open ? `${day.charAt(0).toUpperCase() + day.slice(1)}: ${h.from}–${h.to}` : `${day.charAt(0).toUpperCase() + day.slice(1)}: Closed`)
+    .map(([day, h]) => h?.open ? `${day.charAt(0).toUpperCase() + day.slice(1)}: ${h.from}–${h.to}` : `${day.charAt(0).toUpperCase() + day.slice(1)}: Closed`)
     .join(', ');
 
-  const userMsg = `
-You are writing the AI system prompt for a voice receptionist called "${ctx.agentName}" at a ${ctx.businessType || 'clinic'} named "${ctx.clinicName}".
+  const rules = ctx.bookingRules ?? {};
+  const depositNote = rules.requireDeposit
+    ? `${rules.depositPercent ?? 25}% deposit required at booking`
+    : 'no deposit required';
+  const newClientNote = rules.newClientPolicy === 'require_consultation'
+    ? 'new clients must book a free consultation before treatments'
+    : 'new clients can book any service directly';
 
-Clinic details:
-- Address: ${ctx.address || 'not provided'}
-- Parking: ${ctx.parking || 'not provided'}
-- Phone: ${ctx.phone || 'not provided'}
-- Opening hours: ${hoursStr || 'Mon–Fri 9am–5pm'}
+  const userMsg = `Write a complete AI voice receptionist system prompt using EXACTLY these section headings in this order. Do not add, skip, or rename any section.
 
-Services offered:
-${servicesList}
+# Personality
+# Environment
+# Tone
+# Goal
+# Knowledge Base
+## Services
+## Booking rules
+# Guardrails
+# Tools
+# Rules you must always follow
 
-${staffList ? `Team:\n${staffList}\n` : ''}
-Booking rules:
-- Minimum notice: ${ctx.bookingRules.cancellationNoticeHours ?? 24}h for cancellations
-- Advance booking: up to ${ctx.bookingRules.maxFutureDays ?? 60} days ahead
-- Deposit required: ${ctx.bookingRules.requireDeposit ? 'yes' : 'no'}
+CLINIC DATA to weave into the sections:
+- Agent name: ${ctx.agentName}
+- Clinic: ${ctx.clinicName}${ctx.businessType ? ` (${ctx.businessType})` : ''}${ctx.address ? `\n- Address: ${ctx.address}` : ''}${ctx.phone ? `\n- Phone: ${ctx.phone}` : ''}${ctx.parking ? `\n- Parking: ${ctx.parking}` : ''}
+- Opening hours: ${hoursStr || 'Mon–Fri 9:00–19:00'}
 
-${ctx.clinicContext ? `Additional context:\n${ctx.clinicContext}` : ''}
+## Services
+${servicesList}${staffBlock}
 
-Write a complete, natural, conversational AI receptionist system prompt. The agent should:
-1. Greet callers warmly by name (${ctx.agentName}), mention the clinic name
-2. Help with booking, rescheduling, and cancelling appointments
-3. Answer questions about services, pricing, hours, and parking
-4. Transfer to a human receptionist when asked (using [TRANSFER])
-5. Be concise (1–3 sentences per response) — this is a phone call
-6. Never invent appointment slots — always use tools to check availability first
-7. Always confirm full booking details before finalising
+## Booking rules
+* Min notice: ${rules.minNoticeHours ?? 2} hours
+* Max advance: ${rules.maxFutureDays ?? 60} days
+* ${newClientNote}
+* ${depositNote}
+* Rescheduling: ${rules.allowRescheduling !== false ? 'allowed' : 'not available by phone'}
+* Cancellations: ${rules.allowCancellation !== false ? `allowed with ${rules.cancellationNoticeHours ?? 24}h notice` : 'not available by phone'}
+${ctx.clinicContext ? `\nExtra context: ${ctx.clinicContext}` : ''}
 
-Write the prompt in second-person (you are...) format, ready to use directly as a ChatGPT system message.
-`.trim();
+REQUIREMENTS:
+- # Personality: describe who ${ctx.agentName} is, warm and professional
+- # Environment: phone call via AI voice system, real-time calendar access
+- # Tone: short (1–3 sentences), natural, conversational, UK English
+- # Goal: EXACTLY 5 numbered steps — 1. Greeting, 2. Answer questions, 3. Check availability, 4. Book appointment, 5. Close the call
+- # Knowledge Base: use the Services and Booking rules sections above
+- # Guardrails: what the agent must never do
+- # Tools: mention Calendar Integration (for checking/booking slots) and Transfer (for human handoff using [TRANSFER])
+- # Rules you must always follow: 5 numbered firm rules including confirming caller's name, always using calendar tool, reading back booking details before finalising
+- End the entire prompt with exactly this line: TODAY'S DATE & TIME: {CURRENT_DATETIME}`.trim();
 
   const completion = await openai.chat.completions.create({
-    model:       'gpt-4o-mini',
-    max_tokens:  800,
-    temperature: 0.4,
+    model:       process.env.OPENAI_MODEL || 'gpt-4o-mini',
+    max_tokens:  1400,
+    temperature: 0.3,
     messages: [
-      { role: 'system', content: 'You are an expert at writing concise, effective AI receptionist system prompts for UK healthcare and beauty clinics.' },
+      { role: 'system', content: 'You are an expert at writing AI voice receptionist system prompts for UK healthcare and beauty clinics. You always follow the exact section structure provided and write in UK English.' },
       { role: 'user',   content: userMsg },
     ],
   });
@@ -305,7 +323,7 @@ Write the prompt in second-person (you are...) format, ready to use directly as 
   const generatedPrompt = completion.choices[0]?.message?.content?.trim();
   if (!generatedPrompt) return;
 
-  // Persist the generated prompt into voiceAgent.systemPrompt
+  // Persist the AI-generated prompt (replaces the template saved at onboarding)
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } });
   if (!tenant) return;
 
