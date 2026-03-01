@@ -135,7 +135,48 @@ export async function purchaseNumber(tenantId, phoneNumber) {
   return { phoneNumber: purchased.phoneNumber, sid: purchased.sid, isActive: true };
 }
 
-// ─── Release a number from Twilio and remove from tenant settings ──────────────
+// ─── Update webhook URLs for an existing number ───────────────────────────────
+// Call this if PUBLIC_URL changed after the number was purchased, or if the
+// webhook was misconfigured. Idempotent — safe to call multiple times.
+export async function updateWebhook(tenantId) {
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { settings: true },
+  });
+  if (!tenant) throw Object.assign(new Error('Tenant not found'), { statusCode: 404 });
+
+  const settings = tenant.settings ?? {};
+  const sid = settings.voiceAgentPhoneSid;
+  if (!sid) {
+    throw Object.assign(
+      new Error('No phone number SID found — purchase a number first'),
+      { statusCode: 400 }
+    );
+  }
+
+  const publicUrl = process.env.PUBLIC_URL;
+  if (!publicUrl) {
+    throw Object.assign(
+      new Error('PUBLIC_URL environment variable is not set on the server'),
+      { statusCode: 500 }
+    );
+  }
+
+  try {
+    await getTwilio().incomingPhoneNumbers(sid).update({
+      voiceUrl:             `${publicUrl}/voice/inbound`,
+      voiceMethod:          'POST',
+      statusCallback:       `${publicUrl}/voice/status`,
+      statusCallbackMethod: 'POST',
+    });
+  } catch (err) {
+    throw Object.assign(new Error(`Twilio webhook update failed: ${err.message}`), { statusCode: 502 });
+  }
+
+  return { updated: true, voiceUrl: `${publicUrl}/voice/inbound`, sid };
+}
+
+
 export async function releaseNumber(tenantId, phoneNumber) {
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },

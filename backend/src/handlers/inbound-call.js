@@ -40,7 +40,7 @@ export async function inboundCallHandler(request, reply) {
     // ── 1. Identify tenant from the called number ─────────────────────────
     const tenant = await getTenantByPhoneNumber(To);
     if (!tenant) {
-      request.log.warn({ To }, 'No tenant found for phone number');
+      request.log.warn({ To }, 'No tenant found for phone number — check that voiceAgentPhone is saved in tenant settings');
       // Fall back to a generic rejection message
       return reply
         .header('Content-Type', 'text/xml')
@@ -51,6 +51,8 @@ export async function inboundCallHandler(request, reply) {
 </Response>`);
     }
 
+    request.log.info({ To, tenantId: tenant.id, tenantName: tenant.name }, 'Tenant matched for call');
+
     // ── 2. Create a call session (in-memory store for conversation state) ──
     await createCallSession({
       callSid: CallSid,
@@ -60,13 +62,14 @@ export async function inboundCallHandler(request, reply) {
       startedAt: new Date(),
     });
 
-    request.log.info(
-      { callSid: CallSid, tenant: tenant.name },
-      'Call session created'
-    );
-
     // ── 3. Build WebSocket URL for Twilio Media Streams ───────────────────
-    const wsUrl = `${process.env.PUBLIC_URL.replace('https', 'wss')}/voice/stream`;
+    // Derive the public URL from PUBLIC_URL env var, falling back to the
+    // request's own host so calls work even if the env var is not set.
+    const publicUrl = process.env.PUBLIC_URL
+      || `https://${request.headers.host}`;
+    const wsUrl = publicUrl.replace(/^https?:\/\//, 'wss://') + '/voice/stream';
+
+    request.log.info({ wsUrl, tenant: tenant.name }, 'Returning TwiML with stream URL');
 
     // ── 4. Return TwiML ───────────────────────────────────────────────────
     return reply

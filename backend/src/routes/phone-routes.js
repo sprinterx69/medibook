@@ -14,6 +14,7 @@ import {
   searchAvailableNumbers,
   purchaseNumber,
   releaseNumber,
+  updateWebhook,
   SUPPORTED_COUNTRIES,
 } from '../services/phone-numbers.js';
 
@@ -82,6 +83,20 @@ export default async function phoneRoutes(fastify) {
         requiredPlan: err.requiredPlan ?? null,
         limit:        err.limit        ?? null,
       });
+    }
+  });
+
+  // ── PATCH /api/tenants/:tenantId/phone-numbers/fix-webhook ───────────────
+  // Repairs the Twilio webhook URL for the tenant's existing number.
+  // Use this if the number was purchased before PUBLIC_URL was configured, or
+  // if the domain changed. Safe to call at any time — idempotent.
+  fastify.patch('/api/tenants/:tenantId/phone-numbers/fix-webhook', {
+    preHandler: requireAuth,
+  }, async (request, reply) => {
+    try {
+      return await updateWebhook(request.params.tenantId);
+    } catch (err) {
+      return reply.status(err.statusCode ?? 500).send({ error: err.message });
     }
   });
 
