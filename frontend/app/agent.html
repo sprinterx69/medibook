@@ -699,7 +699,7 @@ async function regeneratePrompt(){
   box.textContent='Generating AI system prompt from your clinic data…\n\nThis may take 5–15 seconds.';
   meta.textContent='Calling ChatGPT…';
   try{
-    const res=await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-prompt/regenerate`,{method:'POST',headers:authHeaders});
+    const res=await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/agent-prompt/regenerate`,{method:'POST',headers:authHeaders,body:'{}'});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||res.status);}
     const data=await res.json();
     box.textContent=data.prompt;
