@@ -169,6 +169,17 @@ function buildSystemPrompt(tenantContext) {
   const { name, services, hours, location, voiceAgent } = tenantContext;
   const va = voiceAgent ?? {};
 
+  // If a custom system prompt was generated at onboarding or via Regenerate,
+  // use it directly — it's the clinic-specific AI-generated prompt.
+  // Replace the {CURRENT_DATETIME} placeholder with the actual current date/time.
+  if (va.systemPrompt) {
+    const now = new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' });
+    return va.systemPrompt.replace('TODAY\'S DATE & TIME: {CURRENT_DATETIME}', `TODAY'S DATE & TIME: ${now}`)
+                          .replace('{CURRENT_DATETIME}', now);
+  }
+
+  // Fallback: build a generic prompt from the clinic's settings
+
   const agentName    = va.agentName    ?? 'Aria';
   const greeting     = va.greeting     ?? `Hello! Thank you for calling ${name}. How can I help you today?`;
   const clinicCtx    = va.clinicContext ?? '';

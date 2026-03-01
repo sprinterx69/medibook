@@ -204,8 +204,9 @@ export async function mediaStreamHandler(connection, request) {
 
       log.info({ responseText: responseText.slice(0, 80) + '...' }, 'Agent response');
 
-      // Synthesize speech with ElevenLabs
-      const audioChunks = await synthesizeSpeech(responseText);
+      // Synthesize speech with ElevenLabs — use the clinic's chosen voice
+      const clinicVoiceId = session.tenantContext?.voiceAgent?.voiceId;
+      const audioChunks = await synthesizeSpeech(responseText, clinicVoiceId);
 
       // Stream audio back to Twilio
       await streamAudioToTwilio({
@@ -237,7 +238,8 @@ export async function mediaStreamHandler(connection, request) {
     sess.conversationHistory.push({ role: 'assistant', content: greeting });
     isSpeaking = true;
 
-    const audioChunks = await synthesizeSpeech(greeting);
+    const clinicVoiceId = va.voiceId;
+    const audioChunks = await synthesizeSpeech(greeting, clinicVoiceId);
     await streamAudioToTwilio({
       socket: conn.socket,
       streamSid: sid,

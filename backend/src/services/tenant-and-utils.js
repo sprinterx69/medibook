@@ -58,6 +58,7 @@ export async function getTenantContext(tenantId) {
     voiceAgent: {
       agentName:        va.agentName        ?? 'Aria',
       voiceId:          va.voiceId          ?? '21m00Tcm4TlvDq8ikWAM',
+      systemPrompt:     va.systemPrompt     ?? null,   // AI-generated prompt saved at onboarding / Regenerate
       greeting:         va.greeting         ?? null,
       afterHoursMessage:va.afterHoursMessage ?? null,
       transferMessage:  va.transferMessage  ?? null,

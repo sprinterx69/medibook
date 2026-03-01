@@ -65,11 +65,13 @@ function pcm16ToUlaw8k(pcmBuffer, inputSampleRate = 24000) {
  * @param {string} text - The text to synthesize
  * @returns {Promise<Buffer[]>} Array of audio chunks
  */
-export async function synthesizeSpeech(text) {
-  const voiceId = process.env.ELEVENLABS_VOICE_ID ?? '21m00Tcm4TlvDq8ikWAM';
+export async function synthesizeSpeech(text, voiceId) {
+  // Use the per-clinic voice ID (set during onboarding), falling back to the
+  // global env var or the ElevenLabs default (Rachel — US English female).
+  const id = voiceId || process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
 
   const response = await fetch(
-    `${ELEVENLABS_BASE}/text-to-speech/${voiceId}/stream`,
+    `${ELEVENLABS_BASE}/text-to-speech/${id}/stream`,
     {
       method: 'POST',
       headers: {
