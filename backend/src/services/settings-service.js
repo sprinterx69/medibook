@@ -159,7 +159,7 @@ export async function buyClinicNumber(tenantId, country = 'GB') {
   }
 
   const chosenNumber   = available[0].phoneNumber;
-  const voiceWebhook   = `${process.env.PUBLIC_URL}/api/voice-webhook`;
+  const voiceWebhook   = `${process.env.PUBLIC_URL}/voice/inbound`;
 
   // ── Purchase via Twilio ────────────────────────────────────────────────────
   let purchased;
