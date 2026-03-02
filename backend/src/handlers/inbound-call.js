@@ -63,11 +63,10 @@ export async function inboundCallHandler(request, reply) {
     });
 
     // ── 3. Build WebSocket URL for Twilio Media Streams ───────────────────
-    // Derive the public URL from PUBLIC_URL env var, falling back to the
-    // request's own host so calls work even if the env var is not set.
-    const publicUrl = process.env.PUBLIC_URL
-      || `https://${request.headers.host}`;
-    const wsUrl = publicUrl.replace(/^https?:\/\//, 'wss://') + '/voice/stream';
+    // Use the request's host header — this is always the domain Twilio
+    // actually called (e.g. api.callora.me), so the WebSocket URL is correct
+    // regardless of what PUBLIC_URL is set to.
+    const wsUrl = `wss://${request.headers.host}/voice/stream`;
 
     request.log.info({ wsUrl, tenant: tenant.name }, 'Returning TwiML with stream URL');
 
