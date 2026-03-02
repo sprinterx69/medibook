@@ -70,14 +70,16 @@ export async function synthesizeSpeech(text, voiceId) {
   // global env var or the ElevenLabs default (Rachel — US English female).
   const id = voiceId || process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
 
+  // output_format MUST be a query param — ElevenLabs ignores it in the JSON body.
+  // Without it, ElevenLabs returns MP3 by default, which we'd mis-interpret as
+  // raw PCM and the audio would sound like static noise on the call.
   const response = await fetch(
-    `${ELEVENLABS_BASE}/text-to-speech/${id}/stream`,
+    `${ELEVENLABS_BASE}/text-to-speech/${id}/stream?output_format=pcm_24000`,
     {
       method: 'POST',
       headers: {
         'xi-api-key': process.env.ELEVENLABS_API_KEY,
         'Content-Type': 'application/json',
-        Accept: 'audio/pcm',
       },
       body: JSON.stringify({
         text,
@@ -88,7 +90,6 @@ export async function synthesizeSpeech(text, voiceId) {
           style: 0.0,
           use_speaker_boost: true,
         },
-        output_format: 'pcm_24000',    // Raw PCM at 24kHz for easy conversion
       }),
     }
   );
