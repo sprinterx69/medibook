@@ -77,7 +77,7 @@ export async function synthesizeSpeech(text, voiceId) {
       headers: {
         'xi-api-key': process.env.ELEVENLABS_API_KEY,
         'Content-Type': 'application/json',
-        Accept: 'audio/mpeg',
+        Accept: 'audio/pcm',
       },
       body: JSON.stringify({
         text,
