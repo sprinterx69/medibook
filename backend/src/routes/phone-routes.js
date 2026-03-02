@@ -16,6 +16,7 @@ import {
   releaseNumber,
   updateWebhook,
   SUPPORTED_COUNTRIES,
+  diagnoseTenantPhone,
 } from '../services/phone-numbers.js';
 
 export default async function phoneRoutes(fastify) {
@@ -108,6 +109,19 @@ export default async function phoneRoutes(fastify) {
     const phoneNumber = decodeURIComponent(request.params.number);
     try {
       return await releaseNumber(request.params.tenantId, phoneNumber);
+    } catch (err) {
+      return reply.status(err.statusCode ?? 500).send({ error: err.message });
+    }
+  });
+
+  // ── GET /api/tenants/:tenantId/phone-numbers/diagnose ─────────────────────
+  // Returns the stored phone number, its Twilio webhook config, and PUBLIC_URL.
+  // Use this to verify the number is correctly linked and webhooks are correct.
+  fastify.get('/api/tenants/:tenantId/phone-numbers/diagnose', {
+    preHandler: requireAuth,
+  }, async (request, reply) => {
+    try {
+      return await diagnoseTenantPhone(request.params.tenantId);
     } catch (err) {
       return reply.status(err.statusCode ?? 500).send({ error: err.message });
     }

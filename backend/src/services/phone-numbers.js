@@ -204,3 +204,40 @@ export async function releaseNumber(tenantId, phoneNumber) {
 
   return { released: true, phoneNumber };
 }
+
+// ─── Diagnose phone number configuration ──────────────────────────────────────
+// Returns what's in the DB, what Twilio has configured, and what PUBLIC_URL is.
+export async function diagnoseTenantPhone(tenantId) {
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { settings: true },
+  });
+  if (!tenant) throw Object.assign(new Error('Tenant not found'), { statusCode: 404 });
+
+  const settings = tenant.settings ?? {};
+  const phone = settings.voiceAgentPhone ?? null;
+  const sid   = settings.voiceAgentPhoneSid ?? null;
+
+  const result = {
+    db: { voiceAgentPhone: phone, voiceAgentPhoneSid: sid },
+    server: { PUBLIC_URL: process.env.PUBLIC_URL ?? null },
+    twilio: null,
+  };
+
+  if (sid) {
+    try {
+      const num = await getTwilio().incomingPhoneNumbers(sid).fetch();
+      result.twilio = {
+        phoneNumber:  num.phoneNumber,
+        voiceUrl:     num.voiceUrl,
+        voiceMethod:  num.voiceMethod,
+        sid:          num.sid,
+        accountSid:   num.accountSid,
+      };
+    } catch (err) {
+      result.twilio = { error: err.message };
+    }
+  }
+
+  return result;
+}
