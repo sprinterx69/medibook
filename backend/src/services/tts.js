@@ -98,7 +98,7 @@ export async function synthesizeSpeech(text, voiceId) {
     throw new Error(`ElevenLabs TTS error ${response.status}: ${err}`);
   }
 
-  // Collect streamed PCM chunks
+  // Collect all streamed PCM chunks
   const pcmChunks = [];
   const reader = response.body.getReader();
 
@@ -108,8 +108,13 @@ export async function synthesizeSpeech(text, voiceId) {
     if (value) pcmChunks.push(Buffer.from(value));
   }
 
-  // Convert all PCM to μ-law 8kHz
-  return pcmChunks.map(chunk => pcm16ToUlaw8k(chunk, 24000));
+  // Concatenate ALL PCM first, then convert once.
+  // Converting per-chunk causes empty buffers: tiny streaming chunks (2-4 bytes)
+  // produce 0 output samples at the 3:1 (24kHz→8kHz) downsample ratio,
+  // which makes Twilio reject media messages with "empty payload" (warning 31951).
+  const fullPcm = Buffer.concat(pcmChunks);
+  const ulawAudio = pcm16ToUlaw8k(fullPcm, 24000);
+  return [ulawAudio];
 }
 
 /**
