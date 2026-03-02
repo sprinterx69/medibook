@@ -238,14 +238,19 @@ export async function mediaStreamHandler(connection, request) {
     sess.conversationHistory.push({ role: 'assistant', content: greeting });
     isSpeaking = true;
 
-    const clinicVoiceId = va.voiceId;
-    const audioChunks = await synthesizeSpeech(greeting, clinicVoiceId);
-    await streamAudioToTwilio({
-      socket: conn.socket,
-      streamSid: sid,
-      audioChunks,
-      markName: 'agent-done-speaking',
-    });
+    try {
+      const clinicVoiceId = va.voiceId;
+      const audioChunks = await synthesizeSpeech(greeting, clinicVoiceId);
+      await streamAudioToTwilio({
+        socket: conn.socket,
+        streamSid: sid,
+        audioChunks,
+        markName: 'agent-done-speaking',
+      });
+    } catch (err) {
+      logger.error({ err }, 'Failed to synthesize or stream greeting — check ELEVENLABS_API_KEY and voice ID');
+      isSpeaking = false;
+    }
   }
 
   // ─── Handle call end ──────────────────────────────────────────────────────
