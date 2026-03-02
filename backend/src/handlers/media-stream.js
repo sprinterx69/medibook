@@ -24,6 +24,7 @@ import { runLLMTurn } from '../services/llm.js';
 import { synthesizeSpeech, streamAudioToTwilio } from '../services/tts.js';
 import { getTenantContext } from '../services/tenant-and-utils.js';
 import { saveCallTranscript } from '../services/transcript.js';
+import { getTwilio } from '../services/phone-numbers.js';
 
 export async function mediaStreamHandler(connection, request) {
   const log = request.log;
@@ -112,6 +113,28 @@ export async function mediaStreamHandler(connection, request) {
       case 'mark': {
         if (msg.mark.name === 'agent-done-speaking') {
           isSpeaking = false;
+
+          // If LLM requested a transfer, execute it now that the goodbye
+          // message has finished playing. We use the Twilio REST API to
+          // replace the current call with a <Dial> TwiML, which bridges
+          // the caller to the clinic's transfer number.
+          if (session?.shouldTransfer) {
+            const transferNumber = session.tenantContext?.voiceAgent?.transferNumber;
+            if (transferNumber) {
+              log.info({ callSid, transferNumber }, 'Executing call transfer');
+              try {
+                await getTwilio().calls(callSid).update({
+                  twiml: `<Response><Dial>${transferNumber}</Dial></Response>`,
+                });
+              } catch (err) {
+                log.error({ err }, 'Failed to transfer call');
+              }
+            } else {
+              log.warn({ callSid }, 'Transfer requested but no transferNumber configured');
+            }
+            session.shouldTransfer = false;
+          }
+
           log.debug('Agent finished speaking, listening again');
         }
         break;

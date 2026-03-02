@@ -18,7 +18,7 @@ import twilio from 'twilio';
 
 // Lazy-load Twilio client to ensure env vars are loaded
 let twilioClient;
-function getTwilio() {
+export function getTwilio() {
   if (!twilioClient) {
     twilioClient = twilio(
       process.env.TWILIO_ACCOUNT_SID,
@@ -107,13 +107,21 @@ export async function purchaseNumber(tenantId, phoneNumber) {
   }
 
   // Buy from Twilio and configure webhooks
+  const publicUrl = process.env.PUBLIC_URL;
+  if (!publicUrl) {
+    throw Object.assign(
+      new Error('PUBLIC_URL environment variable is not set — cannot configure Twilio webhooks'),
+      { statusCode: 500 }
+    );
+  }
+
   let purchased;
   try {
     purchased = await getTwilio().incomingPhoneNumbers.create({
       phoneNumber,
-      voiceUrl:              `${process.env.PUBLIC_URL}/voice/inbound`,
+      voiceUrl:              `${publicUrl}/voice/inbound`,
       voiceMethod:           'POST',
-      statusCallback:        `${process.env.PUBLIC_URL}/voice/status`,
+      statusCallback:        `${publicUrl}/voice/status`,
       statusCallbackMethod:  'POST',
     });
   } catch (err) {
