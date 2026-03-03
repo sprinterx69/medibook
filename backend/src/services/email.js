@@ -49,6 +49,37 @@ export async function sendVerificationEmail({ to, fullName, code }) {
   });
 }
 
+// ─── Onboarding email (sent after Stripe payment — links to token-gated wizard) ─
+export async function sendOnboardingEmail({ to, fullName, tenantName, onboardingUrl }) {
+  await send({
+    to,
+    subject: `Welcome to Callora — complete your Med Spa setup`,
+    html: `
+      <div style="font-family:'Segoe UI',sans-serif;max-width:520px;margin:0 auto;background:#0f1419;padding:40px 32px;border-radius:12px">
+        <div style="font-family:Georgia,serif;font-size:26px;color:#ffffff;margin-bottom:8px">Cal<span style="color:#c9903a">lora</span></div>
+        <h2 style="font-size:22px;color:#ffffff;margin:24px 0 8px">Hi ${fullName} — let's get your Med Spa set up.</h2>
+        <p style="color:#94a3b8;font-size:15px;line-height:1.7">
+          Payment confirmed. Your <strong style="color:#ffffff">${tenantName}</strong> account is ready.
+          Click below to complete your clinic setup — it takes about 5 minutes.
+        </p>
+        <p style="margin:32px 0;text-align:center">
+          <a href="${onboardingUrl}" style="background:#c9903a;color:white;padding:16px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;display:inline-block">
+            Complete My Setup →
+          </a>
+        </p>
+        <p style="color:#64748b;font-size:13px;line-height:1.6">
+          This link is unique to your account and expires in 72 hours.
+          If it expires, simply log in and a new link will be generated automatically.
+        </p>
+        <hr style="border:none;border-top:1px solid #1e293b;margin:28px 0"/>
+        <p style="color:#475569;font-size:12px;line-height:1.6">
+          Questions? Reply to this email or contact support@callora.me
+        </p>
+      </div>
+    `,
+  });
+}
+
 // ─── Welcome email (after trial starts) ───────────────────────────────────────
 export async function sendWelcomeEmail({ to, fullName, tenantName, dashboardUrl }) {
   await send({

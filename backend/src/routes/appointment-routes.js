@@ -12,9 +12,9 @@
 import {
   getTodaysAppointments,
   getDashboardStats,
-  createAppointment,
   getServicesAndStaff,
 } from '../services/appointment-service.js';
+import { BookingEngine } from '../services/booking-engine.js';
 import { logActivity } from '../services/activity-service.js';
 
 export default async function appointmentRoutes(fastify) {
@@ -68,10 +68,14 @@ export default async function appointmentRoutes(fastify) {
 
       let appointment;
       try {
-        appointment = await createAppointment(tenantId, request.body);
+        appointment = await BookingEngine.createAppointment(tenantId, request.body, 'manual');
       } catch (err) {
-        const status = err.code === 404 ? 404 : (err.code || 400);
-        return reply.code(status).send({ error: err.message });
+        const status = err.statusCode ?? (err.code === 404 ? 404 : (err.code || 400));
+        return reply.code(status).send({
+          error:  err.message,
+          code:   err.code ?? null,
+          errors: err.errors ?? undefined,
+        });
       }
 
       // Fire-and-forget activity log

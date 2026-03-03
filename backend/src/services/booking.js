@@ -10,6 +10,9 @@
 import { prisma } from '../config/prisma.js';
 import { format, parseISO } from 'date-fns';
 import twilio from 'twilio';
+import { BookingEngine } from './booking-engine.js';
+
+const ENGINE_ENABLED = process.env.BOOKING_ENGINE_ENABLED === 'true';
 
 // Lazy-load Twilio client to ensure env vars are loaded
 let twilioClient;
@@ -59,6 +62,36 @@ export async function bookAppointment({
 
   if (!service) {
     throw new Error(`Service "${serviceName}" not found`);
+  }
+
+  // Run BookingEngine validation (when enabled) before any DB writes
+  if (ENGINE_ENABLED) {
+    const date = startsAt.toISOString().slice(0, 10); // "YYYY-MM-DD"
+    const time = `${String(startsAt.getUTCHours()).padStart(2, '0')}:${String(startsAt.getUTCMinutes()).padStart(2, '0')}`;
+    await BookingEngine.createAppointment(
+      tenantId,
+      { clientName: callerName, clientPhone: callerNumber, serviceId: service.id, staffId, date, time, notes },
+      'ai'
+    );
+    // If we get here, validation passed and appointment was already created by BookingEngine.
+    // Return the result that was created inside BookingEngine.
+    // Note: BookingEngine.createAppointment already calls createAppointment internally — do not double-create.
+    // So if engine is enabled we return early after the engine creates the appointment.
+    const created = await prisma.appointment.findFirst({
+      where: { tenantId, staffId, startsAt, status: { not: 'CANCELLED' } },
+      include: {
+        client:  { select: { fullName: true, phone: true } },
+        staff:   { select: { name: true } },
+        service: { select: { name: true, durationMins: true } },
+      },
+    });
+    return {
+      success:       true,
+      appointmentId: created?.id,
+      startsAt,
+      endsAt:        new Date(startsAt.getTime() + service.durationMins * 60 * 1000),
+      message:       `Confirmed! Your appointment is on ${format(startsAt, 'MMMM do')} at ${format(startsAt, 'h:mm a')}.`,
+    };
   }
 
   // Calculate end time
