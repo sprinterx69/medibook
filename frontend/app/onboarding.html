@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Callora — Med Spa Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0c1117;--surface:#141b24;--card:#1a2332;--border:#1e2d3d;--border2:#243447;
+  --ink:#e2e8f0;--ink2:#94a3b8;--gold:#c9903a;--gold2:#e0a850;--teal:#0d9488;
+  --red:#ef4444;--green:#22c55e;--radius:10px;
+  --shadow:0 2px 8px rgba(0,0,0,0.3);
+}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Geist',sans-serif}
+body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:24px 16px}
+
+/* Header */
+.header{width:100%;max-width:700px;display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+.logo{font-family:'Instrument Serif',serif;font-size:22px;color:var(--ink)}
+.logo span{color:var(--gold)}
+
+/* Progress */
+.progress-bar{width:100%;max-width:700px;margin-bottom:32px}
+.progress-steps{display:flex;align-items:center;gap:0}
+.step-item{display:flex;align-items:center;flex:1}
+.step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;border:2px solid var(--border2);background:var(--surface);color:var(--ink2);transition:all 0.3s}
+.step-dot.active{border-color:var(--gold);background:rgba(201,144,58,0.15);color:var(--gold)}
+.step-dot.done{border-color:var(--green);background:rgba(34,197,94,0.15);color:var(--green)}
+.step-line{flex:1;height:2px;background:var(--border2);transition:background 0.3s}
+.step-line.done{background:var(--green)}
+.step-labels{display:flex;justify-content:space-between;margin-top:8px}
+.step-label{font-size:10px;color:var(--ink2);text-align:center;flex:1;transition:color 0.3s}
+.step-label.active{color:var(--gold)}
+.step-label.done{color:var(--green)}
+
+/* Card */
+.card{width:100%;max-width:700px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px}
+.step-title{font-family:'Instrument Serif',serif;font-size:24px;color:var(--ink);margin-bottom:6px}
+.step-sub{font-size:14px;color:var(--ink2);margin-bottom:28px;line-height:1.6}
+
+/* Form */
+.field{margin-bottom:18px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.row.three{grid-template-columns:1fr 1fr 1fr}
+label{display:block;font-size:11px;font-weight:600;letter-spacing:0.05em;color:var(--ink2);margin-bottom:6px;text-transform:uppercase}
+input,select,textarea{
+  width:100%;padding:11px 13px;border:1.5px solid var(--border2);border-radius:var(--radius);
+  font-family:'Geist',sans-serif;font-size:14px;color:var(--ink);background:var(--surface);
+  outline:none;transition:border-color 0.2s,box-shadow 0.2s;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,144,58,0.1)}
+textarea{resize:vertical;min-height:90px}
+select option{background:var(--card);color:var(--ink)}
+input[type="checkbox"]{width:auto;cursor:pointer}
+.check-row{display:flex;align-items:center;gap:10px;padding:10px;border:1.5px solid var(--border2);border-radius:var(--radius);cursor:pointer}
+.check-row:hover{border-color:var(--gold)}
+.check-row input{width:16px;height:16px;cursor:pointer}
+
+/* Service item */
+.service-block{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.service-block .block-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.service-block .block-title{font-size:13px;font-weight:600;color:var(--ink)}
+.btn-remove{background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.2);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:'Geist',sans-serif}
+
+/* Days checkboxes */
+.days-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day-btn{padding:8px 4px;border:1.5px solid var(--border2);border-radius:8px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink2);background:var(--surface);transition:all 0.2s;user-select:none}
+.day-btn.selected{border-color:var(--gold);background:rgba(201,144,58,0.15);color:var(--gold)}
+
+/* Time blocks */
+.time-block{display:grid;grid-template-columns:1fr auto 1fr auto;gap:8px;align-items:center;margin-bottom:8px}
+.time-sep{font-size:13px;color:var(--ink2);text-align:center}
+
+/* Navigation */
+.nav{display:flex;justify-content:space-between;align-items:center;margin-top:28px}
+.btn-back{background:transparent;border:1.5px solid var(--border2);color:var(--ink2);padding:11px 24px;border-radius:var(--radius);font-size:14px;font-weight:500;cursor:pointer;font-family:'Geist',sans-serif;transition:all 0.2s}
+.btn-back:hover{border-color:var(--ink2);color:var(--ink)}
+.btn-next{background:var(--gold);color:white;border:none;padding:11px 28px;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;font-family:'Geist',sans-serif;display:flex;align-items:center;gap:8px;transition:all 0.2s}
+.btn-next:hover{background:#b8802f}
+.btn-next:disabled{opacity:0.5;pointer-events:none}
+
+/* Saving indicator */
+.save-indicator{font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.save-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+
+/* Alert */
+.alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
+.alert.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:var(--red)}
+.alert.show{display:block}
+
+/* Success screen */
+.success-screen{text-align:center;padding:20px 0}
+.success-icon{font-size:56px;margin-bottom:16px}
+.success-title{font-family:'Instrument Serif',serif;font-size:30px;color:var(--ink);margin-bottom:8px}
+.success-sub{font-size:15px;color:var(--ink2);line-height:1.7;max-width:480px;margin:0 auto}
+
+/* Tone selector */
+.tone-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.tone-card{border:2px solid var(--border2);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all 0.2s;text-align:center}
+.tone-card:hover{border-color:var(--gold)}
+.tone-card.selected{border-color:var(--gold);background:rgba(201,144,58,0.08)}
+.tone-card .tone-icon{font-size:24px;margin-bottom:8px}
+.tone-card .tone-name{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.tone-card .tone-desc{font-size:11px;color:var(--ink2);line-height:1.5}
+
+/* Tag input */
+.tag-input-wrap{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;border:1.5px solid var(--border2);border-radius:var(--radius);min-height:46px;cursor:text;background:var(--surface)}
+.tag{background:rgba(201,144,58,0.15);color:var(--gold);border:1px solid rgba(201,144,58,0.3);border-radius:4px;padding:3px 10px;font-size:12px;display:flex;align-items:center;gap:6px}
+.tag button{background:none;border:none;color:var(--gold);cursor:pointer;font-size:14px;line-height:1}
+.tag-input-wrap input{flex:1;min-width:120px;border:none;background:transparent;font-family:'Geist',sans-serif;font-size:14px;color:var(--ink);padding:0;outline:none}
+
+@media(max-width:600px){
+  .row,.row.three{grid-template-columns:1fr}
+  .days-grid{grid-template-columns:repeat(4,1fr)}
+  .tone-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Cal<span>lora</span></div>
+  <div class="save-indicator" id="saveIndicator" style="display:none">
+    <span class="save-dot"></span><span>Saved</span>
+  </div>
+</div>
+
+<div class="progress-bar">
+  <div class="progress-steps" id="progressSteps"></div>
+  <div class="step-labels" id="stepLabels"></div>
+</div>
+
+<div class="card">
+  <div class="alert error" id="alertBox"></div>
+  <div id="stepContent"></div>
+  <div class="nav" id="navBar">
+    <button class="btn-back" id="btnBack" onclick="prevStep()">← Back</button>
+    <button class="btn-next" id="btnNext" onclick="nextStep()">Continue →</button>
+  </div>
+</div>
+
+<script>
+const STEPS = ['Clinic Info','Services','Consultation Rules','Call Handling','Brand Voice','Operating Hours'];
+const API = (location.hostname==='localhost'||location.hostname==='127.0.0.1')
+  ? 'http://localhost:3001' : '';
+
+// ── Token from URL ──────────────────────────────────────────────────────────
+const token = new URLSearchParams(location.search).get('token');
+if (!token) {
+  document.querySelector('.card').innerHTML = `<div style="text-align:center;padding:40px">
+    <div style="font-size:40px;margin-bottom:16px">🔒</div>
+    <h2 style="font-family:'Instrument Serif',serif;font-size:24px;margin-bottom:8px">Invalid link</h2>
+    <p style="color:var(--ink2)">This onboarding link is invalid. Please log in to receive a new link.</p>
+    <a href="/pages/login.html" style="display:inline-block;margin-top:20px;color:var(--gold)">Go to Login →</a>
+  </div>`;
+  document.getElementById('navBar').style.display = 'none';
+  document.querySelector('.progress-bar').style.display = 'none';
+}
+
+let currentStep = 1;
+let stepData = {};
+let tenantName = '';
+let saveTimeout = null;
+
+// ── Init ────────────────────────────────────────────────────────────────────
+async function init() {
+  if (!token) return;
+  try {
+    const res = await fetch(`${API}/api/onboarding/${token}`);
+    if (!res.ok) {
+      const d = await res.json();
+      showTokenError(d.error, d.message);
+      return;
+    }
+    const data = await res.json();
+    tenantName = data.tenantName ?? 'Your Clinic';
+    currentStep = Math.min(data.currentStep ?? 1, 6);
+    stepData = data.stepData ?? {};
+    renderProgress();
+    renderStep(currentStep);
+  } catch {
+    showTokenError('NETWORK_ERROR', 'Network error. Please check your connection and refresh.');
+  }
+}
+
+function showTokenError(code, message) {
+  document.querySelector('.card').innerHTML = `<div style="text-align:center;padding:40px">
+    <div style="font-size:40px;margin-bottom:16px">${code === 'TOKEN_EXPIRED' ? '⏰' : '❌'}</div>
+    <h2 style="font-family:'Instrument Serif',serif;font-size:24px;margin-bottom:8px">${code === 'TOKEN_USED' ? 'Already completed' : code === 'TOKEN_EXPIRED' ? 'Link expired' : 'Link not found'}</h2>
+    <p style="color:var(--ink2);line-height:1.6">${message}</p>
+    ${code === 'TOKEN_EXPIRED' ? '<p style="color:var(--ink2);font-size:13px;margin-top:12px">Log in and a new link will be generated automatically.</p>' : ''}
+    <a href="/pages/login.html" style="display:inline-block;margin-top:20px;color:var(--gold)">Go to Login →</a>
+  </div>`;
+  document.getElementById('navBar').style.display = 'none';
+  document.querySelector('.progress-bar').style.display = 'none';
+}
+
+// ── Progress ─────────────────────────────────────────────────────────────────
+function renderProgress() {
+  const stepsEl = document.getElementById('progressSteps');
+  const labelsEl = document.getElementById('stepLabels');
+  stepsEl.innerHTML = '';
+  labelsEl.innerHTML = '';
+  STEPS.forEach((label, i) => {
+    const step = i + 1;
+    const done   = step < currentStep;
+    const active = step === currentStep;
+    stepsEl.innerHTML += `<div class="step-item">
+      <div class="step-dot ${done?'done':active?'active':''}">${done?'✓':step}</div>
+      ${i < STEPS.length - 1 ? `<div class="step-line ${done?'done':''}"></div>` : ''}
+    </div>`;
+    labelsEl.innerHTML += `<span class="step-label ${done?'done':active?'active':''}">${label}</span>`;
+  });
+  document.getElementById('btnBack').style.display = currentStep === 1 ? 'none' : '';
+  document.getElementById('btnNext').textContent = currentStep === 6 ? 'Submit Setup' : 'Continue →';
+}
+
+// ── Step Renderer ─────────────────────────────────────────────────────────────
+function renderStep(step) {
+  const content = document.getElementById('stepContent');
+  const d = stepData[step] ?? {};
+  const templates = {
+    1: step1HTML(d),
+    2: step2HTML(d),
+    3: step3HTML(d),
+    4: step4HTML(d),
+    5: step5HTML(d),
+    6: step6HTML(d),
+  };
+  content.innerHTML = templates[step] || '';
+  if (step === 2) initServicesStep(d);
+  if (step === 3) initDaysStep(d);
+  if (step === 5) initBrandVoiceStep(d);
+  if (step === 6) initOperatingHoursStep(d);
+}
+
+function step1HTML(d) {
+  return `<h2 class="step-title">Clinic Information</h2>
+  <p class="step-sub">Tell us about ${tenantName}. This information helps configure your AI receptionist.</p>
+  <div class="field"><label>Clinic Name</label><input id="s1_name" value="${esc(d.clinicName??tenantName)}" placeholder="e.g. Lumiere Med Spa"></div>
+  <div class="row">
+    <div class="field"><label>Main Phone</label><input id="s1_phone" value="${esc(d.phone??'')}" placeholder="+1 (555) 000-0000"></div>
+    <div class="field"><label>Timezone</label><select id="s1_tz">
+      ${['America/New_York','America/Chicago','America/Denver','America/Los_Angeles','America/Phoenix','Europe/London','Europe/Paris','Australia/Sydney'].map(tz=>`<option value="${tz}" ${(d.timezone??'America/New_York')===tz?'selected':''}>${tz}</option>`).join('')}
+    </select></div>
+  </div>
+  <div class="field"><label>Address</label><input id="s1_addr" value="${esc(d.address??'')}" placeholder="123 Main Street, New York, NY 10001"></div>
+  <div class="row">
+    <div class="field"><label>Website (optional)</label><input id="s1_web" value="${esc(d.website??'')}" placeholder="https://yourmedspa.com"></div>
+    <div class="field"><label>Instagram (optional)</label><input id="s1_ig" value="${esc(d.instagram??'')}" placeholder="@yourmedspa"></div>
+  </div>`;
+}
+
+function step2HTML(d) {
+  return `<h2 class="step-title">Your Services</h2>
+  <p class="step-sub">Add the treatments your Med Spa offers. Mark those that require a consultation first.</p>
+  <div id="servicesList"></div>
+  <button onclick="addService()" style="background:transparent;border:1.5px dashed var(--border2);color:var(--ink2);padding:10px 20px;border-radius:var(--radius);font-size:13px;cursor:pointer;font-family:'Geist',sans-serif;width:100%;margin-top:4px">+ Add Service</button>`;
+}
+
+let services = [];
+function initServicesStep(d) {
+  services = d.services?.length ? d.services : [
+    {name:'Botox',avgPrice:'350',durationMins:'30',consultationRequired:true},
+    {name:'Dermal Fillers',avgPrice:'550',durationMins:'45',consultationRequired:true},
+  ];
+  renderServices();
+}
+function renderServices() {
+  document.getElementById('servicesList').innerHTML = services.map((s,i) => `
+  <div class="service-block">
+    <div class="block-header">
+      <span class="block-title">Service ${i+1}</span>
+      <button class="btn-remove" onclick="removeService(${i})">Remove</button>
+    </div>
+    <div class="row">
+      <div class="field"><label>Service Name</label><input value="${esc(s.name)}" oninput="services[${i}].name=this.value" placeholder="e.g. Botox"></div>
+      <div class="field"><label>Avg Price ($)</label><input type="number" value="${esc(s.avgPrice)}" oninput="services[${i}].avgPrice=this.value" placeholder="350"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Duration (mins)</label><input type="number" value="${esc(s.durationMins)}" oninput="services[${i}].durationMins=this.value" placeholder="30"></div>
+      <div class="field" style="display:flex;align-items:center;gap:12px;padding-top:20px">
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;cursor:pointer">
+          <input type="checkbox" ${s.consultationRequired?'checked':''} onchange="services[${i}].consultationRequired=this.checked">
+          Requires consultation
+        </label>
+      </div>
+    </div>
+  </div>`).join('');
+}
+function addService() { services.push({name:'',avgPrice:'',durationMins:'60',consultationRequired:false}); renderServices(); }
+function removeService(i) { services.splice(i,1); renderServices(); }
+
+function step3HTML(d) {
+  return `<h2 class="step-title">Consultation Rules</h2>
+  <p class="step-sub">Configure when and how consultations can be booked. These rules are enforced by the booking engine.</p>
+  <div class="row">
+    <div class="field"><label>Consultation Duration (mins)</label><input id="s3_dur" type="number" value="${d.durationMins??30}" placeholder="30"></div>
+    <div class="field"><label>Buffer Between Appointments (mins)</label><input id="s3_buf" type="number" value="${d.bufferMins??15}" placeholder="15"></div>
+  </div>
+  <div class="field"><label>Max Consultations Per Day</label><input id="s3_max" type="number" value="${d.maxPerDay??10}" placeholder="10"></div>
+  <div class="field"><label>Available Days</label><div class="days-grid" id="daysGrid"></div></div>
+  <div class="field"><label>Time Blocks</label><div id="timeBlocks"></div>
+    <button onclick="addTimeBlock()" style="background:transparent;border:1.5px dashed var(--border2);color:var(--ink2);padding:8px 16px;border-radius:var(--radius);font-size:12px;cursor:pointer;font-family:'Geist',sans-serif;margin-top:8px">+ Add Time Block</button>
+  </div>`;
+}
+
+let selectedDays = [];
+let timeBlocks = [];
+function initDaysStep(d) {
+  selectedDays = d.availableDays ?? [1,2,3,4,5];
+  timeBlocks   = d.timeBlocks   ?? [{start:'09:00',end:'17:00'}];
+  renderDays(); renderTimeBlocks();
+}
+const DAY_LABELS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function renderDays() {
+  document.getElementById('daysGrid').innerHTML = DAY_LABELS.map((d,i)=>`
+    <div class="day-btn ${selectedDays.includes(i)?'selected':''}" onclick="toggleDay(${i})">${d}</div>`).join('');
+}
+function toggleDay(i) { if(selectedDays.includes(i)) selectedDays=selectedDays.filter(d=>d!==i); else selectedDays.push(i); renderDays(); }
+function renderTimeBlocks() {
+  document.getElementById('timeBlocks').innerHTML = timeBlocks.map((tb,i)=>`
+    <div class="time-block">
+      <input type="time" value="${tb.start}" oninput="timeBlocks[${i}].start=this.value">
+      <span class="time-sep">to</span>
+      <input type="time" value="${tb.end}" oninput="timeBlocks[${i}].end=this.value">
+      <button onclick="removeTimeBlock(${i})" style="background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.2);border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer">✕</button>
+    </div>`).join('');
+}
+function addTimeBlock() { timeBlocks.push({start:'09:00',end:'17:00'}); renderTimeBlocks(); }
+function removeTimeBlock(i) { timeBlocks.splice(i,1); renderTimeBlocks(); }
+
+function step4HTML(d) {
+  return `<h2 class="step-title">Call Handling</h2>
+  <p class="step-sub">Configure how the AI receptionist handles calls, transfers, and after-hours situations.</p>
+  <div class="row">
+    <div class="field"><label>Transfer Number</label><input id="s4_transfer" value="${esc(d.transferNumber??'')}" placeholder="+1 (555) 000-0000"></div>
+    <div class="field" style="display:flex;align-items:flex-end;padding-bottom:2px">
+      <label class="check-row" style="display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid var(--border2);border-radius:var(--radius);cursor:pointer;width:100%">
+        <input type="checkbox" id="s4_price" ${d.allowPriceQuoting?'checked':''}>
+        <span style="font-size:13px;color:var(--ink)">Allow AI to quote prices</span>
+      </label>
+    </div>
+  </div>
+  <div class="field"><label>After-Hours Handling</label>
+    <select id="s4_after">
+      <option value="voicemail" ${d.afterHoursHandling==='voicemail'?'selected':''}>Take a voicemail</option>
+      <option value="transfer"  ${d.afterHoursHandling==='transfer'?'selected':''}>Transfer to mobile</option>
+      <option value="message"   ${d.afterHoursHandling==='message'?'selected':''}>Play message and hang up</option>
+    </select>
+  </div>
+  <div class="field"><label>Emergency Keywords (comma-separated)</label>
+    <input id="s4_emerg" value="${esc((d.emergencyKeywords??['emergency','chest pain','can\'t breathe']).join(', '))}" placeholder="emergency, chest pain, allergic reaction">
+    <div style="font-size:11px;color:var(--ink2);margin-top:4px">When these words are detected, the call is immediately transferred.</div>
+  </div>`;
+}
+
+function step5HTML(d) {
+  return `<h2 class="step-title">Brand Voice</h2>
+  <p class="step-sub">Define how your AI receptionist sounds and communicates with clients.</p>
+  <div class="field"><label>Tone</label>
+    <div class="tone-grid" id="toneGrid">
+      ${[
+        {id:'Luxury',icon:'✨',desc:'Sophisticated and exclusive. Perfect for high-end, premium Med Spas.'},
+        {id:'Friendly',icon:'😊',desc:'Warm and approachable. Makes clients feel comfortable and welcome.'},
+        {id:'Clinical',icon:'🏥',desc:'Professional and precise. Focuses on results and expertise.'},
+      ].map(t=>`<div class="tone-card ${(d.tone??'Friendly')===t.id?'selected':''}" onclick="selectTone('${t.id}')">
+        <div class="tone-icon">${t.icon}</div>
+        <div class="tone-name">${t.id}</div>
+        <div class="tone-desc">${t.desc}</div>
+      </div>`).join('')}
+    </div>
+  </div>
+  <div class="field"><label>Words to Avoid</label>
+    <div class="tag-input-wrap" id="tagsWrap" onclick="document.getElementById('tagInput').focus()"></div>
+    <input id="tagInput" style="display:none" onkeydown="handleTagKey(event)">
+    <div style="font-size:11px;color:var(--ink2);margin-top:4px">Type a word and press Enter to add. e.g. "cheap", "discount", "botched"</div>
+  </div>
+  <div class="field"><label>Special Messaging (optional)</label>
+    <textarea id="s5_msg" placeholder="e.g. Always mention our complimentary consultation for new clients. Never discuss competitor pricing.">${esc(d.specialMessaging??'')}</textarea>
+  </div>`;
+}
+
+let selectedTone = 'Friendly';
+let avoidTags = [];
+function initBrandVoiceStep(d) {
+  selectedTone = d.tone ?? 'Friendly';
+  avoidTags    = d.wordsToAvoid ?? [];
+  renderTags();
+  // Show real tag input inside the wrap
+  document.getElementById('tagInput').style.display = 'block';
+  document.getElementById('tagsWrap').appendChild(document.getElementById('tagInput'));
+}
+function selectTone(t) { selectedTone=t; document.querySelectorAll('.tone-card').forEach(c=>c.classList.toggle('selected',c.querySelector('.tone-name').textContent===t)); }
+function renderTags() {
+  const wrap = document.getElementById('tagsWrap');
+  if (!wrap) return;
+  const input = document.getElementById('tagInput');
+  wrap.innerHTML = avoidTags.map((t,i)=>`<span class="tag">${esc(t)}<button onclick="removeTag(${i})">×</button></span>`).join('');
+  if (input) { input.style.display='block'; wrap.appendChild(input); }
+}
+function handleTagKey(e) { if(e.key==='Enter'||e.key===','){ e.preventDefault(); const v=e.target.value.trim().replace(/,$/,''); if(v){ avoidTags.push(v); e.target.value=''; renderTags(); }}}
+function removeTag(i) { avoidTags.splice(i,1); renderTags(); }
+
+const DAY_FULL = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+function step6HTML(d) {
+  const sched = d.weeklySchedule ?? {};
+  return `<h2 class="step-title">Operating Hours</h2>
+  <p class="step-sub">Set your weekly schedule and any upcoming closure dates.</p>
+  <div id="hoursGrid"></div>
+  <div class="field" style="margin-top:24px"><label>Blackout Dates (optional)</label>
+    <div id="blackoutList"></div>
+    <button onclick="addBlackout()" style="background:transparent;border:1.5px dashed var(--border2);color:var(--ink2);padding:8px 16px;border-radius:var(--radius);font-size:12px;cursor:pointer;font-family:'Geist',sans-serif;margin-top:8px">+ Add Closure Date</button>
+  </div>`;
+}
+
+let weeklySchedule = {};
+let blackoutDates = [];
+function initOperatingHoursStep(d) {
+  weeklySchedule = d.weeklySchedule ?? {};
+  blackoutDates  = d.blackoutDates  ?? [];
+  if (!Object.keys(weeklySchedule).length) {
+    weeklySchedule = { monday:{isOpen:true,open:'09:00',close:'18:00'}, tuesday:{isOpen:true,open:'09:00',close:'18:00'}, wednesday:{isOpen:true,open:'09:00',close:'18:00'}, thursday:{isOpen:true,open:'09:00',close:'18:00'}, friday:{isOpen:true,open:'09:00',close:'18:00'}, saturday:{isOpen:false,open:'10:00',close:'16:00'}, sunday:{isOpen:false,open:'10:00',close:'16:00'} };
+  }
+  renderHoursGrid(); renderBlackouts();
+}
+function renderHoursGrid() {
+  document.getElementById('hoursGrid').innerHTML = DAY_FULL.map((day,i) => {
+    const cfg = weeklySchedule[day] ?? {isOpen:i>0&&i<6,open:'09:00',close:'18:00'};
+    return `<div style="display:grid;grid-template-columns:90px auto;align-items:center;gap:12px;margin-bottom:8px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+      <label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;font-weight:600;cursor:pointer">
+        <input type="checkbox" ${cfg.isOpen?'checked':''} onchange="weeklySchedule['${day}'].isOpen=this.checked;renderHoursGrid()">
+        ${day.charAt(0).toUpperCase()+day.slice(1)}
+      </label>
+      <div style="display:flex;align-items:center;gap:8px;${!cfg.isOpen?'opacity:0.4;pointer-events:none':''}">
+        <input type="time" value="${cfg.open}" style="flex:1" oninput="weeklySchedule['${day}'].open=this.value">
+        <span style="color:var(--ink2);font-size:12px">to</span>
+        <input type="time" value="${cfg.close}" style="flex:1" oninput="weeklySchedule['${day}'].close=this.value">
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderBlackouts() {
+  document.getElementById('blackoutList').innerHTML = blackoutDates.map((b,i)=>`
+    <div style="display:grid;grid-template-columns:1fr 2fr auto;gap:8px;align-items:center;margin-bottom:8px">
+      <input type="date" value="${b.date}" oninput="blackoutDates[${i}].date=this.value" style="color-scheme:dark">
+      <input type="text" value="${esc(b.reason??'')}" oninput="blackoutDates[${i}].reason=this.value" placeholder="Reason (optional)">
+      <button onclick="blackoutDates.splice(${i},1);renderBlackouts()" style="background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.2);border-radius:6px;padding:8px 12px;cursor:pointer">✕</button>
+    </div>`).join('');
+}
+function addBlackout() { blackoutDates.push({date:'',reason:''}); renderBlackouts(); }
+
+// ── Collect step data ────────────────────────────────────────────────────────
+function collectStep(step) {
+  if (step === 1) return {
+    clinicName: document.getElementById('s1_name')?.value.trim(),
+    phone:      document.getElementById('s1_phone')?.value.trim(),
+    timezone:   document.getElementById('s1_tz')?.value,
+    address:    document.getElementById('s1_addr')?.value.trim(),
+    website:    document.getElementById('s1_web')?.value.trim(),
+    instagram:  document.getElementById('s1_ig')?.value.trim(),
+  };
+  if (step === 2) return { services: JSON.parse(JSON.stringify(services)) };
+  if (step === 3) return {
+    durationMins:  parseInt(document.getElementById('s3_dur')?.value)||30,
+    bufferMins:    parseInt(document.getElementById('s3_buf')?.value)||15,
+    maxPerDay:     parseInt(document.getElementById('s3_max')?.value)||10,
+    availableDays: [...selectedDays],
+    timeBlocks:    JSON.parse(JSON.stringify(timeBlocks)),
+  };
+  if (step === 4) return {
+    transferNumber:    document.getElementById('s4_transfer')?.value.trim(),
+    allowPriceQuoting: document.getElementById('s4_price')?.checked,
+    afterHoursHandling: document.getElementById('s4_after')?.value,
+    emergencyKeywords: (document.getElementById('s4_emerg')?.value||'').split(',').map(s=>s.trim()).filter(Boolean),
+  };
+  if (step === 5) return {
+    tone:            selectedTone,
+    wordsToAvoid:    [...avoidTags],
+    specialMessaging: document.getElementById('s5_msg')?.value.trim(),
+  };
+  if (step === 6) return {
+    weeklySchedule: JSON.parse(JSON.stringify(weeklySchedule)),
+    blackoutDates:  JSON.parse(JSON.stringify(blackoutDates)),
+  };
+  return {};
+}
+
+// ── Auto-save ────────────────────────────────────────────────────────────────
+async function autoSave(step) {
+  const data = collectStep(step);
+  stepData[step] = data;
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(async () => {
+    try {
+      await fetch(`${API}/api/onboarding/${token}/step`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ step, data }),
+      });
+      const ind = document.getElementById('saveIndicator');
+      if (ind) { ind.style.display = 'flex'; setTimeout(()=>ind.style.display='none', 2000); }
+    } catch {}
+  }, 1000);
+}
+
+// ── Navigation ───────────────────────────────────────────────────────────────
+async function nextStep() {
+  const data = collectStep(currentStep);
+  stepData[currentStep] = data;
+  // Save current step
+  try {
+    await fetch(`${API}/api/onboarding/${token}/step`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ step: currentStep, data }),
+    });
+  } catch {}
+
+  if (currentStep === 6) {
+    await submitOnboarding();
+    return;
+  }
+  currentStep++;
+  renderProgress();
+  renderStep(currentStep);
+  window.scrollTo(0,0);
+}
+
+function prevStep() {
+  if (currentStep > 1) {
+    stepData[currentStep] = collectStep(currentStep);
+    currentStep--;
+    renderProgress();
+    renderStep(currentStep);
+    window.scrollTo(0,0);
+  }
+}
+
+// ── Submit ───────────────────────────────────────────────────────────────────
+async function submitOnboarding() {
+  const btn = document.getElementById('btnNext');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+  hideAlert();
+
+  try {
+    const res = await fetch(`${API}/api/onboarding/${token}/submit`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ stepData }),
+    });
+    const d = await res.json();
+    if (!res.ok) { showAlert(d.error || 'Submission failed. Please try again.'); btn.disabled=false; btn.textContent='Submit Setup'; return; }
+
+    // Show success screen
+    document.getElementById('stepContent').innerHTML = `<div class="success-screen">
+      <div class="success-icon">🎉</div>
+      <h2 class="success-title">Setup complete!</h2>
+      <p class="success-sub">Thank you, your Med Spa setup has been submitted. Our team will review your configuration and activate your account shortly.<br><br>You'll receive an email when your AI receptionist is ready.</p>
+    </div>`;
+    document.getElementById('navBar').style.display = 'none';
+    document.querySelector('.progress-bar').style.display = 'none';
+  } catch {
+    showAlert('Network error. Please check your connection and try again.');
+    btn.disabled = false;
+    btn.textContent = 'Submit Setup';
+  }
+}
+
+function showAlert(msg) { const el=document.getElementById('alertBox'); el.textContent=msg; el.classList.add('show'); }
+function hideAlert() { document.getElementById('alertBox').classList.remove('show'); }
+function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+init();
+</script>
+</body>
+</html>

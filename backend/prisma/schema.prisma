@@ -15,26 +15,35 @@ datasource db {
 
 // ─── TENANTS ──────────────────────────────────────────────────────────────────
 model Tenant {
-  id               String   @id @default(uuid())
-  slug             String   @unique @db.VarChar(63)  // e.g. "lumiere-clinic"
-  name             String   @db.VarChar(255)
-  plan             Plan     @default(STARTER)
-  stripeCustomerId String?  @db.VarChar(255)
-  settings         Json     @default("{}")           // timezone, address, brand colors, voice agent config
-  isActive         Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  slug                 String   @unique @db.VarChar(63)  // e.g. "lumiere-clinic"
+  name                 String   @db.VarChar(255)
+  plan                 Plan     @default(STARTER)
+  stripeCustomerId     String?  @db.VarChar(255)
+  stripeSubscriptionId String?  @db.VarChar(255)         // denormalized from Subscription for fast status checks
+  clinicStatus         String   @default("live")          // pending_payment | onboarding_required | onboarding_submitted | setup_in_progress | testing | live | paused
+  settings             Json     @default("{}")            // timezone, address, brand colors, voice agent config, onboardingProgress
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  // Relations
-  users        User[]
-  staff        Staff[]
-  clients      Client[]
-  services     Service[]
-  appointments Appointment[]
-  locations    Location[]
-  callLogs     CallLog[]
+  // Relations (existing)
+  users         User[]
+  staff         Staff[]
+  clients       Client[]
+  services      Service[]
+  appointments  Appointment[]
+  locations     Location[]
+  callLogs      CallLog[]
   subscriptions Subscription[]
   activityLogs  ActivityLog[]
+
+  // Relations (new)
+  onboardingToken   OnboardingToken?
+  consultationRule  ConsultationRule?
+  blackoutDates     BlackoutDate[]
+  bookingEngineLogs BookingEngineLog[]
+  brandVoice        BrandVoice?
 
   @@map("tenants")
 }
@@ -58,6 +67,7 @@ model User {
   avatarUrl       String?   @db.VarChar(500)
   isAvailable     Boolean   @default(true)
   role            UserRole  @default(OWNER)
+  platformRole    String    @default("CLINIC")  // "SUPERADMIN" | "CLINIC"
   emailVerifiedAt DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -76,7 +86,8 @@ enum UserRole {
 
 // ─── PENDING REGISTRATIONS ────────────────────────────────────────────────────
 // Holds signup state between form submission and email verification.
-// Deleted once the account is fully created.
+// Also used for admin-initiated Stripe-first clinic creation flow.
+// status: "awaiting_email_verify" | "awaiting_payment" | "processed"
 model PendingRegistration {
   id           String   @id @default(uuid())
   planKey      String   @db.VarChar(20)
@@ -89,6 +100,7 @@ model PendingRegistration {
   passwordHash String   @db.VarChar(255)
   verifyCode   String   @db.VarChar(6)
   verifyExpiry DateTime
+  status       String   @default("awaiting_email_verify")  // awaiting_email_verify | awaiting_payment | processed
   createdAt    DateTime @default(now())
 
   @@map("pending_registrations")
@@ -163,18 +175,19 @@ model Availability {
 
 // ─── SERVICES ─────────────────────────────────────────────────────────────────
 model Service {
-  id            String   @id @default(uuid())
-  tenantId      String
-  name          String
-  description   String?
-  durationMins  Int      // e.g. 60
-  priceCents    Int      // e.g. 18000 = £180.00
-  depositCents  Int      @default(0)
-  color         String   @default("#d4a84b")
-  isActive      Boolean  @default(true)
-  category      String?  // e.g. "Facial Treatments"
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  tenantId             String
+  name                 String
+  description          String?
+  durationMins         Int      // e.g. 60
+  priceCents           Int      // e.g. 18000 = £180.00
+  depositCents         Int      @default(0)
+  color                String   @default("#d4a84b")
+  isActive             Boolean  @default(true)
+  category             String?  // e.g. "Facial Treatments"
+  consultationRequired Boolean  @default(false)  // Med Spa: true for Botox, Fillers, etc.
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   appointments Appointment[]
@@ -247,12 +260,13 @@ model Appointment {
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
-  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  client   Client    @relation(fields: [clientId], references: [id])
-  staff    Staff     @relation(fields: [staffId], references: [id])
-  service  Service   @relation(fields: [serviceId], references: [id])
-  location Location? @relation(fields: [locationId], references: [id])
-  payments Payment[]
+  tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  client            Client            @relation(fields: [clientId], references: [id])
+  staff             Staff             @relation(fields: [staffId], references: [id])
+  service           Service           @relation(fields: [serviceId], references: [id])
+  location          Location?         @relation(fields: [locationId], references: [id])
+  payments          Payment[]
+  bookingEngineLogs BookingEngineLog[]
 
   @@index([tenantId, startsAt])
   @@index([tenantId, clientId])
@@ -368,4 +382,89 @@ model ActivityLog {
   @@index([tenantId])
   @@index([tenantId, createdAt(sort: Desc)])
   @@map("activity_logs")
+}
+
+// ─── ONBOARDING TOKENS ─────────────────────────────────────────────────────────
+// Secure, time-limited tokens for token-gated Med Spa onboarding flow.
+// Generated by Stripe webhook on checkout.session.completed.
+// Auto-regenerated on login if expired.
+model OnboardingToken {
+  id        String    @id @default(uuid())
+  token     String    @unique @db.VarChar(64)
+  tenantId  String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("onboarding_tokens")
+}
+
+// ─── CONSULTATION RULES ────────────────────────────────────────────────────────
+// Per-clinic BookingEngine configuration. Managed by admin only.
+model ConsultationRule {
+  id            String   @id @default(uuid())
+  tenantId      String   @unique
+  durationMins  Int      @default(30)
+  availableDays Json     @default("[1,2,3,4,5]")        // [1=Mon..5=Fri]
+  timeBlocks    Json     @default("[{\"start\":\"09:00\",\"end\":\"17:00\"}]")
+  bufferMins    Int      @default(15)
+  maxPerDay     Int      @default(10)
+  updatedAt     DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("consultation_rules")
+}
+
+// ─── BLACKOUT DATES ────────────────────────────────────────────────────────────
+// Dates on which no consultations can be booked (holidays, closures, etc.)
+model BlackoutDate {
+  id        String   @id @default(uuid())
+  tenantId  String
+  date      DateTime @db.Date
+  reason    String?  @db.VarChar(255)
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, date])
+  @@index([tenantId])
+  @@map("blackout_dates")
+}
+
+// ─── BOOKING ENGINE LOG ────────────────────────────────────────────────────────
+// Audit trail for every booking attempt (allowed or rejected) through BookingEngine.
+// Used by admin dashboard "Booking Validation Logs" view.
+model BookingEngineLog {
+  id               String    @id @default(uuid())
+  tenantId         String
+  appointmentId    String?
+  source           String    @db.VarChar(20)   // "ai" | "manual" | "api"
+  outcome          String    @db.VarChar(20)   // "allowed" | "rejected"
+  validationErrors Json?
+  createdAt        DateTime  @default(now())
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, createdAt(sort: Desc)])
+  @@map("booking_engine_logs")
+}
+
+// ─── BRAND VOICE ──────────────────────────────────────────────────────────────
+// Med Spa tone and messaging configuration captured during onboarding Step 5.
+model BrandVoice {
+  id               String   @id @default(uuid())
+  tenantId         String   @unique
+  tone             String   @default("Friendly") @db.VarChar(20)  // "Luxury" | "Friendly" | "Clinical"
+  wordsToAvoid     Json     @default("[]")
+  specialMessaging String?  @db.Text
+  updatedAt        DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("brand_voices")
 }
