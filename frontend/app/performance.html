@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Performance — Callora</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .metric-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); }
+    .metric-row:last-child { border-bottom:none; }
+    .metric-label { font-size:13.5px; font-weight:500; color:var(--text-2); }
+    .metric-value { font-size:15px; font-weight:700; color:var(--text); }
+    .bar-wrap { margin-top:6px; background:var(--border); border-radius:4px; height:6px; overflow:hidden; }
+    .bar-fill { height:100%; border-radius:4px; transition:width 0.6s ease; }
+    .service-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+    .service-row:last-child { border-bottom:none; }
+    .service-rank { width:22px; height:22px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--text-muted); flex-shrink:0; }
+    .period-btn { padding:6px 14px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); font-size:12.5px; font-weight:600; color:var(--text-muted); cursor:pointer; font-family:inherit; transition:all 0.15s; }
+    .period-btn.active { background:var(--brand); color:#fff; border-color:var(--brand); }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">C</div>
+      <span class="logo-text">Callora</span>
+    </div>
+    <div class="sidebar-scroll">
+      <div class="nav-section">Clinic</div>
+      <a href="dashboard.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="6" height="6" rx="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.2"/><rect x="1" y="9" width="6" height="6" rx="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.2"/></svg>
+        Overview
+      </a>
+      <a href="calendar.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M5 1v3M11 1v3M1.5 6.5h13"/></svg>
+        Calendar
+      </a>
+      <a href="bookings.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V3a1 1 0 00-1-1z"/><path d="M5 6h6M5 9h4"/></svg>
+        Bookings
+      </a>
+      <a href="calls.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/></svg>
+        Calls
+      </a>
+      <a href="performance.html" class="nav-item active">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="2,12 6,8 9,11 14,5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 14h12"/></svg>
+        Performance
+      </a>
+      <div class="nav-section">Settings</div>
+      <a href="settings.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="2.2"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M2.697 2.697l1.06 1.06M12.243 12.243l1.06 1.06M13.303 2.697l-1.06 1.06M3.757 12.243l-1.06 1.06"/></svg>
+        Settings
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-av" id="userAv">--</div>
+        <div>
+          <div class="user-name" id="userName">Loading…</div>
+          <div class="user-role">Clinic Owner</div>
+        </div>
+      </div>
+      <a href="#" id="signOutBtn" style="display:block;text-align:center;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 0;margin-top:2px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">Sign out</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="page-title">Performance</span>
+      </div>
+      <div class="topbar-right">
+        <div style="display:flex;gap:4px;">
+          <button class="period-btn active" onclick="setPeriod('week',this)">This Week</button>
+          <button class="period-btn" onclick="setPeriod('month',this)">This Month</button>
+          <button class="period-btn" onclick="setPeriod('quarter',this)">Quarter</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- TOP STAT CARDS -->
+      <div class="stat-grid" style="margin-bottom:24px;">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#f0fdfa;">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#0d9488" stroke-width="1.7"><path d="M8 2v12M5 5h4.5a2 2 0 010 4H5m0-4v4m0 0H9"/></svg>
+          </div>
+          <div class="stat-label">Revenue</div>
+          <div class="stat-value" id="statRevenue">—</div>
+          <div class="stat-meta" id="revMeta"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#f0fdf4;">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#16a34a" stroke-width="1.7"><path d="M13 5l-7 7-4-4"/></svg>
+          </div>
+          <div class="stat-label">Completion Rate</div>
+          <div class="stat-value" id="statCompletion">—</div>
+          <div class="stat-meta" id="compMeta"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fef2f2;">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#dc2626" stroke-width="1.7"><path d="M8 5v3l2 2"/><circle cx="8" cy="8" r="6"/></svg>
+          </div>
+          <div class="stat-label">Cancellation Rate</div>
+          <div class="stat-value" id="statCancellation">—</div>
+          <div class="stat-meta" id="cancelMeta"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#f5f3ff;">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#7c3aed" stroke-width="1.7"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M5 1v3M11 1v3M1.5 6.5h13"/></svg>
+          </div>
+          <div class="stat-label">Total Appointments</div>
+          <div class="stat-value" id="statAppts">—</div>
+          <div class="stat-meta" id="apptMeta"></div>
+        </div>
+      </div>
+
+      <!-- TWO COLUMN -->
+      <div class="grid-2" style="margin-bottom:24px;">
+
+        <!-- Booking Source Breakdown -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Booking Sources</div>
+          </div>
+          <div class="card-body">
+            <div id="sourceBreakdown">
+              <div class="metric-row">
+                <div>
+                  <div class="metric-label" style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:2px;background:#3b82f6;display:inline-block;"></span>AI Bookings</div>
+                  <div class="bar-wrap" style="width:180px;margin-top:6px;"><div class="bar-fill" id="barAI" style="width:0%;background:#3b82f6;"></div></div>
+                </div>
+                <div class="metric-value" id="valAI">—</div>
+              </div>
+              <div class="metric-row">
+                <div>
+                  <div class="metric-label" style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:2px;background:#16a34a;display:inline-block;"></span>Manual Bookings</div>
+                  <div class="bar-wrap" style="width:180px;margin-top:6px;"><div class="bar-fill" id="barManual" style="width:0%;background:#16a34a;"></div></div>
+                </div>
+                <div class="metric-value" id="valManual">—</div>
+              </div>
+              <div class="metric-row">
+                <div>
+                  <div class="metric-label" style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:2px;background:#94a3b8;display:inline-block;"></span>Blocked / Unavailable</div>
+                  <div class="bar-wrap" style="width:180px;margin-top:6px;"><div class="bar-fill" id="barBlocked" style="width:0%;background:#94a3b8;"></div></div>
+                </div>
+                <div class="metric-value" id="valBlocked">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Breakdown -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Appointment Status</div>
+          </div>
+          <div class="card-body">
+            <div class="metric-row">
+              <span class="metric-label">Confirmed</span>
+              <span class="metric-value" id="s_confirmed">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Completed</span>
+              <span class="metric-value" id="s_completed">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Pending</span>
+              <span class="metric-value" id="s_pending">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Cancelled</span>
+              <span class="metric-value" id="s_cancelled">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">No Show</span>
+              <span class="metric-value" id="s_noshow">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TOP SERVICES -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Top Services</div>
+          <span class="card-subtitle" id="servicesSubtitle">by booking count</span>
+        </div>
+        <div class="card-body" id="topServices">
+          <div style="padding:20px;text-align:center;color:var(--text-muted);">Loading…</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+const API    = (location.hostname==='localhost'||location.hostname==='127.0.0.1') ? 'http://localhost:3001' : 'https://medibook-backend-production-dfb2.up.railway.app';
+const TOKEN  = localStorage.getItem('medibook_token');
+const TENANT = localStorage.getItem('medibook_tenant_id');
+const CLINIC = localStorage.getItem('medibook_tenant_name') || 'My Clinic';
+
+if (!TOKEN||!TENANT) location.href='/pages/login.html';
+document.getElementById('userName').textContent = CLINIC;
+document.getElementById('userAv').textContent   = CLINIC.slice(0,2).toUpperCase();
+document.getElementById('signOutBtn').addEventListener('click', e=>{ e.preventDefault(); localStorage.clear(); location.href='/pages/login.html'; });
+
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+let currentPeriod = 'week';
+
+function setPeriod(p, btn) {
+  currentPeriod = p;
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  loadPerformance();
+}
+
+function getDateRange(period) {
+  const now = new Date();
+  let start;
+  if (period==='week') {
+    const day = now.getDay(); const diff = day===0?-6:1-day;
+    start = new Date(now.getFullYear(), now.getMonth(), now.getDate()+diff);
+  } else if (period==='month') {
+    start = new Date(now.getFullYear(), now.getMonth(), 1);
+  } else {
+    start = new Date(now.getFullYear(), Math.floor(now.getMonth()/3)*3, 1);
+  }
+  return start.toISOString().slice(0,10);
+}
+
+function renderSourceBreakdown(appts) {
+  const ai      = appts.filter(a=>a.source==='AI'||a.bookedViaAI).length;
+  const blocked = appts.filter(a=>a.type==='BLOCKED'||a.status==='BLOCKED').length;
+  const manual  = appts.length - ai - blocked;
+  const total   = Math.max(1, appts.length);
+  document.getElementById('valAI').textContent      = ai;
+  document.getElementById('valManual').textContent  = Math.max(0,manual);
+  document.getElementById('valBlocked').textContent = blocked;
+  setTimeout(()=>{
+    document.getElementById('barAI').style.width      = (ai/total*100)+'%';
+    document.getElementById('barManual').style.width  = (Math.max(0,manual)/total*100)+'%';
+    document.getElementById('barBlocked').style.width = (blocked/total*100)+'%';
+  }, 50);
+}
+
+function renderStatusBreakdown(appts) {
+  const count = s => appts.filter(a=>a.status?.toUpperCase()===s).length;
+  document.getElementById('s_confirmed').textContent = count('CONFIRMED');
+  document.getElementById('s_completed').textContent = count('COMPLETED');
+  document.getElementById('s_pending').textContent   = count('PENDING');
+  document.getElementById('s_cancelled').textContent = count('CANCELLED');
+  document.getElementById('s_noshow').textContent    = count('NO_SHOW');
+}
+
+function renderTopServices(appts) {
+  const svcMap = {};
+  appts.forEach(a => {
+    const name = a.serviceName ?? a.service?.name ?? 'Unknown';
+    if (!svcMap[name]) svcMap[name] = { count:0, revenue:0 };
+    svcMap[name].count++;
+    svcMap[name].revenue += a.priceCents ?? 0;
+  });
+  const sorted = Object.entries(svcMap).sort((a,b)=>b[1].count-a[1].count).slice(0,6);
+  const el = document.getElementById('topServices');
+  if (!sorted.length) {
+    el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted);">No data for this period.</div>`;
+    return;
+  }
+  const max = sorted[0][1].count;
+  el.innerHTML = sorted.map(([name,data],i)=>`
+    <div class="service-row">
+      <div class="service-rank">${i+1}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:4px;">${esc(name)}</div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${(data.count/max*100)}%;background:var(--brand);"></div></div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:13.5px;font-weight:700;color:var(--text);">${data.count} <span style="font-size:11.5px;font-weight:500;color:var(--text-muted);">bookings</span></div>
+        ${data.revenue ? `<div style="font-size:12px;color:var(--text-muted);">£${(data.revenue/100).toFixed(0)} revenue</div>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+async function loadPerformance() {
+  const start = getDateRange(currentPeriod);
+  try {
+    const data = await fetch(`${API}/api/tenants/${TENANT}/calendar/upcoming?start=${start}&limit=500`, { headers:{Authorization:`Bearer ${TOKEN}`} });
+    if (!data.ok) throw new Error(`HTTP ${data.status}`);
+    const json = await data.json();
+    const appts = json.appointments ?? [];
+
+    const completed  = appts.filter(a=>a.status?.toUpperCase()==='COMPLETED').length;
+    const cancelled  = appts.filter(a=>a.status?.toUpperCase()==='CANCELLED').length;
+    const total      = appts.length;
+    const revenue    = appts.reduce((sum,a)=>sum+(a.priceCents??0),0);
+    const compRate   = total ? Math.round(completed/total*100) : 0;
+    const cancelRate = total ? Math.round(cancelled/total*100) : 0;
+
+    document.getElementById('statRevenue').textContent     = `£${(revenue/100).toLocaleString('en-GB',{minimumFractionDigits:0})}`;
+    document.getElementById('statCompletion').textContent  = `${compRate}%`;
+    document.getElementById('statCancellation').textContent = `${cancelRate}%`;
+    document.getElementById('statAppts').textContent       = total;
+    document.getElementById('revMeta').innerHTML           = `<span style="color:var(--text-muted);">this ${currentPeriod}</span>`;
+    document.getElementById('compMeta').innerHTML          = `<span style="color:var(--text-muted);">${completed} of ${total}</span>`;
+    document.getElementById('cancelMeta').innerHTML        = `<span style="color:var(--red);">${cancelled} cancelled</span>`;
+    document.getElementById('apptMeta').innerHTML          = `<span style="color:var(--text-muted);">${currentPeriod}</span>`;
+
+    renderSourceBreakdown(appts);
+    renderStatusBreakdown(appts);
+    renderTopServices(appts);
+  } catch {
+    document.getElementById('topServices').innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted);">Could not load performance data.</div>`;
+    ['statRevenue','statCompletion','statCancellation','statAppts'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+  }
+}
+
+loadPerformance();
+</script>
+</body>
+</html>
