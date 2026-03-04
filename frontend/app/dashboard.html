@@ -3,18 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard — Callora</title>
+  <title>Overview — Callora</title>
   <link rel="stylesheet" href="./styles.css" />
   <style>
-    /* ── Dashboard-specific ── */
-    .two-col { display: grid; grid-template-columns: 60% 1fr; gap: 20px; margin-bottom: 24px; }
+    /* ── Layout ── */
+    .two-col { display: grid; grid-template-columns: 1fr 380px; gap: 20px; margin-bottom: 20px; }
     @media (max-width: 1100px) { .two-col { grid-template-columns: 1fr; } }
 
-    /* Schedule list */
-    .schedule-list { display: flex; flex-direction: column; }
+    /* ── Schedule list ── */
     .schedule-row {
       display: grid;
-      grid-template-columns: 68px 1fr 110px 90px;
+      grid-template-columns: 58px 1fr auto auto;
       align-items: center;
       gap: 12px;
       padding: 11px 20px;
@@ -23,10 +22,9 @@
     }
     .schedule-row:last-child { border-bottom: none; }
     .schedule-row:hover { background: var(--surface-2); }
-    .schedule-time { font-size: 13px; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-    .schedule-patient { font-size: 13.5px; font-weight: 600; color: var(--text); line-height: 1.3; }
-    .schedule-service { font-size: 12px; color: var(--text-muted); }
-    .schedule-staff-name { font-size: 12.5px; color: var(--text-2); }
+    .schedule-time { font-size: 12.5px; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .schedule-name { font-size: 13.5px; font-weight: 600; color: var(--text); }
+    .schedule-service { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
     .schedule-break {
       display: flex; align-items: center; gap: 12px;
       padding: 7px 20px;
@@ -34,55 +32,27 @@
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
     }
-    .schedule-break span { font-size: 11.5px; color: var(--text-light); font-style: italic; }
+    .schedule-break span { font-size: 11px; color: var(--text-light); font-style: italic; }
     .schedule-break-line { flex: 1; height: 1px; background: var(--border); }
 
-    /* Staff on duty */
-    .staff-list { display: flex; flex-direction: column; gap: 0; }
-    .staff-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 20px;
-      border-bottom: 1px solid var(--border);
-      transition: background 0.1s;
-    }
-    .staff-row:last-child { border-bottom: none; }
-    .staff-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .staff-info { flex: 1; min-width: 0; }
-    .staff-name { font-size: 13.5px; font-weight: 600; color: var(--text); }
-    .staff-role-label { font-size: 12px; color: var(--text-muted); }
-
-    /* AI Agent card */
-    .agent-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
-    .agent-stat-item { padding: 10px 12px; background: var(--surface-2); border-radius: var(--radius); }
-    .agent-stat-val { font-size: 17px; font-weight: 700; color: var(--text); }
-    .agent-stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-
-    /* Activity feed */
-    .activity-list { display: flex; flex-direction: column; gap: 0; }
+    /* ── Activity ── */
     .activity-row {
-      display: flex; align-items: flex-start; gap: 14px;
-      padding: 13px 20px;
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 20px;
       border-bottom: 1px solid var(--border);
       transition: background 0.1s;
     }
     .activity-row:last-child { border-bottom: none; }
     .activity-icon {
-      width: 34px; height: 34px; border-radius: 9px;
+      width: 32px; height: 32px; border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; font-size: 15px;
+      font-size: 14px; flex-shrink: 0;
     }
-    .activity-body { flex: 1; min-width: 0; }
-    .activity-desc { font-size: 13.5px; color: var(--text-2); line-height: 1.4; }
+    .activity-desc { font-size: 13px; color: var(--text-2); line-height: 1.4; }
     .activity-desc strong { color: var(--text); font-weight: 600; }
-    .activity-time { font-size: 11.5px; color: var(--text-light); margin-top: 2px; }
+    .activity-time { font-size: 11px; color: var(--text-light); margin-top: 2px; }
 
-    /* Right column stack */
-    .right-col { display: flex; flex-direction: column; gap: 20px; }
-
-    /* Topbar date */
-    .topbar-date { font-size: 13px; color: var(--text-muted); font-weight: 500; }
-
-    /* ── Loading skeleton ── */
+    /* ── Skeleton ── */
     .skeleton {
       background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
       background-size: 200% 100%;
@@ -90,20 +60,14 @@
       border-radius: 6px;
     }
     @keyframes shimmer { to { background-position: -200% 0; } }
-    .skeleton-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 14px 20px; border-bottom: 1px solid var(--border);
-    }
+    .skeleton-row { display: flex; align-items: center; gap: 12px; padding: 13px 20px; border-bottom: 1px solid var(--border); }
     .skeleton-row:last-child { border-bottom: none; }
 
-    /* ── Empty state ── */
-    .empty-state {
-      display: flex; flex-direction: column; align-items: center;
-      padding: 40px 20px; gap: 8px;
-    }
-    .empty-state-icon { font-size: 32px; }
-    .empty-state-title { font-size: 14px; font-weight: 600; color: var(--text-2); }
-    .empty-state-sub { font-size: 13px; color: var(--text-muted); }
+    /* ── AI status card ── */
+    .ai-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .ai-stat-item { padding: 12px 14px; background: var(--surface-2); border-radius: var(--radius); border: 1px solid var(--border); }
+    .ai-stat-val { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+    .ai-stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-weight: 500; }
   </style>
 </head>
 <body>
@@ -132,6 +96,7 @@
       <a href="calls.html" class="nav-item">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/></svg>
         Calls
+        <span class="nav-badge green" id="navCallsBadge" style="display:none;"></span>
       </a>
       <a href="performance.html" class="nav-item">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="2,12 6,8 9,11 14,5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 14h12"/></svg>
@@ -157,146 +122,163 @@
 
   <!-- MAIN -->
   <div class="main">
-    <!-- TOPBAR -->
     <header class="topbar">
       <div class="topbar-left">
         <span class="page-title">Overview</span>
+        <span class="breadcrumb" id="topbarDate" style="color:var(--text-muted);font-size:13px;"></span>
       </div>
       <div class="topbar-right">
-        <span class="topbar-date" id="topbarDate"></span>
-        <button class="btn btn-secondary" onclick="showToast('Export started — CSV will download shortly.','📊')">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 10v2.5A1.5 1.5 0 0112.5 14h-9A1.5 1.5 0 012 12.5V10"/><path d="M8 2v8M5 7l3 3 3-3"/></svg>
-          Export
-        </button>
-        <button class="btn btn-primary" onclick="openModal()">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
+        <button class="btn btn-secondary btn-sm" onclick="openModal()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
           New Booking
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="loadDashboard()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13.5 2.5v4h-4M2.5 13.5v-4h4M13.5 6.5A6 6 0 003.5 4M2.5 9.5A6 6 0 0012.5 12"/></svg>
+          Refresh
         </button>
       </div>
     </header>
 
-    <!-- CONTENT -->
     <main class="content">
 
       <!-- STAT CARDS -->
       <div class="stat-grid">
-        <div class="stat-card">
-          <div class="stat-icon" style="background:#f0fdfa;">
-            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#0d9488" stroke-width="1.7"><path d="M8 2v12M5 5h4.5a2 2 0 010 4H5m0-4v4m0 0H9"/></svg>
-          </div>
-          <div class="stat-label">Today's Revenue</div>
-          <div class="stat-value" id="statRevenue">—</div>
-          <div class="stat-meta" id="statRevenueMeta"><span class="stat-skeleton skeleton" style="width:80px;height:12px;display:inline-block;"></span></div>
-        </div>
-        <div class="stat-card">
+        <div class="stat-card accent-blue">
           <div class="stat-icon" style="background:#eff6ff;">
-            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#2563eb" stroke-width="1.7"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M5 1v3M11 1v3M1.5 6.5h13"/></svg>
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#2563eb" stroke-width="1.7"><path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/></svg>
           </div>
-          <div class="stat-label">Appointments Today</div>
-          <div class="stat-value" id="statAppts">—</div>
-          <div class="stat-meta" id="statApptsMeta"><span class="skeleton" style="width:80px;height:12px;display:inline-block;border-radius:4px;"></span></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="background:#f5f3ff;">
-            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#7c3aed" stroke-width="1.7"><circle cx="6" cy="5" r="2.5"/><path d="M1 13.5c0-2.485 2.239-4.5 5-4.5s5 2.015 5 4.5"/><circle cx="12" cy="5" r="2"/><path d="M14.5 13c0-1.8-1.12-3.34-2.75-4"/></svg>
-          </div>
-          <div class="stat-label">New Clients This Month</div>
-          <div class="stat-value" id="statClients">—</div>
-          <div class="stat-meta" id="statClientsMeta"><span class="skeleton" style="width:80px;height:12px;display:inline-block;border-radius:4px;"></span></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="background:#eff6ff;">
-            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#3b82f6" stroke-width="1.7"><polyline points="2,12 6,8 9,11 14,5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 14h12"/></svg>
-          </div>
-          <div class="stat-label">Calls Today</div>
+          <div class="stat-label">Calls Answered Today</div>
           <div class="stat-value" id="statCalls">—</div>
-          <div class="stat-meta" id="statCallsMeta"><span class="skeleton" style="width:80px;height:12px;display:inline-block;border-radius:4px;"></span></div>
+          <div class="stat-meta" id="statCallsMeta">—</div>
+        </div>
+        <div class="stat-card accent-purple">
+          <div class="stat-icon" style="background:#f5f3ff;">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#7c3aed" stroke-width="1.7"><circle cx="8" cy="8" r="6.5"/><path d="M5.5 8.5l2 2L11 6"/></svg>
+          </div>
+          <div class="stat-label">AI Consultations Booked</div>
+          <div class="stat-value" id="statAIBooked">—</div>
+          <div class="stat-meta" id="statAIBookedMeta">—</div>
+        </div>
+        <div class="stat-card accent-green">
+          <div class="stat-icon" style="background:#f0fdf4;">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#16a34a" stroke-width="1.7"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M5 1v3M11 1v3M1.5 6.5h13M5.5 10.5l1.5 1.5 3-3"/></svg>
+          </div>
+          <div class="stat-label">Manual Bookings Today</div>
+          <div class="stat-value" id="statManual">—</div>
+          <div class="stat-meta" id="statManualMeta">—</div>
+        </div>
+        <div class="stat-card accent-teal">
+          <div class="stat-icon" style="background:#f0fdfa;">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#0d9488" stroke-width="1.7"><path d="M8 2v12M5 5h4.5a2 2 0 010 4H5m0-4v4m0 0H9"/></svg>
+          </div>
+          <div class="stat-label">Estimated Revenue</div>
+          <div class="stat-value" id="statRevenue">—</div>
+          <div class="stat-meta" id="statRevenueMeta">—</div>
         </div>
       </div>
 
       <!-- TWO COLUMN -->
       <div class="two-col">
-        <!-- TODAY'S SCHEDULE -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Today's Schedule</div>
-              <div class="card-subtitle" id="scheduleSubtitle">Loading…</div>
+
+        <!-- WEEKLY BOOKINGS CHART + SCHEDULE -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+          <!-- Weekly Chart -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Weekly Bookings</div>
+                <div class="card-subtitle">AI vs Manual — this week</div>
+              </div>
+              <div class="chart-legend">
+                <div class="chart-legend-item">
+                  <div class="chart-legend-dot" style="background:var(--blue);"></div>AI
+                </div>
+                <div class="chart-legend-item">
+                  <div class="chart-legend-dot" style="background:var(--green);"></div>Manual
+                </div>
+              </div>
             </div>
-            <span class="badge badge-blue" id="scheduleCount">—</span>
+            <div class="card-body">
+              <div class="chart-wrap">
+                <div class="chart-bars" id="chartBars">
+                  <!-- rendered by JS -->
+                </div>
+                <div class="chart-labels" id="chartLabels"></div>
+              </div>
+            </div>
           </div>
-          <div class="schedule-list" id="scheduleList">
-            <!-- skeleton rows -->
-            <div class="skeleton-row"><div class="skeleton" style="width:44px;height:14px;"></div><div style="flex:1"><div class="skeleton" style="width:130px;height:14px;margin-bottom:5px;"></div><div class="skeleton" style="width:90px;height:11px;"></div></div><div class="skeleton" style="width:70px;height:11px;"></div><div class="skeleton" style="width:70px;height:22px;border-radius:20px;"></div></div>
-            <div class="skeleton-row"><div class="skeleton" style="width:44px;height:14px;"></div><div style="flex:1"><div class="skeleton" style="width:110px;height:14px;margin-bottom:5px;"></div><div class="skeleton" style="width:80px;height:11px;"></div></div><div class="skeleton" style="width:70px;height:11px;"></div><div class="skeleton" style="width:70px;height:22px;border-radius:20px;"></div></div>
-            <div class="skeleton-row"><div class="skeleton" style="width:44px;height:14px;"></div><div style="flex:1"><div class="skeleton" style="width:120px;height:14px;margin-bottom:5px;"></div><div class="skeleton" style="width:85px;height:11px;"></div></div><div class="skeleton" style="width:70px;height:11px;"></div><div class="skeleton" style="width:70px;height:22px;border-radius:20px;"></div></div>
-          </div>
-          <div class="card-footer">
-            <a href="calendar.html" style="font-size:13px;color:var(--brand-text);font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
-              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
-              Add appointment
-            </a>
+
+          <!-- Today's Schedule -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Today's Schedule</div>
+                <div class="card-subtitle" id="scheduleSubtitle">Loading…</div>
+              </div>
+              <span class="badge badge-brand" id="scheduleCount">—</span>
+            </div>
+            <div id="scheduleList">
+              <div class="skeleton-row"><div class="skeleton" style="width:44px;height:13px;"></div><div style="flex:1"><div class="skeleton" style="width:130px;height:13px;margin-bottom:5px;"></div><div class="skeleton" style="width:90px;height:11px;"></div></div><div class="skeleton" style="width:70px;height:22px;border-radius:20px;"></div></div>
+              <div class="skeleton-row"><div class="skeleton" style="width:44px;height:13px;"></div><div style="flex:1"><div class="skeleton" style="width:110px;height:13px;margin-bottom:5px;"></div><div class="skeleton" style="width:80px;height:11px;"></div></div><div class="skeleton" style="width:70px;height:22px;border-radius:20px;"></div></div>
+            </div>
+            <div class="card-footer">
+              <a href="calendar.html" style="font-size:13px;color:var(--brand-text);font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
+                Add appointment
+              </a>
+            </div>
           </div>
         </div>
 
         <!-- RIGHT COLUMN -->
-        <div class="right-col">
-          <!-- Staff on duty -->
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title">Staff on Duty</div>
-              <span class="badge badge-green badge-dot" id="staffOnlineCount">— online</span>
-            </div>
-            <div class="staff-list" id="staffList">
-              <div class="skeleton-row"><div class="skeleton" style="width:8px;height:8px;border-radius:50%;"></div><div class="skeleton" style="width:32px;height:32px;border-radius:8px;flex-shrink:0;"></div><div style="flex:1"><div class="skeleton" style="width:110px;height:13px;margin-bottom:5px;"></div><div class="skeleton" style="width:80px;height:11px;"></div></div></div>
-              <div class="skeleton-row"><div class="skeleton" style="width:8px;height:8px;border-radius:50%;"></div><div class="skeleton" style="width:32px;height:32px;border-radius:8px;flex-shrink:0;"></div><div style="flex:1"><div class="skeleton" style="width:100px;height:13px;margin-bottom:5px;"></div><div class="skeleton" style="width:75px;height:11px;"></div></div></div>
-            </div>
-          </div>
+        <div style="display:flex;flex-direction:column;gap:20px;">
 
-          <!-- Booking Breakdown -->
+          <!-- AI Performance -->
           <div class="card">
             <div class="card-header">
-              <div class="card-title">Today's Bookings</div>
-              <a href="bookings.html" style="font-size:12.5px;color:var(--brand-text);font-weight:600;text-decoration:none;">View all</a>
+              <div class="card-title">AI Receptionist</div>
+              <span class="badge badge-green badge-dot" id="aiStatusBadge">Active</span>
             </div>
-            <div class="card-body" style="padding-top:12px;">
-              <div class="agent-stats">
-                <div class="agent-stat-item" style="border-left:3px solid #3b82f6;">
-                  <div class="agent-stat-val" id="bkAI">—</div>
-                  <div class="agent-stat-lbl">AI bookings</div>
+            <div class="card-body">
+              <div class="ai-stat-grid">
+                <div class="ai-stat-item" style="border-top:2px solid var(--blue);">
+                  <div class="ai-stat-val" id="bkAI">—</div>
+                  <div class="ai-stat-lbl">AI bookings today</div>
                 </div>
-                <div class="agent-stat-item" style="border-left:3px solid #16a34a;">
-                  <div class="agent-stat-val" id="bkManual">—</div>
-                  <div class="agent-stat-lbl">Manual bookings</div>
+                <div class="ai-stat-item" style="border-top:2px solid var(--green);">
+                  <div class="ai-stat-val" id="bkManual">—</div>
+                  <div class="ai-stat-lbl">Manual bookings</div>
                 </div>
-                <div class="agent-stat-item" style="border-left:3px solid #94a3b8;">
-                  <div class="agent-stat-val" id="bkBlocked">—</div>
-                  <div class="agent-stat-lbl">Blocked slots</div>
+                <div class="ai-stat-item" style="border-top:2px solid var(--brand);">
+                  <div class="ai-stat-val" id="bkRate">—</div>
+                  <div class="ai-stat-lbl">Completion rate</div>
                 </div>
-                <div class="agent-stat-item" style="border-left:3px solid var(--brand);">
-                  <div class="agent-stat-val" id="bkRate">—</div>
-                  <div class="agent-stat-lbl">Completion rate</div>
+                <div class="ai-stat-item" style="border-top:2px solid var(--purple);">
+                  <div class="ai-stat-val" id="bkCallRate">—</div>
+                  <div class="ai-stat-lbl">Call→booking rate</div>
                 </div>
               </div>
-              <a href="calls.html" class="btn btn-brand-outline btn-sm" style="width:100%;justify-content:center;margin-top:4px;">
+              <a href="calls.html" class="btn btn-brand-outline btn-sm" style="width:100%;justify-content:center;margin-top:14px;">
                 <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/></svg>
                 View Call Logs
               </a>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- RECENT ACTIVITY -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Recent Activity</div>
-          <a href="#" style="font-size:12.5px;color:var(--brand-text);font-weight:600;text-decoration:none;">View all</a>
-        </div>
-        <div class="activity-list" id="activityList">
-          <div class="skeleton-row" style="padding:13px 20px;"><div class="skeleton" style="width:34px;height:34px;border-radius:9px;flex-shrink:0;"></div><div style="flex:1;padding-left:2px;"><div class="skeleton" style="width:260px;height:13px;margin-bottom:6px;"></div><div class="skeleton" style="width:70px;height:11px;"></div></div></div>
-          <div class="skeleton-row" style="padding:13px 20px;"><div class="skeleton" style="width:34px;height:34px;border-radius:9px;flex-shrink:0;"></div><div style="flex:1;padding-left:2px;"><div class="skeleton" style="width:220px;height:13px;margin-bottom:6px;"></div><div class="skeleton" style="width:60px;height:11px;"></div></div></div>
-          <div class="skeleton-row" style="padding:13px 20px;"><div class="skeleton" style="width:34px;height:34px;border-radius:9px;flex-shrink:0;"></div><div style="flex:1;padding-left:2px;"><div class="skeleton" style="width:240px;height:13px;margin-bottom:6px;"></div><div class="skeleton" style="width:55px;height:11px;"></div></div></div>
+          <!-- Recent Activity -->
+          <div class="card" style="flex:1;">
+            <div class="card-header">
+              <div class="card-title">Recent Activity</div>
+              <a href="bookings.html" style="font-size:12.5px;color:var(--brand-text);font-weight:600;text-decoration:none;">View all</a>
+            </div>
+            <div id="activityList">
+              <div class="skeleton-row" style="padding:12px 20px;"><div class="skeleton" style="width:32px;height:32px;border-radius:8px;flex-shrink:0;"></div><div style="flex:1;padding-left:2px;"><div class="skeleton" style="width:220px;height:13px;margin-bottom:5px;"></div><div class="skeleton" style="width:70px;height:11px;"></div></div></div>
+              <div class="skeleton-row" style="padding:12px 20px;"><div class="skeleton" style="width:32px;height:32px;border-radius:8px;flex-shrink:0;"></div><div style="flex:1;padding-left:2px;"><div class="skeleton" style="width:190px;height:13px;margin-bottom:5px;"></div><div class="skeleton" style="width:60px;height:11px;"></div></div></div>
+              <div class="skeleton-row" style="padding:12px 20px;"><div class="skeleton" style="width:32px;height:32px;border-radius:8px;flex-shrink:0;"></div><div style="flex:1;padding-left:2px;"><div class="skeleton" style="width:200px;height:13px;margin-bottom:5px;"></div><div class="skeleton" style="width:55px;height:11px;"></div></div></div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -314,13 +296,14 @@
       </button>
     </div>
     <div class="modal-body">
+      <div id="modalValidation" style="display:none;margin-bottom:14px;padding:10px 14px;background:var(--red-dim);border:1px solid var(--red-border);border-radius:var(--radius);font-size:13px;color:var(--red);"></div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Date</label>
+          <label class="form-label">Date <span style="color:var(--red)">*</span></label>
           <input type="date" class="input" id="bookDate" />
         </div>
         <div class="form-group">
-          <label class="form-label">Time</label>
+          <label class="form-label">Time <span style="color:var(--red)">*</span></label>
           <input type="time" class="input" id="bookTime" value="10:00" />
         </div>
       </div>
@@ -337,20 +320,16 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Service <span style="color:var(--red)">*</span></label>
-          <select class="select" id="bookService">
-            <option value="">Loading services…</option>
-          </select>
+          <select class="select" id="bookService"><option value="">Loading…</option></select>
         </div>
         <div class="form-group">
           <label class="form-label">Staff <span style="color:var(--red)">*</span></label>
-          <select class="select" id="bookStaff">
-            <option value="">Loading staff…</option>
-          </select>
+          <select class="select" id="bookStaff"><option value="">Loading…</option></select>
         </div>
       </div>
       <div class="form-group" style="margin-bottom:0;">
         <label class="form-label">Notes</label>
-        <textarea class="textarea" id="bookNotes" placeholder="Optional notes for this appointment…"></textarea>
+        <textarea class="textarea" id="bookNotes" placeholder="Optional notes…"></textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -360,59 +339,26 @@
   </div>
 </div>
 
-<!-- TOAST CONTAINER -->
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-// ─── Config ──────────────────────────────────────────────────────────────────
-const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+// ─── Config ───────────────────────────────────────────────────────────────────
+const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
   ? 'http://localhost:3001'
   : 'https://medibook-backend-production-dfb2.up.railway.app';
 
-// ─── Auth ─────────────────────────────────────────────────────────────────────
 const token    = localStorage.getItem('medibook_token');
 const tenantId = localStorage.getItem('medibook_tenant_id');
-const userName = localStorage.getItem('medibook_user_name')    || 'Clinic Owner';
-const tenantName = localStorage.getItem('medibook_tenant_name') || 'My Clinic';
+const uName    = localStorage.getItem('medibook_user_name')   || 'Clinic Owner';
+const tName    = localStorage.getItem('medibook_tenant_name') || 'My Clinic';
 
-if (!token || !tenantId) {
-  window.location.href = '/pages/login.html';
-}
+if (!token || !tenantId) location.href = '/pages/login.html';
 
-// Sidebar user info
-document.getElementById('userName').textContent = tenantName;
-document.getElementById('userAv').textContent   = tenantName.slice(0, 2).toUpperCase();
+document.getElementById('userName').textContent = tName;
+document.getElementById('userAv').textContent   = tName.slice(0, 2).toUpperCase();
 document.getElementById('signOutBtn').addEventListener('click', e => {
-  e.preventDefault();
-  localStorage.clear();
-  window.location.href = '/pages/login.html';
+  e.preventDefault(); localStorage.clear(); location.href = '/pages/login.html';
 });
-
-// ─── API helper ───────────────────────────────────────────────────────────────
-async function apiFetch(path) {
-  const res = await fetch(`${API}${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || `HTTP ${res.status}`);
-  }
-  return res.json();
-}
-
-async function apiPost(path, body) {
-  const res = await fetch(`${API}${path}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-  return data;
-}
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 function todayISO() {
@@ -421,245 +367,268 @@ function todayISO() {
 }
 
 function setTopbarDate() {
-  const d = new Date();
   document.getElementById('topbarDate').textContent =
-    d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+    new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+// ─── API helpers ──────────────────────────────────────────────────────────────
+async function apiFetch(path) {
+  const r = await fetch(`${API}${path}`, { headers: { Authorization: `Bearer ${token}` } });
+  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || `HTTP ${r.status}`); }
+  return r.json();
+}
+async function apiPost(path, body) {
+  const r = await fetch(`${API}${path}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+  return d;
 }
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
-const statusBadge = s => ({
-  'completed':   '<span class="badge badge-green">Completed</span>',
-  'in-progress': '<span class="badge badge-blue">In Progress</span>',
-  'confirmed':   '<span class="badge badge-brand">Confirmed</span>',
-  'cancelled':   '<span class="badge badge-gray">Cancelled</span>',
-  'no-show':     '<span class="badge badge-orange">No Show</span>',
-  'pending':     '<span class="badge badge-gray">Pending</span>',
-}[s] || `<span class="badge badge-gray">${s}</span>`);
+function statusBadge(s) {
+  return ({
+    'completed':   '<span class="badge badge-green">Completed</span>',
+    'confirmed':   '<span class="badge badge-brand">Confirmed</span>',
+    'in-progress': '<span class="badge badge-blue">In Progress</span>',
+    'cancelled':   '<span class="badge badge-gray">Cancelled</span>',
+    'no-show':     '<span class="badge badge-orange">No Show</span>',
+    'pending':     '<span class="badge badge-gold">Pending</span>',
+  }[s?.toLowerCase()] || `<span class="badge badge-gray">${esc(s||'Unknown')}</span>`);
+}
+
+// ─── Weekly Chart ─────────────────────────────────────────────────────────────
+function renderWeeklyChart(appointments) {
+  const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0=Sun
+  const mon = new Date(now);
+  mon.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  mon.setHours(0, 0, 0, 0);
+
+  // Build 7-day buckets
+  const buckets = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(mon);
+    d.setDate(mon.getDate() + i);
+    return { date: d, ai: 0, manual: 0, label: DAY_NAMES[i] };
+  });
+
+  appointments.forEach(a => {
+    const d = new Date(a.startsAt);
+    d.setHours(0, 0, 0, 0);
+    const bucket = buckets.find(b => b.date.getTime() === d.getTime());
+    if (!bucket) return;
+    if (a.source === 'AI' || a.bookedViaAI) bucket.ai++;
+    else if (a.type !== 'BLOCKED' && a.status !== 'BLOCKED') bucket.manual++;
+  });
+
+  const maxVal = Math.max(1, ...buckets.map(b => b.ai + b.manual));
+  const todayIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+
+  const barsEl   = document.getElementById('chartBars');
+  const labelsEl = document.getElementById('chartLabels');
+
+  barsEl.innerHTML = buckets.map((b, i) => {
+    const aiH     = Math.round((b.ai     / maxVal) * 100);
+    const manualH = Math.round((b.manual / maxVal) * 100);
+    const isToday = i === todayIdx;
+    return `<div class="chart-bar-group" style="${isToday ? 'opacity:1;' : 'opacity:0.7;'}">
+      <div class="chart-bar manual" style="height:${manualH}%;" title="${b.manual} manual"></div>
+      <div class="chart-bar ai"     style="height:${aiH}%;"     title="${b.ai} AI"></div>
+    </div>`;
+  }).join('');
+
+  labelsEl.innerHTML = buckets.map((b, i) => {
+    const isToday = i === todayIdx;
+    return `<div class="chart-label" style="${isToday ? 'color:var(--brand-text);font-weight:700;' : ''}">${b.label}</div>`;
+  }).join('');
+}
 
 // ─── Render schedule ──────────────────────────────────────────────────────────
 function renderSchedule(appointments, stats) {
-  const el = document.getElementById('scheduleList');
+  const el       = document.getElementById('scheduleList');
   const subtitle = document.getElementById('scheduleSubtitle');
-  const countBadge = document.getElementById('scheduleCount');
+  const count    = document.getElementById('scheduleCount');
 
-  const d = new Date();
-  subtitle.textContent = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  countBadge.textContent = `${stats.total} appointment${stats.total !== 1 ? 's' : ''}`;
+  subtitle.textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  count.textContent    = `${stats.total} appointment${stats.total !== 1 ? 's' : ''}`;
 
   if (!appointments.length) {
-    el.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">📅</div>
-        <div class="empty-state-title">No appointments today</div>
-        <div class="empty-state-sub">Click "New Booking" to add one</div>
-      </div>`;
+    el.innerHTML = `<div class="empty-state" style="padding:32px 20px;">
+      <div class="empty-icon">📅</div>
+      <div class="empty-title">No appointments today</div>
+      <div class="empty-text">Click "New Booking" to get started</div>
+    </div>`;
     return;
   }
 
   let html = '';
   let lunchInserted = false;
-  appointments.forEach((a, i) => {
-    // Insert lunch break marker between morning and afternoon appointments
+  appointments.forEach(a => {
     if (!lunchInserted && a.time >= '13:00') {
       lunchInserted = true;
-      html += `<div class="schedule-break">
-        <div class="schedule-break-line"></div>
-        <span>Lunch Break</span>
-        <div class="schedule-break-line"></div>
-      </div>`;
+      html += `<div class="schedule-break"><div class="schedule-break-line"></div><span>Lunch Break</span><div class="schedule-break-line"></div></div>`;
     }
+    const sourceTag = (a.source === 'AI' || a.bookedViaAI)
+      ? `<span class="badge badge-blue" style="font-size:10.5px;">AI</span>`
+      : '';
     html += `<div class="schedule-row">
-      <div class="schedule-time">${a.time}</div>
+      <div class="schedule-time">${esc(a.time)}</div>
       <div>
-        <div class="schedule-patient">${escHtml(a.client.name)}</div>
-        <div class="schedule-service">${escHtml(a.service.name)}</div>
+        <div class="schedule-name">${esc(a.client.name)} ${sourceTag}</div>
+        <div class="schedule-service">${esc(a.service.name)}</div>
       </div>
-      <div class="schedule-staff-name">${escHtml(a.staff.name)}</div>
+      <div style="font-size:12px;color:var(--text-muted);">${esc(a.staff.name)}</div>
       <div>${statusBadge(a.status)}</div>
     </div>`;
   });
   el.innerHTML = html;
 }
 
-// ─── Render stat cards ────────────────────────────────────────────────────────
-function renderStats(stats, ds) {
-  document.getElementById('statRevenue').textContent   = ds.todayRevenueFormatted;
-  document.getElementById('statRevenueMeta').innerHTML = `<span style="color:var(--text-muted)">${ds.appointmentsToday} completed</span>`;
+// ─── Render stats ─────────────────────────────────────────────────────────────
+function renderStats(appointments, stats, dashStats, callsToday) {
+  // Calls answered
+  document.getElementById('statCalls').textContent      = callsToday ?? dashStats?.aiCallsToday ?? '—';
+  document.getElementById('statCallsMeta').innerHTML    = `<span style="color:var(--text-muted);">inbound today</span>`;
 
-  document.getElementById('statAppts').textContent   = stats.total;
-  const remaining = stats.confirmed + stats.pending;
-  document.getElementById('statApptsMeta').innerHTML = `<span style="color:var(--text-muted)">${remaining} remaining</span>`;
+  // AI bookings
+  const aiCount = appointments.filter(a => a.source === 'AI' || a.bookedViaAI).length;
+  document.getElementById('statAIBooked').textContent   = aiCount;
+  document.getElementById('statAIBookedMeta').innerHTML = aiCount > 0
+    ? `<span class="stat-up">↑ ${Math.round(aiCount/Math.max(1,stats.total)*100)}%</span> <span style="color:var(--text-muted);">of today's total</span>`
+    : `<span style="color:var(--text-muted);">no AI bookings yet today</span>`;
 
-  document.getElementById('statClients').textContent   = ds.newClientsMonth;
-  document.getElementById('statClientsMeta').innerHTML = `<span style="color:var(--text-muted)">this month</span>`;
+  // Manual bookings
+  const manualCount = appointments.filter(a => !(a.source==='AI'||a.bookedViaAI) && a.type!=='BLOCKED').length;
+  document.getElementById('statManual').textContent     = manualCount;
+  document.getElementById('statManualMeta').innerHTML   = `<span style="color:var(--text-muted);">${stats.confirmed + stats.pending} remaining today</span>`;
 
-  document.getElementById('statCalls').textContent   = ds.aiCallsToday;
-  document.getElementById('statCallsMeta').innerHTML = `<span style="color:var(--text-muted)">inbound today</span>`;
-}
+  // Revenue
+  document.getElementById('statRevenue').textContent    = dashStats?.todayRevenueFormatted ?? '—';
+  document.getElementById('statRevenueMeta').innerHTML  = `<span style="color:var(--text-muted);">${dashStats?.appointmentsToday ?? 0} completed today</span>`;
 
-// ─── Render staff ─────────────────────────────────────────────────────────────
-function renderStaff(staff, onlineCount) {
-  document.getElementById('staffOnlineCount').textContent = `${onlineCount} online`;
+  // AI metrics mini-grid
+  const rate = stats.total > 0 ? Math.round(stats.completed/stats.total*100)+'%' : '0%';
+  const callRate = callsToday > 0 ? Math.round(aiCount/callsToday*100)+'%' : '—';
+  document.getElementById('bkAI').textContent      = aiCount;
+  document.getElementById('bkManual').textContent  = manualCount;
+  document.getElementById('bkRate').textContent    = rate;
+  document.getElementById('bkCallRate').textContent = callRate;
 
-  const el = document.getElementById('staffList');
-  if (!staff.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-title">No staff added yet</div></div>`;
-    return;
+  // Calls nav badge
+  if (callsToday > 0) {
+    const badge = document.getElementById('navCallsBadge');
+    badge.textContent = callsToday;
+    badge.style.display = '';
   }
-
-  el.innerHTML = staff.map(s => {
-    const statusColor = s.isAvailable ? '#16a34a' : '#ea580c';
-    const initials = s.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    const badge = s.currentlyWith
-      ? `<span class="badge badge-orange">With client</span>`
-      : s.isAvailable
-        ? `<span class="badge badge-green">Available</span>`
-        : `<span class="badge badge-gray">Off duty</span>`;
-    return `<div class="staff-row">
-      <div class="staff-dot" style="background:${statusColor};"></div>
-      <div style="width:32px;height:32px;border-radius:8px;background:${s.color}22;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${s.color};">
-        ${s.avatarUrl ? `<img src="${s.avatarUrl}" style="width:32px;height:32px;border-radius:8px;object-fit:cover;">` : initials}
-      </div>
-      <div class="staff-info">
-        <div class="staff-name">${escHtml(s.name)}</div>
-        <div class="staff-role-label">${s.currentlyWith ? `With ${escHtml(s.currentlyWith)}` : s.role}</div>
-      </div>
-      ${badge}
-    </div>`;
-  }).join('');
 }
 
 // ─── Render activity ──────────────────────────────────────────────────────────
 function renderActivity(activity) {
   const el = document.getElementById('activityList');
   if (!activity.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-title">No recent activity</div><div class="empty-state-sub">Activity will appear here as your clinic gets busy</div></div>`;
+    el.innerHTML = `<div class="empty-state" style="padding:24px 20px;">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">No recent activity</div>
+      <div class="empty-text">Activity will appear here as your clinic gets busy</div>
+    </div>`;
     return;
   }
-  el.innerHTML = activity.map(a => `
+  el.innerHTML = activity.slice(0, 8).map(a => `
     <div class="activity-row">
-      <div class="activity-icon" style="background:${a.bgColor ?? '#f9f7f4'};">${a.icon ?? '📌'}</div>
-      <div class="activity-body">
+      <div class="activity-icon" style="background:${a.bgColor ?? '#f8fafc'};">${a.icon ?? '📌'}</div>
+      <div style="flex:1;min-width:0;">
         <div class="activity-desc">${a.description}</div>
         <div class="activity-time">${a.timeAgo}</div>
       </div>
     </div>`).join('');
 }
 
-// ─── Booking breakdown ────────────────────────────────────────────────────────
-function renderBookingBreakdown(appointments, stats) {
-  const ai      = appointments.filter(a => a.source === 'AI' || a.bookedViaAI).length;
-  const blocked = appointments.filter(a => a.type === 'BLOCKED' || a.status === 'BLOCKED').length;
-  const manual  = appointments.length - ai - blocked;
-  const rate    = stats.total > 0
-    ? Math.round((stats.completed / stats.total) * 100) + '%'
-    : '0%';
-  document.getElementById('bkAI').textContent      = ai;
-  document.getElementById('bkManual').textContent  = Math.max(0, manual);
-  document.getElementById('bkBlocked').textContent = blocked;
-  document.getElementById('bkRate').textContent    = rate;
-}
-
-// ─── Load all dashboard data ──────────────────────────────────────────────────
+// ─── Load dashboard ───────────────────────────────────────────────────────────
 async function loadDashboard() {
   try {
-    const [scheduleData, staffData, activityData] = await Promise.all([
+    const weekStart = (() => {
+      const d = new Date();
+      const day = d.getDay();
+      d.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    })();
+
+    const [todayData, activityData, weekData] = await Promise.all([
       apiFetch(`/api/tenants/${tenantId}/appointments/today`),
-      apiFetch(`/api/tenants/${tenantId}/staff/on-duty`),
       apiFetch(`/api/tenants/${tenantId}/activity?limit=20`),
+      apiFetch(`/api/tenants/${tenantId}/calendar/upcoming?start=${weekStart}&limit=200`).catch(() => ({ appointments: [] })),
     ]);
 
-    renderStats(scheduleData.stats, scheduleData.dashboardStats);
-    renderSchedule(scheduleData.appointments, scheduleData.stats);
-    renderStaff(staffData.staff, staffData.onlineCount);
-    renderActivity(activityData.activity);
-    renderBookingBreakdown(scheduleData.appointments, scheduleData.stats);
+    const { appointments, stats, dashboardStats } = todayData;
+    const callsToday = dashboardStats?.aiCallsToday ?? 0;
+
+    renderStats(appointments, stats, dashboardStats, callsToday);
+    renderSchedule(appointments, stats);
+    renderActivity(activityData.activity ?? []);
+    renderWeeklyChart(weekData.appointments ?? []);
   } catch (err) {
     console.error('Dashboard load error:', err);
-    showToast('Failed to load dashboard data. Please refresh.', '⚠️', 'error');
-    // Show empty states on error
-    renderSchedule([], { total: 0, confirmed: 0, pending: 0 });
-    renderStaff([], 0);
+    showToast('Failed to load dashboard. Please refresh.', '⚠️', 'error');
+    renderSchedule([], { total: 0, confirmed: 0, pending: 0, completed: 0 });
     renderActivity([]);
   }
 }
 
-// ─── Modal + booking ──────────────────────────────────────────────────────────
-let modalDataLoaded = false;
+// ─── Modal ────────────────────────────────────────────────────────────────────
+let modalLoaded = false;
 
 async function openModal() {
   document.getElementById('bookingModal').classList.add('open');
-  // Set date to today
   document.getElementById('bookDate').value = todayISO();
-
-  if (!modalDataLoaded) {
+  document.getElementById('modalValidation').style.display = 'none';
+  if (!modalLoaded) {
     try {
       const { services, staff } = await apiFetch(`/api/tenants/${tenantId}/modal-data`);
-
-      const svcSel = document.getElementById('bookService');
-      if (services.length) {
-        svcSel.innerHTML = services.map(s =>
-          `<option value="${s.id}">${escHtml(s.name)} (${s.durationMins} min · £${(s.priceCents/100).toFixed(0)})</option>`
-        ).join('');
-      } else {
-        svcSel.innerHTML = '<option value="">No services configured</option>';
-      }
-
-      const staffSel = document.getElementById('bookStaff');
-      if (staff.length) {
-        staffSel.innerHTML = staff.map(s =>
-          `<option value="${s.id}">${escHtml(s.name)}</option>`
-        ).join('');
-      } else {
-        staffSel.innerHTML = '<option value="">No staff configured</option>';
-      }
-
-      modalDataLoaded = true;
-    } catch {
-      showToast('Could not load services/staff. Check your settings.', '⚠️', 'error');
-    }
+      document.getElementById('bookService').innerHTML = services.length
+        ? services.map(s => `<option value="${s.id}">${esc(s.name)} (${s.durationMins}min · £${(s.priceCents/100).toFixed(0)})</option>`).join('')
+        : '<option value="">No services configured</option>';
+      document.getElementById('bookStaff').innerHTML = staff.length
+        ? staff.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('')
+        : '<option value="">No staff configured</option>';
+      modalLoaded = true;
+    } catch { showToast('Could not load services/staff.', '⚠️', 'error'); }
   }
 }
 
-function closeModal() {
-  document.getElementById('bookingModal').classList.remove('open');
-}
+function closeModal() { document.getElementById('bookingModal').classList.remove('open'); }
 
 async function bookAppointment() {
-  const clientName  = document.getElementById('bookClientName').value.trim();
-  const clientPhone = document.getElementById('bookClientPhone').value.trim();
-  const serviceId   = document.getElementById('bookService').value;
-  const staffId     = document.getElementById('bookStaff').value;
-  const date        = document.getElementById('bookDate').value;
-  const time        = document.getElementById('bookTime').value;
-  const notes       = document.getElementById('bookNotes').value.trim();
+  const name    = document.getElementById('bookClientName').value.trim();
+  const phone   = document.getElementById('bookClientPhone').value.trim();
+  const service = document.getElementById('bookService').value;
+  const staff   = document.getElementById('bookStaff').value;
+  const date    = document.getElementById('bookDate').value;
+  const time    = document.getElementById('bookTime').value;
+  const notes   = document.getElementById('bookNotes').value.trim();
+  const errEl   = document.getElementById('modalValidation');
 
-  if (!clientName) { showToast('Please enter the client name.', '⚠️', 'error'); return; }
-  if (!serviceId)  { showToast('Please select a service.', '⚠️', 'error'); return; }
-  if (!staffId)    { showToast('Please select a staff member.', '⚠️', 'error'); return; }
-  if (!date)       { showToast('Please select a date.', '⚠️', 'error'); return; }
+  if (!name)    { errEl.textContent = 'Client name is required.';    errEl.style.display='block'; return; }
+  if (!service) { errEl.textContent = 'Please select a service.';    errEl.style.display='block'; return; }
+  if (!staff)   { errEl.textContent = 'Please select a staff member.'; errEl.style.display='block'; return; }
+  if (!date)    { errEl.textContent = 'Please select a date.';        errEl.style.display='block'; return; }
 
   const btn = document.getElementById('bookBtn');
-  btn.disabled = true;
-  btn.textContent = 'Booking…';
+  btn.disabled = true; btn.textContent = 'Booking…';
 
   try {
-    await apiPost(`/api/tenants/${tenantId}/appointments`, {
-      clientName, clientPhone, serviceId, staffId, date, time, notes,
-    });
+    await apiPost(`/api/tenants/${tenantId}/appointments`, { clientName:name, clientPhone:phone, serviceId:service, staffId:staff, date, time, notes, source:'MANUAL' });
     closeModal();
-    showToast('Appointment booked successfully!', '📅', 'success');
-    // Clear form
-    ['bookClientName','bookClientPhone','bookNotes'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
-    // Reload data to reflect new booking
+    showToast('Appointment booked!', '📅', 'success');
+    ['bookClientName','bookClientPhone','bookNotes'].forEach(id => { document.getElementById(id).value = ''; });
     loadDashboard();
   } catch (err) {
-    showToast(err.message || 'Failed to book appointment.', '❌', 'error');
+    errEl.textContent = err.message || 'Could not create booking.';
+    errEl.style.display = 'block';
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'Book Appointment';
+    btn.disabled = false; btn.textContent = 'Book Appointment';
   }
 }
 
@@ -670,18 +639,15 @@ document.getElementById('bookingModal').addEventListener('click', e => {
 // ─── Toast ────────────────────────────────────────────────────────────────────
 function showToast(msg, icon = '✅', type = '') {
   const wrap = document.getElementById('toastWrap');
-  const t = document.createElement('div');
+  const t    = document.createElement('div');
   t.className = `toast ${type}`;
-  t.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-content"><div class="toast-title">${msg}</div></div>`;
+  t.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-content"><div class="toast-title">${esc(msg)}</div></div>`;
   wrap.appendChild(t);
   requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
   setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }, 3500);
 }
 
-// ─── Security helper ──────────────────────────────────────────────────────────
-function escHtml(str) {
-  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 setTopbarDate();

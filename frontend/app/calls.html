@@ -5,6 +5,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calls — Callora</title>
   <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .play-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px;
+      background: var(--blue-dim); color: var(--blue);
+      border: 1px solid var(--blue-border);
+      font-size: 11.5px; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .play-btn:hover { background: #dbeafe; }
+    .transcript-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px;
+      background: var(--surface-2); color: var(--text-muted);
+      border: 1px solid var(--border);
+      font-size: 11.5px; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .transcript-btn:hover { background: var(--surface-3); color: var(--text-2); border-color: var(--border-strong); }
+    .transcript-text {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      font-size: 13.5px;
+      line-height: 1.8;
+      color: var(--text-2);
+      max-height: 340px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .call-meta { font-size: 11.5px; color: var(--text-muted); }
+    .filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  </style>
 </head>
 <body>
 <div class="app-shell">
@@ -60,9 +97,12 @@
     <header class="topbar">
       <div class="topbar-left">
         <span class="page-title">Call Logs</span>
+        <span class="breadcrumb" id="dateRange"></span>
       </div>
       <div class="topbar-right">
-        <span id="dateRange" style="font-size:13px;color:var(--text-muted);font-weight:500;"></span>
+        <select class="select" id="monthSelect" style="width:160px;" onchange="loadCalls()">
+          <!-- populated by JS -->
+        </select>
       </div>
     </header>
 
@@ -70,52 +110,54 @@
 
       <!-- STAT CARDS -->
       <div class="stat-grid" style="margin-bottom:20px;">
-        <div class="stat-card">
+        <div class="stat-card accent-blue">
           <div class="stat-icon" style="background:#eff6ff;">
-            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#3b82f6" stroke-width="1.7"><path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/></svg>
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#2563eb" stroke-width="1.7"><path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/></svg>
           </div>
           <div class="stat-label">Total Calls</div>
           <div class="stat-value" id="statTotal">—</div>
           <div class="stat-meta" id="statTotalMeta"></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card accent-green">
           <div class="stat-icon" style="background:#f0fdf4;">
-            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#16a34a" stroke-width="1.7"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M5 1v3M11 1v3M1.5 6.5h13"/></svg>
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#16a34a" stroke-width="1.7"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M5 1v3M11 1v3M1.5 6.5h13M5.5 10.5l1.5 1.5 3-3"/></svg>
           </div>
           <div class="stat-label">Bookings Made</div>
           <div class="stat-value" id="statBooked">—</div>
           <div class="stat-meta" id="statBookedMeta"></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card accent-teal">
           <div class="stat-icon" style="background:#f0fdfa;">
             <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#0d9488" stroke-width="1.7"><polyline points="2,12 6,8 9,11 14,5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 14h12"/></svg>
           </div>
           <div class="stat-label">Booking Rate</div>
           <div class="stat-value" id="statRate">—</div>
-          <div class="stat-meta"></div>
+          <div class="stat-meta"><span style="color:var(--text-muted);">call to booking</span></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card accent-purple">
           <div class="stat-icon" style="background:#f5f3ff;">
             <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#7c3aed" stroke-width="1.7"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.5l2 2"/></svg>
           </div>
           <div class="stat-label">Avg Duration</div>
           <div class="stat-value" id="statAvgDur">—</div>
-          <div class="stat-meta"></div>
+          <div class="stat-meta"><span style="color:var(--text-muted);">per call</span></div>
         </div>
       </div>
 
-      <!-- FILTER -->
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <!-- FILTERS -->
+      <div class="filter-bar">
         <div class="tabs" style="margin-bottom:0;border:none;">
-          <button class="tab active" onclick="setOutcomeFilter('all',this)">All</button>
-          <button class="tab" onclick="setOutcomeFilter('booked',this)">Booked</button>
+          <button class="tab active" onclick="setOutcomeFilter('all',this)">All Calls</button>
+          <button class="tab" onclick="setOutcomeFilter('booked',this)">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;"></span> Booked
+          </button>
           <button class="tab" onclick="setOutcomeFilter('info',this)">Info Only</button>
           <button class="tab" onclick="setOutcomeFilter('no_action',this)">No Action</button>
         </div>
         <div style="margin-left:auto;">
           <div class="search-wrap" style="width:220px;">
             <svg class="search-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6.5" cy="6.5" r="4"/><path d="M11 11l3 3"/></svg>
-            <input type="text" class="search-input" id="searchInput" placeholder="Search caller…" oninput="applyFilter()" />
+            <input type="text" class="search-input" id="searchInput" placeholder="Search caller or service…" oninput="applyFilter()" />
           </div>
         </div>
       </div>
@@ -128,18 +170,40 @@
               <th>Date &amp; Time</th>
               <th>Caller</th>
               <th>Duration</th>
+              <th>Service Interest</th>
               <th>Outcome</th>
-              <th>Booking Created</th>
-              <th>Sentiment</th>
+              <th>Recording</th>
+              <th>Transcript</th>
             </tr>
           </thead>
           <tbody id="callsTbody">
-            <tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">Loading call logs…</td></tr>
+            <tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">Loading call logs…</td></tr>
           </tbody>
         </table>
       </div>
 
     </main>
+  </div>
+</div>
+
+<!-- TRANSCRIPT MODAL -->
+<div class="modal-overlay" id="transcriptModal">
+  <div class="modal" style="width:640px;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Call Transcript</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;" id="transcriptMeta"></div>
+      </div>
+      <button class="btn-icon" onclick="closeTranscript()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" style="padding:20px;">
+      <div class="transcript-text" id="transcriptContent">Loading transcript…</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeTranscript()">Close</button>
+    </div>
   </div>
 </div>
 
@@ -158,9 +222,26 @@ document.getElementById('signOutBtn').addEventListener('click', e=>{ e.preventDe
 
 function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// ─── Month selector ────────────────────────────────────────────────────────────
+function buildMonthSelector() {
+  const sel = document.getElementById('monthSelect');
+  const now = new Date();
+  const months = [];
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      label: d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }),
+      value: d.toISOString().slice(0, 7),
+    });
+  }
+  sel.innerHTML = months.map(m => `<option value="${m.value}">${m.label}</option>`).join('');
+}
+
+// ─── State ────────────────────────────────────────────────────────────────────
 let allCalls = [];
 let outcomeFilter = 'all';
 
+// ─── Filters ─────────────────────────────────────────────────────────────────
 function setOutcomeFilter(f, btn) {
   outcomeFilter = f;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -171,13 +252,17 @@ function setOutcomeFilter(f, btn) {
 function applyFilter() {
   const q = document.getElementById('searchInput').value.toLowerCase();
   const filtered = allCalls.filter(c => {
-    if (outcomeFilter!=='all' && c.outcome!==outcomeFilter) return false;
-    if (q && !(c.callerNumber??'').toLowerCase().includes(q) && !(c.callerName??'').toLowerCase().includes(q)) return false;
+    if (outcomeFilter !== 'all' && c.outcome !== outcomeFilter) return false;
+    if (q) {
+      const hay = `${c.callerNumber??''} ${c.callerName??''} ${c.serviceInterest??''}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
     return true;
   });
   renderTable(filtered);
 }
 
+// ─── Badge helpers ────────────────────────────────────────────────────────────
 function outcomeBadge(o) {
   return ({
     'booked':    '<span class="badge badge-green">Booked</span>',
@@ -187,79 +272,161 @@ function outcomeBadge(o) {
   }[o] ?? `<span class="badge badge-gray">${esc(o??'Unknown')}</span>`);
 }
 
-function sentimentBadge(s) {
-  if (!s) return '—';
-  return ({
-    'positive': '<span class="badge badge-green">Positive</span>',
-    'neutral':  '<span class="badge badge-gray">Neutral</span>',
-    'negative': '<span class="badge badge-red">Negative</span>',
-  }[s.toLowerCase()] ?? `<span class="badge badge-gray">${esc(s)}</span>`);
-}
-
 function fmtDuration(secs) {
   if (!secs) return '—';
   const m = Math.floor(secs/60), s = secs%60;
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
+// ─── Render table ─────────────────────────────────────────────────────────────
 function renderTable(calls) {
   const tbody = document.getElementById('callsTbody');
   if (!calls.length) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📞</div><div class="empty-title">No calls found</div><div class="empty-text">Call logs will appear here once your AI agent starts receiving calls.</div></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📞</div><div class="empty-title">No calls found</div><div class="empty-text">Call logs will appear here once your AI agent starts receiving calls.</div></div></td></tr>`;
     return;
   }
   const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  tbody.innerHTML = calls.map(c => {
+  tbody.innerHTML = calls.map((c, i) => {
     const d = new Date(c.startedAt ?? c.createdAt);
-    const t = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-    const dateStr = `${days[d.getDay()]} ${d.getDate()} ${d.toLocaleDateString('en-GB',{month:'short'})}, ${t}`;
-    const caller  = c.callerName ? `${esc(c.callerName)}<br><span style="font-size:11.5px;color:var(--text-muted);">${esc(c.callerNumber??'')}</span>` : esc(c.callerNumber??'Unknown');
-    const booking = c.appointmentId ? `<span class="badge badge-brand">Created</span>` : '—';
+    const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const dateStr = `${days[d.getDay()]} ${d.getDate()} ${d.toLocaleDateString('en-GB',{month:'short'})}`;
+    const caller  = c.callerName
+      ? `<div style="font-weight:600;color:var(--text);">${esc(c.callerName)}</div><div class="call-meta">${esc(c.callerNumber??'')}</div>`
+      : `<div style="font-weight:500;">${esc(c.callerNumber??'Unknown')}</div>`;
+    const service = c.serviceInterest
+      ? `<span class="badge badge-brand">${esc(c.serviceInterest)}</span>`
+      : `<span style="color:var(--text-light);">—</span>`;
+    const recording = c.recordingUrl
+      ? `<button class="play-btn" onclick="playRecording('${esc(c.recordingUrl)}',this)">
+           <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6V2z"/></svg>Play
+         </button>`
+      : `<span style="color:var(--text-light);font-size:12px;">—</span>`;
+    const transcript = (c.transcript || c.transcriptUrl)
+      ? `<button class="transcript-btn" onclick="showTranscript(${i})">
+           <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V3a1 1 0 00-1-1z"/><path d="M5 6h6M5 9h4"/></svg>View
+         </button>`
+      : `<span style="color:var(--text-light);font-size:12px;">—</span>`;
+
     return `<tr>
-      <td style="font-variant-numeric:tabular-nums;">${esc(dateStr)}</td>
+      <td>
+        <div style="font-variant-numeric:tabular-nums;font-weight:500;">${esc(dateStr)}</div>
+        <div class="call-meta">${esc(timeStr)}</div>
+      </td>
       <td>${caller}</td>
-      <td>${fmtDuration(c.durationSeconds)}</td>
+      <td style="font-variant-numeric:tabular-nums;">${fmtDuration(c.durationSeconds)}</td>
+      <td>${service}</td>
       <td>${outcomeBadge(c.outcome)}</td>
-      <td>${booking}</td>
-      <td>${sentimentBadge(c.sentiment)}</td>
+      <td>${recording}</td>
+      <td>${transcript}</td>
     </tr>`;
   }).join('');
 }
 
+// ─── Stats ────────────────────────────────────────────────────────────────────
 function renderStats(calls) {
   const booked  = calls.filter(c=>c.outcome==='booked'||c.appointmentId).length;
-  const durSecs = calls.filter(c=>c.durationSeconds).map(c=>c.durationSeconds);
-  const avgDur  = durSecs.length ? Math.round(durSecs.reduce((a,b)=>a+b,0)/durSecs.length) : 0;
+  const durs    = calls.filter(c=>c.durationSeconds).map(c=>c.durationSeconds);
+  const avgDur  = durs.length ? Math.round(durs.reduce((a,b)=>a+b,0)/durs.length) : 0;
   const rate    = calls.length ? Math.round(booked/calls.length*100)+'%' : '0%';
   document.getElementById('statTotal').textContent   = calls.length;
   document.getElementById('statBooked').textContent  = booked;
   document.getElementById('statRate').textContent    = rate;
   document.getElementById('statAvgDur').textContent  = fmtDuration(avgDur);
-  if (calls.length>0) {
-    document.getElementById('statTotalMeta').innerHTML  = `<span style="color:var(--text-muted);">this period</span>`;
-    document.getElementById('statBookedMeta').innerHTML = `<span class="stat-up">↑ ${rate}</span> <span style="color:var(--text-muted);">conversion</span>`;
+  document.getElementById('statTotalMeta').innerHTML = `<span style="color:var(--text-muted);">this period</span>`;
+  document.getElementById('statBookedMeta').innerHTML = calls.length > 0
+    ? `<span class="stat-up">↑ ${rate}</span> <span style="color:var(--text-muted);">conversion</span>`
+    : `<span style="color:var(--text-muted);">no calls yet</span>`;
+}
+
+// ─── Recording playback ───────────────────────────────────────────────────────
+let currentAudio = null;
+function playRecording(url, btn) {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  const audio = new Audio(url);
+  currentAudio = audio;
+  btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="4" height="12" rx="1"/><rect x="9" y="2" width="4" height="12" rx="1"/></svg>Stop`;
+  audio.play().catch(() => { btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6V2z"/></svg>Play`; showToast('Could not play recording.', '⚠️', 'error'); });
+  audio.onended = () => { btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6V2z"/></svg>Play`; currentAudio = null; };
+  btn.onclick = () => { audio.pause(); currentAudio = null; btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6V2z"/></svg>Play`; btn.onclick = () => playRecording(url, btn); };
+}
+
+// ─── Transcript modal ─────────────────────────────────────────────────────────
+async function showTranscript(idx) {
+  const c = allCalls[idx];
+  if (!c) return;
+  const modal = document.getElementById('transcriptModal');
+  const content = document.getElementById('transcriptContent');
+  const meta = document.getElementById('transcriptMeta');
+  const d = new Date(c.startedAt ?? c.createdAt);
+  meta.textContent = `${d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · ${c.callerNumber ?? 'Unknown caller'} · ${fmtDuration(c.durationSeconds)}`;
+  modal.classList.add('open');
+
+  if (c.transcript) {
+    content.textContent = c.transcript;
+    return;
+  }
+
+  if (c.transcriptUrl || c.id) {
+    content.textContent = 'Loading transcript…';
+    try {
+      const r = await fetch(`${API}/api/tenants/${TENANT}/calls/${c.id}/transcript`, { headers: { Authorization: `Bearer ${TOKEN}` } });
+      if (!r.ok) throw new Error('Not found');
+      const data = await r.json();
+      content.textContent = data.transcript || data.text || 'No transcript available.';
+    } catch {
+      content.textContent = 'Transcript not available for this call.';
+    }
+  } else {
+    content.textContent = 'No transcript available for this call.';
   }
 }
 
+function closeTranscript() {
+  document.getElementById('transcriptModal').classList.remove('open');
+}
+
+document.getElementById('transcriptModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeTranscript();
+});
+
+// ─── Load calls ───────────────────────────────────────────────────────────────
 async function loadCalls() {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
-  document.getElementById('dateRange').textContent = `${now.toLocaleDateString('en-GB',{month:'long',year:'numeric'})}`;
+  const selectedMonth = document.getElementById('monthSelect').value;
+  const [year, month] = selectedMonth.split('-').map(Number);
+  const start = `${year}-${String(month).padStart(2,'0')}-01`;
+  const end = new Date(year, month, 0);
+  const endStr = `${year}-${String(month).padStart(2,'0')}-${String(end.getDate()).padStart(2,'0')}`;
+
+  document.getElementById('dateRange').textContent =
+    new Date(year, month - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
   try {
-    const data = await fetch(`${API}/api/tenants/${TENANT}/calls?start=${start}`, { headers:{Authorization:`Bearer ${TOKEN}`} });
-    if (!data.ok) throw new Error(`HTTP ${data.status}`);
-    const json = await data.json();
+    const r = await fetch(`${API}/api/tenants/${TENANT}/calls?start=${start}&end=${endStr}`, { headers: { Authorization: `Bearer ${TOKEN}` } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const json = await r.json();
     allCalls = json.calls ?? [];
     renderStats(allCalls);
     applyFilter();
-  } catch (err) {
-    // Endpoint may not exist yet — show graceful empty state
+  } catch {
     allCalls = [];
     renderStats([]);
-    document.getElementById('callsTbody').innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📞</div><div class="empty-title">No call data yet</div><div class="empty-text">Once your AI voice agent is active, call logs will appear here automatically.</div></div></td></tr>`;
+    document.getElementById('callsTbody').innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📞</div><div class="empty-title">No call data yet</div><div class="empty-text">Once your AI voice agent is active, call logs will appear here automatically.</div></div></td></tr>`;
   }
 }
 
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function showToast(msg, icon='✅', type='') {
+  const wrap = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-content"><div class="toast-title">${esc(msg)}</div></div>`;
+  wrap.appendChild(t);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));
+  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),350); }, 3500);
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+buildMonthSelector();
 loadCalls();
 </script>
 </body>
