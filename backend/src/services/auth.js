@@ -242,14 +242,11 @@ export async function loginUser({ email, password }) {
     select: {
       id: true, tenantId: true, email: true, username: true,
       fullName: true, role: true, platformRole: true, passwordHash: true, emailVerifiedAt: true,
-      tenant: {
-        select: { name: true, plan: true, isActive: true, clinicStatus: true },
-      },
+      tenant: { select: { name: true, plan: true, isActive: true, clinicStatus: true } },
     },
   });
 
   if (!user) {
-    // Same error for wrong email or wrong password to prevent enumeration
     throw Object.assign(new Error('Incorrect email or password.'), { statusCode: 401 });
   }
 
@@ -262,13 +259,6 @@ export async function loginUser({ email, password }) {
     throw Object.assign(
       new Error('Please verify your email address before logging in.'),
       { statusCode: 403, code: 'EMAIL_NOT_VERIFIED' }
-    );
-  }
-
-  if (!user.tenant.isActive) {
-    throw Object.assign(
-      new Error('This account has been suspended. Please contact support.'),
-      { statusCode: 403 }
     );
   }
 
@@ -326,10 +316,10 @@ export async function loginUser({ email, password }) {
     username:     user.username,
     fullName:     user.fullName,
     role:         user.role,
-    platformRole,
-    clinicStatus,
+    platformRole: user.platformRole,
     tenantName:   user.tenant.name,
     plan:         user.tenant.plan,
+    clinicStatus,
     ...(redirect ? { redirect } : {}),
   };
 }

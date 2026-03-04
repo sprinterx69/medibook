@@ -155,7 +155,6 @@ async function submitLogin() {
     localStorage.setItem('medibook_user_name',     data.fullName);
     localStorage.setItem('medibook_tenant_name',   data.tenantName);
     localStorage.setItem('medibook_platform_role', data.platformRole ?? 'CLINIC');
-    // Redirect based on role and clinicStatus
     if (data.redirect) {
       window.location.href = data.redirect;
     } else if (data.platformRole === 'SUPERADMIN') {

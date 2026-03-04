@@ -1,391 +1,244 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // routes/admin-routes.js
 //
-// All routes require platformRole = SUPERADMIN (enforced server-side).
+// Platform admin API — all routes require SUPERADMIN platformRole.
 //
-// GET  /api/admin/overview                           — Platform stats (MRR, clinics, calls, bookings)
-// GET  /api/admin/clinics                            — List all tenants with status
-// GET  /api/admin/clinics/:tenantId                  — Full clinic detail
-// PUT  /api/admin/clinics/:tenantId/status           — Update clinicStatus
-// GET  /api/admin/clinics/:tenantId/ai-config        — Get AI/agent config
-// PUT  /api/admin/clinics/:tenantId/ai-config        — Update AI/agent config
-// GET  /api/admin/clinics/:tenantId/booking-engine   — Get consultation rules
-// PUT  /api/admin/clinics/:tenantId/booking-engine   — Update consultation rules
-// GET  /api/admin/clinics/:tenantId/transcripts      — Call transcripts
-// GET  /api/admin/clinics/:tenantId/booking-logs     — Booking validation logs
-// GET  /api/admin/billing/:tenantId                  — Stripe subscription + invoice data
-// POST /api/admin/clinics/initiate                   — Start Stripe-first clinic creation
-// POST /api/admin/clinics/:tenantId/resend-onboarding — Regenerate onboarding token
+//   GET  /api/admin/overview
+//   GET  /api/admin/clinics
+//   GET  /api/admin/clinics/:tenantId/status
+//   PUT  /api/admin/clinics/:tenantId/status
+//   GET  /api/admin/clinics/:tenantId/ai-config
+//   PUT  /api/admin/clinics/:tenantId/ai-config
+//   GET  /api/admin/clinics/:tenantId/booking-engine
+//   PUT  /api/admin/clinics/:tenantId/booking-engine
+//   GET  /api/admin/clinics/:tenantId/transcripts
+//   GET  /api/admin/clinics/:tenantId/booking-logs
+//   GET  /api/admin/billing/:tenantId
+//   POST /api/admin/clinics/initiate
+//   POST /api/admin/clinics/:tenantId/resend-onboarding
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '../config/prisma.js';
 import { requirePlatformAdmin } from '../middleware/role-guards.js';
-import { createAdminCheckoutSession, getSubscriptionStatus, listInvoices } from '../services/billing.js';
+import { createAdminCheckoutSession } from '../services/billing.js';
+import { sendOnboardingEmail } from '../services/email.js';
 import crypto from 'crypto';
-
-const VALID_CLINIC_STATUSES = [
-  'pending_payment', 'onboarding_required', 'onboarding_submitted',
-  'setup_in_progress', 'testing', 'live', 'paused',
-];
 
 export default async function adminRoutes(fastify) {
 
-  // All admin routes require authentication + SUPERADMIN role
-  const adminGuard = [
-    async (req, reply) => {
-      try { await req.jwtVerify(); } catch { return reply.code(401).send({ error: 'Unauthorized' }); }
-    },
-    requirePlatformAdmin,
-  ];
+  // All admin routes require JWT + SUPERADMIN role
+  async function guard(request, reply) {
+    try { await request.jwtVerify(); } catch { return reply.code(401).send({ error: 'Unauthorized' }); }
+    return requirePlatformAdmin(request, reply);
+  }
 
   // ── GET /api/admin/overview ───────────────────────────────────────────────
-  fastify.get('/api/admin/overview', { preHandler: adminGuard }, async (request, reply) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
-
-    const [
-      totalClinics,
-      liveClinics,
-      callsToday,
-      aiBookingsToday,
-      subscriptions,
-    ] = await Promise.all([
-      prisma.tenant.count(),
-      prisma.tenant.count({ where: { clinicStatus: 'live' } }),
-      prisma.callLog.count({ where: { createdAt: { gte: today, lte: todayEnd } } }),
-      prisma.appointment.count({
-        where: { createdAt: { gte: today, lte: todayEnd }, source: { in: ['VOICE', 'voice_agent', 'ai'] } },
+  fastify.get('/api/admin/overview', { preHandler: [guard] }, async () => {
+    const [tenants, callsToday, bookingsToday] = await Promise.all([
+      prisma.tenant.findMany({
+        select: { id: true, clinicStatus: true, isActive: true, plan: true, subscriptions: { select: { status: true } } },
       }),
-      prisma.subscription.findMany({
-        where:   { status: { in: ['ACTIVE', 'TRIALING'] } },
-        include: { tenant: { select: { plan: true } } },
+      prisma.callLog.count({
+        where: { createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } },
+      }),
+      prisma.appointment.count({
+        where: {
+          source: 'VOICE',
+          createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+        },
       }),
     ]);
 
-    // Approximate MRR from active subscriptions (uses plan amounts from PLANS config)
-    const PLAN_AMOUNTS = { STARTER: 4900, PRO: 12900, ENTERPRISE: 0 };
-    const mrrCents = subscriptions.reduce((sum, sub) => {
-      return sum + (PLAN_AMOUNTS[sub.tenant?.plan] ?? 0);
+    const statusCounts = tenants.reduce((acc, t) => {
+      acc[t.clinicStatus] = (acc[t.clinicStatus] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Rough MRR: count active/trialing subscriptions
+    const planMrr = { STARTER: 4900, PRO: 12900, ENTERPRISE: 39900 };
+    const mrr = tenants.reduce((sum, t) => {
+      const hasPaid = t.subscriptions.some(s => ['ACTIVE', 'TRIALING'].includes(s.status));
+      return sum + (hasPaid ? (planMrr[t.plan] ?? 0) : 0);
     }, 0);
 
-    // Count by status
-    const statusCounts = await prisma.tenant.groupBy({
-      by:      ['clinicStatus'],
-      _count:  { _all: true },
-    });
-
     return {
-      totalClinics,
-      liveClinics,
+      mrr,
+      totalClinics:   tenants.length,
+      liveClinics:    tenants.filter(t => t.clinicStatus === 'live').length,
       callsToday,
-      aiBookingsToday,
-      mrr:          { cents: mrrCents, formatted: `$${(mrrCents / 100).toFixed(0)}` },
-      statusCounts: statusCounts.reduce((acc, row) => {
-        acc[row.clinicStatus] = row._count._all;
-        return acc;
-      }, {}),
+      bookingsToday,
+      statusCounts,
     };
   });
 
   // ── GET /api/admin/clinics ────────────────────────────────────────────────
-  fastify.get('/api/admin/clinics', { preHandler: adminGuard }, async (request, reply) => {
+  fastify.get('/api/admin/clinics', { preHandler: [guard] }, async (request) => {
+    const { status } = request.query;
+    const where = status ? { clinicStatus: status } : {};
     const clinics = await prisma.tenant.findMany({
+      where,
       select: {
-        id:                   true,
-        name:                 true,
-        slug:                 true,
-        plan:                 true,
-        clinicStatus:         true,
-        stripeCustomerId:     true,
-        stripeSubscriptionId: true,
-        isActive:             true,
-        createdAt:            true,
-        users: {
-          where:  { role: 'OWNER' },
-          select: { email: true, fullName: true },
-          take:   1,
-        },
-        subscriptions: {
-          where:   { status: { in: ['ACTIVE', 'TRIALING', 'PAST_DUE'] } },
-          orderBy: { createdAt: 'desc' },
-          take:    1,
-          select:  { status: true, currentPeriodEnd: true },
-        },
+        id: true, name: true, slug: true, plan: true, clinicStatus: true,
+        isActive: true, createdAt: true,
+        users: { where: { role: 'OWNER' }, select: { email: true, fullName: true }, take: 1 },
       },
       orderBy: { createdAt: 'desc' },
     });
-
     return { clinics };
   });
 
-  // ── GET /api/admin/clinics/:tenantId ──────────────────────────────────────
-  fastify.get('/api/admin/clinics/:tenantId', { preHandler: adminGuard }, async (request, reply) => {
-    const { tenantId } = request.params;
+  // ── GET/PUT /api/admin/clinics/:tenantId/status ───────────────────────────
+  fastify.get('/api/admin/clinics/:tenantId/status', { preHandler: [guard] }, async (request) => {
     const tenant = await prisma.tenant.findUnique({
-      where:   { id: tenantId },
-      include: {
-        users:           { select: { id: true, email: true, fullName: true, role: true, platformRole: true, createdAt: true } },
-        subscriptions:   { orderBy: { createdAt: 'desc' }, take: 1 },
-        consultationRule: true,
-        brandVoice:      true,
-        onboardingToken: { select: { expiresAt: true, usedAt: true, createdAt: true } },
-        _count:          { select: { appointments: true, clients: true, callLogs: true } },
-      },
+      where: { id: request.params.tenantId },
+      select: { id: true, name: true, clinicStatus: true, isActive: true },
     });
-
-    if (!tenant) return reply.code(404).send({ error: 'Clinic not found' });
+    if (!tenant) return { error: 'Tenant not found' };
     return tenant;
   });
 
-  // ── PUT /api/admin/clinics/:tenantId/status ───────────────────────────────
-  fastify.put('/api/admin/clinics/:tenantId/status', { preHandler: adminGuard }, async (request, reply) => {
-    const { tenantId }     = request.params;
-    const { clinicStatus } = request.body ?? {};
-
-    if (!VALID_CLINIC_STATUSES.includes(clinicStatus)) {
-      return reply.code(400).send({ error: `Invalid status. Must be one of: ${VALID_CLINIC_STATUSES.join(', ')}` });
+  fastify.put('/api/admin/clinics/:tenantId/status', { preHandler: [guard] }, async (request, reply) => {
+    const { clinicStatus, isActive } = request.body ?? {};
+    const VALID_STATUSES = ['pending_payment', 'onboarding_required', 'onboarding_submitted', 'setup_in_progress', 'testing', 'live', 'paused'];
+    if (clinicStatus && !VALID_STATUSES.includes(clinicStatus)) {
+      return reply.code(400).send({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
     }
-
-    const updated = await prisma.tenant.update({
-      where: { id: tenantId },
-      data:  {
-        clinicStatus,
-        isActive: clinicStatus === 'live' || clinicStatus === 'testing',
-      },
-      select: { id: true, name: true, clinicStatus: true, isActive: true },
-    });
-
-    await prisma.activityLog.create({
-      data: {
-        tenantId,
-        type:        'clinic_status_changed',
-        description: `Clinic status changed to <strong>${clinicStatus}</strong> by admin.`,
-        icon:        '🔧',
-        bgColor:     '#3b82f6',
-      },
-    });
-
-    return updated;
+    const data = {};
+    if (clinicStatus) data.clinicStatus = clinicStatus;
+    if (isActive !== undefined) data.isActive = Boolean(isActive);
+    const tenant = await prisma.tenant.update({ where: { id: request.params.tenantId }, data });
+    return { success: true, clinicStatus: tenant.clinicStatus, isActive: tenant.isActive };
   });
 
-  // ── GET /api/admin/clinics/:tenantId/ai-config ────────────────────────────
-  fastify.get('/api/admin/clinics/:tenantId/ai-config', { preHandler: adminGuard }, async (request, reply) => {
+  // ── GET/PUT /api/admin/clinics/:tenantId/ai-config ────────────────────────
+  fastify.get('/api/admin/clinics/:tenantId/ai-config', { preHandler: [guard] }, async (request) => {
     const tenant = await prisma.tenant.findUnique({
-      where:  { id: request.params.tenantId },
-      select: { id: true, name: true, settings: true, brandVoice: true },
-    });
-    if (!tenant) return reply.code(404).send({ error: 'Clinic not found' });
-
-    return {
-      tenantId:    tenant.id,
-      tenantName:  tenant.name,
-      aiConfig:    tenant.settings?.aiConfig ?? {},
-      callHandling: tenant.settings?.callHandling ?? {},
-      brandVoice:  tenant.brandVoice ?? null,
-    };
-  });
-
-  // ── PUT /api/admin/clinics/:tenantId/ai-config ────────────────────────────
-  fastify.put('/api/admin/clinics/:tenantId/ai-config', { preHandler: adminGuard }, async (request, reply) => {
-    const { tenantId } = request.params;
-    const { aiConfig, callHandling } = request.body ?? {};
-
-    const tenant = await prisma.tenant.findUnique({
-      where:  { id: tenantId },
+      where: { id: request.params.tenantId },
       select: { settings: true },
     });
-    if (!tenant) return reply.code(404).send({ error: 'Clinic not found' });
+    return { aiConfig: (tenant?.settings)?.aiConfig ?? {} };
+  });
 
+  fastify.put('/api/admin/clinics/:tenantId/ai-config', { preHandler: [guard] }, async (request) => {
+    const tenant = await prisma.tenant.findUnique({ where: { id: request.params.tenantId }, select: { settings: true } });
+    const current = tenant?.settings ?? {};
     await prisma.tenant.update({
-      where: { id: tenantId },
-      data:  {
-        settings: {
-          ...(tenant.settings ?? {}),
-          ...(aiConfig      ? { aiConfig }      : {}),
-          ...(callHandling  ? { callHandling }  : {}),
-        },
-      },
+      where: { id: request.params.tenantId },
+      data:  { settings: { ...current, aiConfig: request.body } },
     });
-
     return { success: true };
   });
 
-  // ── GET /api/admin/clinics/:tenantId/booking-engine ───────────────────────
-  fastify.get('/api/admin/clinics/:tenantId/booking-engine', { preHandler: adminGuard }, async (request, reply) => {
-    const rule = await prisma.consultationRule.findUnique({
-      where: { tenantId: request.params.tenantId },
-    });
-    return rule ?? { tenantId: request.params.tenantId, configured: false };
+  // ── GET/PUT /api/admin/clinics/:tenantId/booking-engine ───────────────────
+  fastify.get('/api/admin/clinics/:tenantId/booking-engine', { preHandler: [guard] }, async (request) => {
+    const [rule, brandVoice] = await Promise.all([
+      prisma.consultationRule.findUnique({ where: { tenantId: request.params.tenantId } }),
+      prisma.brandVoice.findUnique({ where: { tenantId: request.params.tenantId } }),
+    ]);
+    return { consultationRule: rule, brandVoice };
   });
 
-  // ── PUT /api/admin/clinics/:tenantId/booking-engine ───────────────────────
-  fastify.put('/api/admin/clinics/:tenantId/booking-engine', { preHandler: adminGuard }, async (request, reply) => {
-    const { tenantId } = request.params;
-    const { durationMins, availableDays, timeBlocks, bufferMins, maxPerDay } = request.body ?? {};
-
-    const data = {};
-    if (durationMins  != null) data.durationMins  = parseInt(durationMins,  10);
-    if (availableDays != null) data.availableDays = availableDays;
-    if (timeBlocks    != null) data.timeBlocks    = timeBlocks;
-    if (bufferMins    != null) data.bufferMins    = parseInt(bufferMins,    10);
-    if (maxPerDay     != null) data.maxPerDay     = parseInt(maxPerDay,     10);
-
-    const rule = await prisma.consultationRule.upsert({
-      where:  { tenantId },
-      create: { tenantId, durationMins: 30, availableDays: [1,2,3,4,5], timeBlocks: [{ start:'09:00',end:'17:00' }], bufferMins: 15, maxPerDay: 10, ...data },
-      update: data,
-    });
-
-    return rule;
+  fastify.put('/api/admin/clinics/:tenantId/booking-engine', { preHandler: [guard] }, async (request) => {
+    const { consultationRule, brandVoice } = request.body ?? {};
+    const tenantId = request.params.tenantId;
+    if (consultationRule) {
+      await prisma.consultationRule.upsert({
+        where:  { tenantId },
+        create: { tenantId, ...consultationRule },
+        update: consultationRule,
+      });
+    }
+    if (brandVoice) {
+      await prisma.brandVoice.upsert({
+        where:  { tenantId },
+        create: { tenantId, ...brandVoice },
+        update: brandVoice,
+      });
+    }
+    return { success: true };
   });
 
   // ── GET /api/admin/clinics/:tenantId/transcripts ──────────────────────────
-  fastify.get('/api/admin/clinics/:tenantId/transcripts', { preHandler: adminGuard }, async (request, reply) => {
-    const { tenantId } = request.params;
-    const limit        = Math.min(parseInt(request.query.limit ?? '50', 10), 200);
-    const offset       = parseInt(request.query.offset ?? '0', 10);
-
-    const [calls, total] = await Promise.all([
-      prisma.callLog.findMany({
-        where:   { tenantId },
-        orderBy: { createdAt: 'desc' },
-        take:    limit,
-        skip:    offset,
-        select:  {
-          id: true, callSid: true, callerPhone: true,
-          durationMs: true, bookingsMade: true, twilioStatus: true,
-          transcript: true, createdAt: true,
-        },
-      }),
-      prisma.callLog.count({ where: { tenantId } }),
-    ]);
-
-    return { calls, total, limit, offset };
+  fastify.get('/api/admin/clinics/:tenantId/transcripts', { preHandler: [guard] }, async (request) => {
+    const logs = await prisma.callLog.findMany({
+      where: { tenantId: request.params.tenantId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      select: { id: true, callSid: true, callerPhone: true, durationMs: true, bookingsMade: true, twilioStatus: true, createdAt: true, transcript: true },
+    });
+    return { logs };
   });
 
   // ── GET /api/admin/clinics/:tenantId/booking-logs ─────────────────────────
-  fastify.get('/api/admin/clinics/:tenantId/booking-logs', { preHandler: adminGuard }, async (request, reply) => {
-    const { tenantId } = request.params;
-    const limit        = Math.min(parseInt(request.query.limit ?? '50', 10), 200);
-    const offset       = parseInt(request.query.offset ?? '0', 10);
-
-    const [logs, total] = await Promise.all([
-      prisma.bookingEngineLog.findMany({
-        where:   { tenantId },
-        orderBy: { createdAt: 'desc' },
-        take:    limit,
-        skip:    offset,
-      }),
-      prisma.bookingEngineLog.count({ where: { tenantId } }),
-    ]);
-
-    return { logs, total, limit, offset };
+  fastify.get('/api/admin/clinics/:tenantId/booking-logs', { preHandler: [guard] }, async (request) => {
+    const logs = await prisma.bookingEngineLog.findMany({
+      where: { tenantId: request.params.tenantId },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+    return { logs };
   });
 
-  // ── GET /api/admin/billing/:tenantId ──────────────────────────────────────
-  fastify.get('/api/admin/billing/:tenantId', { preHandler: adminGuard }, async (request, reply) => {
-    const { tenantId } = request.params;
-    try {
-      const [status, invoices] = await Promise.all([
-        getSubscriptionStatus(tenantId),
-        listInvoices(tenantId, 12),
-      ]);
-      return { subscription: status, ...invoices };
-    } catch (err) {
-      return reply.code(500).send({ error: err.message });
-    }
+  // ── GET /api/admin/billing/:tenantId ─────────────────────────────────────
+  fastify.get('/api/admin/billing/:tenantId', { preHandler: [guard] }, async (request) => {
+    const [tenant, subscriptions] = await Promise.all([
+      prisma.tenant.findUnique({
+        where: { id: request.params.tenantId },
+        select: { stripeCustomerId: true, stripeSubscriptionId: true, plan: true, clinicStatus: true },
+      }),
+      prisma.subscription.findMany({ where: { tenantId: request.params.tenantId }, orderBy: { createdAt: 'desc' } }),
+    ]);
+    return { tenant, subscriptions };
   });
 
   // ── POST /api/admin/clinics/initiate ──────────────────────────────────────
-  // Admin initiates Stripe-first checkout for a new clinic
-  fastify.post('/api/admin/clinics/initiate', { preHandler: adminGuard }, async (request, reply) => {
-    const { businessName, ownerEmail, ownerFullName, planKey, setupFeeIncluded } = request.body ?? {};
-
-    const missing = ['businessName', 'ownerEmail', 'ownerFullName', 'planKey'].filter(k => !request.body?.[k]);
-    if (missing.length) {
-      return reply.code(400).send({ error: `Missing required fields: ${missing.join(', ')}` });
+  // Starts the Stripe-first clinic creation flow.
+  fastify.post('/api/admin/clinics/initiate', { preHandler: [guard] }, async (request, reply) => {
+    const { planKey, businessName, email, fullName } = request.body ?? {};
+    if (!planKey || !businessName || !email) {
+      return reply.code(400).send({ error: 'planKey, businessName, and email are required' });
     }
 
     try {
-      const appUrl = process.env.APP_URL || 'https://app.callora.me';
       const result = await createAdminCheckoutSession({
-        businessName,
-        ownerEmail,
-        ownerFullName,
-        planKey:          planKey.toLowerCase(),
-        setupFeeIncluded: Boolean(setupFeeIncluded),
-        successUrl:       `${appUrl}/pages/admin/index.html?payment=success`,
-        cancelUrl:        `${appUrl}/pages/admin/index.html?payment=cancelled`,
+        planKey, businessName, email, fullName: fullName || businessName,
+        successUrl: `${process.env.PUBLIC_URL}/pages/payment-success.html`,
+        cancelUrl:  `${process.env.PUBLIC_URL}/pages/login.html`,
       });
-
-      return reply.code(201).send(result);
+      return { checkoutUrl: result.url, sessionId: result.sessionId };
     } catch (err) {
       return reply.code(500).send({ error: err.message });
     }
   });
 
   // ── POST /api/admin/clinics/:tenantId/resend-onboarding ───────────────────
-  // Regenerate onboarding token and optionally resend email
-  fastify.post('/api/admin/clinics/:tenantId/resend-onboarding', { preHandler: adminGuard }, async (request, reply) => {
+  // Regenerates the onboarding token and resends the email.
+  fastify.post('/api/admin/clinics/:tenantId/resend-onboarding', { preHandler: [guard] }, async (request, reply) => {
     const { tenantId } = request.params;
 
     const tenant = await prisma.tenant.findUnique({
-      where:  { id: tenantId },
-      select: { id: true, name: true, clinicStatus: true, users: { where: { role: 'OWNER' }, select: { email: true, fullName: true }, take: 1 } },
+      where: { id: tenantId },
+      select: { name: true, users: { where: { role: 'OWNER' }, select: { email: true, fullName: true }, take: 1 } },
     });
+    if (!tenant) return reply.code(404).send({ error: 'Tenant not found' });
 
-    if (!tenant) return reply.code(404).send({ error: 'Clinic not found' });
+    const owner = tenant.users[0];
+    if (!owner) return reply.code(404).send({ error: 'No owner user found' });
 
-    // Generate new token (invalidates old one via upsert)
     const newToken = crypto.randomBytes(32).toString('hex');
-    const tokenRecord = await prisma.onboardingToken.upsert({
+    await prisma.onboardingToken.upsert({
       where:  { tenantId },
-      create: {
-        tenantId,
-        token:     newToken,
-        expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000),
-      },
-      update: {
-        token:     newToken,
-        expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000),
-        usedAt:    null,
-      },
+      create: { tenantId, token: newToken, expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000) },
+      update: { token: newToken, expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000), usedAt: null },
     });
 
-    // Optionally reset clinicStatus to onboarding_required if it was submitted
-    if (tenant.clinicStatus !== 'live' && tenant.clinicStatus !== 'testing') {
-      await prisma.tenant.update({
-        where: { id: tenantId },
-        data:  { clinicStatus: 'onboarding_required' },
-      });
+    const onboardingUrl = `${process.env.PUBLIC_URL}/app/onboarding.html?token=${newToken}`;
+    try {
+      await sendOnboardingEmail({ to: owner.email, fullName: owner.fullName, tenantName: tenant.name, onboardingUrl });
+    } catch (emailErr) {
+      console.error('[Admin] Failed to send onboarding email:', emailErr.message);
     }
 
-    const appUrl = process.env.APP_URL || 'https://app.callora.me';
-    const onboardingUrl = `${appUrl}/app/onboarding.html?token=${tokenRecord.token}`;
-
-    // Send email if owner exists
-    const owner = tenant.users?.[0];
-    if (owner) {
-      try {
-        const { sendOnboardingEmail } = await import('../services/email.js');
-        await sendOnboardingEmail({
-          to:           owner.email,
-          fullName:     owner.fullName,
-          tenantName:   tenant.name,
-          onboardingUrl,
-        });
-      } catch (err) {
-        console.error('[admin] Onboarding email failed (non-fatal):', err.message);
-      }
-    }
-
-    return {
-      success:        true,
-      onboardingUrl,
-      token:          tokenRecord.token,
-      expiresAt:      tokenRecord.expiresAt,
-    };
+    return { success: true, onboardingUrl };
   });
 }

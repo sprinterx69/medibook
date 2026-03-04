@@ -164,7 +164,7 @@ export async function completeOnboarding(tenantId, data) {
   // businessType is hardcoded to 'Med Spa' — no industry selector
   const templatePrompt = _buildTemplatePrompt({
     clinicName, agentName,
-    businessType:   'Med Spa',
+    businessType:   data.businessType ?? 'Med Spa',
     address:        data.address        ?? '',
     parking:        data.parking        ?? '',
     phone:          data.phone          ?? '',
@@ -203,7 +203,7 @@ export async function completeOnboarding(tenantId, data) {
   // ── 6. Update tenant ──────────────────────────────────────────────────────
   const updatedSettings = {
     ...currentSettings,
-    businessType:          'Med Spa',  // Platform is Med Spa only — no industry selector
+    businessType:          data.businessType ?? currentSettings.businessType ?? 'Med Spa',
     address:               data.address              ?? currentSettings.address ?? '',
     phone:                 data.phone                ?? currentSettings.phone   ?? '',
     email:                 data.email                ?? currentSettings.email   ?? '',
@@ -225,7 +225,7 @@ export async function completeOnboarding(tenantId, data) {
   // version when OPENAI_API_KEY is available — never blocks the response.
   generateAndStoreSystemPrompt(tenantId, {
     clinicName,
-    businessType:   'Med Spa',
+    businessType:   data.businessType ?? 'Med Spa',
     address:        data.address         ?? '',
     parking:        data.parking         ?? '',
     phone:          data.phone           ?? '',
