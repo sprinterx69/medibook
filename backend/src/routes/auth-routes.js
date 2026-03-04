@@ -85,7 +85,14 @@ export default async function authRoutes(fastify) {
     try {
       const user  = await loginUser({ email, password });
       const token = fastify.jwt.sign(
-        { userId: user.userId, tenantId: user.tenantId, email: user.email, role: user.role },
+        {
+          userId:       user.userId,
+          tenantId:     user.tenantId,
+          email:        user.email,
+          role:         user.role,
+          platformRole: user.platformRole,
+          clinicStatus: user.clinicStatus,
+        },
         { expiresIn: '7d' }
       );
       return { ...user, token };

@@ -15,26 +15,34 @@ datasource db {
 
 // ─── TENANTS ──────────────────────────────────────────────────────────────────
 model Tenant {
-  id               String   @id @default(uuid())
-  slug             String   @unique @db.VarChar(63)  // e.g. "lumiere-clinic"
-  name             String   @db.VarChar(255)
-  plan             Plan     @default(STARTER)
-  stripeCustomerId String?  @db.VarChar(255)
-  settings         Json     @default("{}")           // timezone, address, brand colors, voice agent config
-  isActive         Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  slug                 String   @unique @db.VarChar(63)  // e.g. "lumiere-clinic"
+  name                 String   @db.VarChar(255)
+  plan                 Plan     @default(STARTER)
+  stripeCustomerId     String?  @db.VarChar(255)
+  stripeSubscriptionId String?  @db.VarChar(255)
+  // clinicStatus: pending_payment | onboarding_required | onboarding_submitted | setup_in_progress | testing | live | paused
+  clinicStatus         String   @default("live")
+  settings             Json     @default("{}")           // timezone, address, brand colors, voice agent config
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   // Relations
-  users        User[]
-  staff        Staff[]
-  clients      Client[]
-  services     Service[]
-  appointments Appointment[]
-  locations    Location[]
-  callLogs     CallLog[]
-  subscriptions Subscription[]
-  activityLogs  ActivityLog[]
+  users             User[]
+  staff             Staff[]
+  clients           Client[]
+  services          Service[]
+  appointments      Appointment[]
+  locations         Location[]
+  callLogs          CallLog[]
+  subscriptions     Subscription[]
+  activityLogs      ActivityLog[]
+  onboardingToken   OnboardingToken?
+  consultationRule  ConsultationRule?
+  blackoutDates     BlackoutDate[]
+  bookingEngineLogs BookingEngineLog[]
+  brandVoice        BrandVoice?
 
   @@map("tenants")
 }
@@ -58,6 +66,7 @@ model User {
   avatarUrl       String?   @db.VarChar(500)
   isAvailable     Boolean   @default(true)
   role            UserRole  @default(OWNER)
+  platformRole    String    @default("CLINIC")  // SUPERADMIN | CLINIC
   emailVerifiedAt DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -170,9 +179,10 @@ model Service {
   durationMins  Int      // e.g. 60
   priceCents    Int      // e.g. 18000 = £180.00
   depositCents  Int      @default(0)
-  color         String   @default("#d4a84b")
-  isActive      Boolean  @default(true)
-  category      String?  // e.g. "Facial Treatments"
+  color                String   @default("#d4a84b")
+  isActive             Boolean  @default(true)
+  consultationRequired Boolean  @default(false)
+  category             String?  // e.g. "Facial Treatments"
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -251,8 +261,9 @@ model Appointment {
   client   Client    @relation(fields: [clientId], references: [id])
   staff    Staff     @relation(fields: [staffId], references: [id])
   service  Service   @relation(fields: [serviceId], references: [id])
-  location Location? @relation(fields: [locationId], references: [id])
-  payments Payment[]
+  location          Location?          @relation(fields: [locationId], references: [id])
+  payments          Payment[]
+  bookingEngineLogs BookingEngineLog[]
 
   @@index([tenantId, startsAt])
   @@index([tenantId, clientId])
@@ -368,4 +379,79 @@ model ActivityLog {
   @@index([tenantId])
   @@index([tenantId, createdAt(sort: Desc)])
   @@map("activity_logs")
+}
+
+// ─── ONBOARDING TOKENS ────────────────────────────────────────────────────────
+model OnboardingToken {
+  id        String    @id @default(uuid())
+  token     String    @unique @db.VarChar(64)
+  tenantId  String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("onboarding_tokens")
+}
+
+// ─── CONSULTATION RULES ───────────────────────────────────────────────────────
+model ConsultationRule {
+  id            String   @id @default(uuid())
+  tenantId      String   @unique
+  durationMins  Int      @default(30)
+  availableDays Json     @default("[1,2,3,4,5]")
+  timeBlocks    Json     @default("[{\"start\":\"09:00\",\"end\":\"17:00\"}]")
+  bufferMins    Int      @default(15)
+  maxPerDay     Int      @default(10)
+  updatedAt     DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("consultation_rules")
+}
+
+// ─── BLACKOUT DATES ───────────────────────────────────────────────────────────
+model BlackoutDate {
+  id       String   @id @default(uuid())
+  tenantId String
+  date     DateTime @db.Date
+  label    String?  @db.VarChar(255)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, date])
+  @@index([tenantId])
+  @@map("blackout_dates")
+}
+
+// ─── BOOKING ENGINE LOGS ──────────────────────────────────────────────────────
+model BookingEngineLog {
+  id               String   @id @default(uuid())
+  tenantId         String
+  appointmentId    String?
+  source           String   @db.VarChar(50)
+  outcome          String   @db.VarChar(20)
+  validationErrors Json     @default("[]")
+  createdAt        DateTime @default(now())
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+
+  @@index([tenantId])
+  @@map("booking_engine_logs")
+}
+
+// ─── BRAND VOICE ──────────────────────────────────────────────────────────────
+model BrandVoice {
+  id           String   @id @default(uuid())
+  tenantId     String   @unique
+  tone         String   @default("luxury")
+  wordsToAvoid Json     @default("[]")
+  specialNotes String?  @db.Text
+  updatedAt    DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("brand_voices")
 }

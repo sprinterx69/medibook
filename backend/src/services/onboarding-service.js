@@ -163,7 +163,7 @@ export async function completeOnboarding(tenantId, data) {
   // Build template system prompt immediately (always works, no API key needed)
   const templatePrompt = _buildTemplatePrompt({
     clinicName, agentName,
-    businessType:   data.businessType   ?? '',
+    businessType:   data.businessType ?? 'Med Spa',
     address:        data.address        ?? '',
     parking:        data.parking        ?? '',
     phone:          data.phone          ?? '',
@@ -202,7 +202,7 @@ export async function completeOnboarding(tenantId, data) {
   // ── 6. Update tenant ──────────────────────────────────────────────────────
   const updatedSettings = {
     ...currentSettings,
-    businessType:          data.businessType         ?? currentSettings.businessType,
+    businessType:          data.businessType ?? currentSettings.businessType ?? 'Med Spa',
     address:               data.address              ?? currentSettings.address ?? '',
     phone:                 data.phone                ?? currentSettings.phone   ?? '',
     email:                 data.email                ?? currentSettings.email   ?? '',
@@ -224,7 +224,7 @@ export async function completeOnboarding(tenantId, data) {
   // version when OPENAI_API_KEY is available — never blocks the response.
   generateAndStoreSystemPrompt(tenantId, {
     clinicName,
-    businessType:   data.businessType   ?? '',
+    businessType:   data.businessType ?? 'Med Spa',
     address:        data.address         ?? '',
     parking:        data.parking         ?? '',
     phone:          data.phone           ?? '',

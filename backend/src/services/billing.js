@@ -1,5 +1,4 @@
 // ─────────────────────────────────────────────────────────────────────────────
-import { prisma } from '../config/prisma.js';
 // stripe/billing.js
 // MediBook — Complete Stripe Subscription & Billing Backend
 //
@@ -15,7 +14,9 @@ import { prisma } from '../config/prisma.js';
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Stripe from 'stripe';
-
+import crypto from 'crypto';
+import { prisma } from '../config/prisma.js';
+import { sendOnboardingEmail } from './email.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2024-04-10',
@@ -99,6 +100,57 @@ export async function createCheckoutSession({ tenantId, planKey, successUrl, can
     custom_text: {
       submit: { message: 'Your 30-day free trial starts today. No charge until the trial ends.' },
     },
+  });
+
+  return { sessionId: session.id, url: session.url };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1b. ADMIN-INITIATED CHECKOUT (Stripe-first clinic creation)
+//     Creates a Stripe Checkout for a not-yet-created clinic.
+//     On completion, the webhook creates the Tenant + User + OnboardingToken.
+// ─────────────────────────────────────────────────────────────────────────────
+export async function createAdminCheckoutSession({ planKey, businessName, email, fullName, successUrl, cancelUrl }) {
+  const plan = PLANS[planKey];
+  if (!plan?.priceId) throw new Error(`Invalid plan or missing Stripe Price ID: ${planKey}`);
+
+  // Create a Stripe Customer before checkout so we can link them later
+  const customer = await stripe.customers.create({
+    name: businessName,
+    email,
+    metadata: { businessName, fullName, planKey },
+  });
+
+  // Track the pending registration in DB
+  const slug = businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/, '').slice(0, 50) || 'clinic';
+  await prisma.pendingRegistration.upsert({
+    where:  { email },
+    create: {
+      planKey, businessName, slug,
+      fullName, email,
+      username: slug + '-' + Date.now(),
+      passwordHash: '',
+      verifyCode: '000000',
+      verifyExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    },
+    update: { planKey, businessName, fullName },
+  });
+
+  const session = await stripe.checkout.sessions.create({
+    mode: 'subscription',
+    customer: customer.id,
+    line_items: [{ price: plan.priceId, quantity: 1 }],
+    subscription_data: {
+      trial_period_days: TRIAL_DAYS,
+      metadata: { businessName, fullName, email, planKey },
+    },
+    payment_method_collection: 'always',
+    billing_address_collection: 'required',
+    allow_promotion_codes: true,
+    success_url: successUrl + '?session_id={CHECKOUT_SESSION_ID}',
+    cancel_url: cancelUrl,
+    metadata: { businessName, fullName, email, planKey },
+    customer_email: email,
   });
 
   return { sessionId: session.id, url: session.url };
@@ -301,18 +353,96 @@ export async function handleStripeWebhook(rawBody, signature) {
       const session = event.data.object;
       if (session.mode !== 'subscription') break;
 
-      const { tenantId, planKey } = session.metadata ?? {};
-      if (!tenantId) break;
-
+      const { tenantId, planKey, businessName, fullName, email } = session.metadata ?? {};
       const stripeSub = await stripe.subscriptions.retrieve(session.subscription);
-      await upsertSubscription(tenantId, stripeSub, planKey);
 
-      // Send welcome email
-      await sendEmail({
-        tenantId,
-        template: 'welcome',
-        data: { planName: PLANS[planKey]?.name ?? 'Pro', trialDays: TRIAL_DAYS },
-      });
+      if (tenantId) {
+        // Existing tenant (tenant created before checkout)
+        const existingTenant = await prisma.tenant.findFirst({
+          where: { OR: [{ stripeCustomerId: String(session.customer) }, { stripeSubscriptionId: stripeSub.id }] },
+        });
+        if (existingTenant) { console.log('[Stripe] Duplicate checkout.session.completed, skipping'); break; }
+        await upsertSubscription(tenantId, stripeSub, planKey);
+        await prisma.tenant.update({ where: { id: tenantId }, data: { stripeCustomerId: String(session.customer), stripeSubscriptionId: stripeSub.id, clinicStatus: 'live' } });
+      } else if (email) {
+        // Stripe-first flow (admin-initiated checkout — clinic not yet created)
+        const existingTenant = await prisma.tenant.findFirst({
+          where: { OR: [{ stripeCustomerId: String(session.customer) }, { stripeSubscriptionId: stripeSub.id }] },
+        });
+        if (existingTenant) { console.log('[Stripe] Duplicate admin checkout, skipping'); break; }
+
+        const slug = (businessName || email).toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50) || 'clinic';
+        const tempPassword = crypto.randomBytes(16).toString('hex');
+        const { scryptSync, randomBytes } = await import('node:crypto');
+        const salt = randomBytes(16).toString('hex');
+        const hash = scryptSync(tempPassword, salt, 64).toString('hex');
+        const passwordHash = `${salt}:${hash}`;
+        const onboardingToken = crypto.randomBytes(32).toString('hex');
+
+        await prisma.$transaction(async (tx) => {
+          const tenant = await tx.tenant.create({
+            data: {
+              slug, name: businessName || email,
+              plan: planKey?.toUpperCase() ?? 'PRO',
+              stripeCustomerId: String(session.customer),
+              stripeSubscriptionId: stripeSub.id,
+              clinicStatus: 'onboarding_required',
+              settings: { timezone: 'America/New_York', currency: 'usd', brandColor: '#c9903a' },
+            },
+          });
+
+          const user = await tx.user.create({
+            data: {
+              tenantId: tenant.id,
+              email,
+              username: slug + '-owner',
+              passwordHash,
+              fullName: fullName || email,
+              role: 'OWNER',
+              platformRole: 'CLINIC',
+              emailVerifiedAt: new Date(),
+            },
+          });
+
+          await tx.staff.create({
+            data: { tenantId: tenant.id, email, name: fullName || email, role: 'OWNER' },
+          });
+
+          await tx.onboardingToken.create({
+            data: {
+              tenantId: tenant.id,
+              token: onboardingToken,
+              expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000),
+            },
+          });
+
+          await tx.subscription.upsert({
+            where: { stripeSubscriptionId: stripeSub.id },
+            create: {
+              tenantId: tenant.id,
+              stripeSubscriptionId: stripeSub.id,
+              stripePriceId: stripeSub.items.data[0]?.price.id ?? '',
+              status: stripeSub.status === 'trialing' ? 'TRIALING' : 'ACTIVE',
+              currentPeriodEnd: new Date(stripeSub.current_period_end * 1000),
+              cancelAtPeriodEnd: false,
+            },
+            update: {},
+          });
+
+          // Mark pending registration as processed if it exists
+          await tx.pendingRegistration.deleteMany({ where: { email } });
+
+          return { tenant, user };
+        });
+
+        // Send onboarding email (outside transaction)
+        try {
+          const onboardingUrl = `${process.env.PUBLIC_URL}/app/onboarding.html?token=${onboardingToken}`;
+          await sendOnboardingEmail({ to: email, fullName: fullName || email, tenantName: businessName || email, onboardingUrl });
+        } catch (emailErr) {
+          console.error('[Stripe] Failed to send onboarding email:', emailErr.message);
+        }
+      }
       break;
     }
 
@@ -338,20 +468,23 @@ export async function handleStripeWebhook(rawBody, signature) {
     // ── Subscription Deleted / Expired ───────────────────────────────────────
     case 'customer.subscription.deleted': {
       const stripeSub = event.data.object;
-      const tenantId = stripeSub.metadata?.tenantId;
-      if (!tenantId) break;
 
       await prisma.subscription.updateMany({
         where: { stripeSubscriptionId: stripeSub.id },
         data: { status: 'CANCELLED' },
       });
 
-      await prisma.tenant.updateMany({
-        where: { id: tenantId },
-        data: { plan: 'STARTER', isActive: true }, // Downgrade but keep account alive
+      // Find tenant by stripeCustomerId or stripeSubscriptionId
+      const tenant = await prisma.tenant.findFirst({
+        where: { OR: [{ stripeCustomerId: String(stripeSub.customer) }, { stripeSubscriptionId: stripeSub.id }] },
       });
-
-      await sendEmail({ tenantId, template: 'subscription_cancelled' });
+      if (tenant) {
+        await prisma.tenant.update({
+          where: { id: tenant.id },
+          data: { clinicStatus: 'paused', isActive: false },
+        });
+        await sendEmail({ tenantId: tenant.id, template: 'subscription_cancelled' });
+      }
       break;
     }
 
@@ -374,26 +507,30 @@ export async function handleStripeWebhook(rawBody, signature) {
       if (!invoice.subscription) break;
 
       const stripeSub = await stripe.subscriptions.retrieve(invoice.subscription);
-      const tenantId = stripeSub.metadata?.tenantId;
-      if (!tenantId) break;
 
-      // Record payment in our DB
-      await prisma.payment.create({
-        data: {
-          tenantId,
-          clientId: await getOwnerClientId(tenantId),
-          amountCents: invoice.amount_paid,
-          currency: invoice.currency,
-          type: 'FULL_PAYMENT',
-          status: 'PAID',
-          stripeInvoiceId: invoice.id,
-        },
-      }).catch(() => {}); // Non-fatal if owner clientId not set up yet
+      // Find tenant by subscription ID
+      const tenant = await prisma.tenant.findFirst({
+        where: { OR: [{ stripeCustomerId: String(invoice.customer) }, { stripeSubscriptionId: invoice.subscription }] },
+      });
+      if (!tenant) break;
+
+      // Restore paused account on successful payment
+      if (tenant.clinicStatus === 'paused') {
+        await prisma.tenant.update({
+          where: { id: tenant.id },
+          data: { clinicStatus: 'live', isActive: true },
+        });
+      }
+
+      await prisma.subscription.updateMany({
+        where: { stripeSubscriptionId: invoice.subscription },
+        data: { status: 'ACTIVE', currentPeriodEnd: new Date(stripeSub.current_period_end * 1000) },
+      });
 
       await sendEmail({
-        tenantId,
+        tenantId: tenant.id,
         template: 'payment_receipt',
-        data: { amount: `£${(invoice.amount_paid / 100).toFixed(2)}`, invoiceUrl: invoice.hosted_invoice_url },
+        data: { amount: `$${(invoice.amount_paid / 100).toFixed(2)}`, invoiceUrl: invoice.hosted_invoice_url },
       });
       break;
     }
@@ -401,20 +538,27 @@ export async function handleStripeWebhook(rawBody, signature) {
     // ── Payment Failed ────────────────────────────────────────────────────────
     case 'invoice.payment_failed': {
       const invoice = event.data.object;
-      const stripeSub = await stripe.subscriptions.retrieve(invoice.subscription);
-      const tenantId = stripeSub.metadata?.tenantId;
-      if (!tenantId) break;
+      if (!invoice.subscription) break;
 
       await prisma.subscription.updateMany({
         where: { stripeSubscriptionId: invoice.subscription },
         data: { status: 'PAST_DUE' },
       });
 
-      await sendEmail({
-        tenantId,
-        template: 'payment_failed',
-        data: { updateUrl: `${process.env.PUBLIC_URL}/billing/portal` },
+      const tenant = await prisma.tenant.findFirst({
+        where: { OR: [{ stripeCustomerId: String(invoice.customer) }, { stripeSubscriptionId: invoice.subscription }] },
       });
+      if (tenant) {
+        await prisma.tenant.update({
+          where: { id: tenant.id },
+          data: { clinicStatus: 'paused' },
+        });
+        await sendEmail({
+          tenantId: tenant.id,
+          template: 'payment_failed',
+          data: { updateUrl: `${process.env.PUBLIC_URL}/billing/portal` },
+        });
+      }
       break;
     }
 

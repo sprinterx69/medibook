@@ -5,7 +5,7 @@
 // Falls back to console.log if RESEND_API_KEY is not set (development).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const FROM = process.env.FROM_EMAIL || 'MediBook <hello@medibook.io>';
+const FROM = process.env.FROM_EMAIL || 'Callora <hello@callora.me>';
 
 async function send({ to, subject, html }) {
   if (!process.env.RESEND_API_KEY) {
@@ -44,6 +44,25 @@ export async function sendVerificationEmail({ to, fullName, code }) {
           <div style="font-size:12px;color:#8896a8;margin-top:10px">Expires in 24 hours</div>
         </div>
         <p style="color:#8896a8;font-size:13px;line-height:1.6">If you didn't sign up for MediBook, you can safely ignore this email.</p>
+      </div>
+    `,
+  });
+}
+
+// ─── Onboarding invitation email ──────────────────────────────────────────────
+export async function sendOnboardingEmail({ to, fullName, tenantName, onboardingUrl }) {
+  await send({
+    to,
+    subject: `Set up your ${tenantName} clinic on Callora`,
+    html: `
+      <div style="font-family:'Segoe UI',sans-serif;max-width:520px;margin:0 auto;background:#0d0d0d;padding:40px 32px;border-radius:12px">
+        <div style="font-family:Georgia,serif;font-size:26px;color:#ffffff;margin-bottom:8px">Cal<span style="color:#c9903a">lora</span></div>
+        <h2 style="font-size:22px;color:#ffffff;margin:24px 0 8px">Hi ${fullName} 👋</h2>
+        <p style="color:#aaaaaa;font-size:15px;line-height:1.7">Your payment was received. Complete your clinic setup to go live with your AI receptionist.</p>
+        <p style="margin:28px 0">
+          <a href="${onboardingUrl}" style="background:#c9903a;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block">Complete Setup →</a>
+        </p>
+        <p style="color:#666666;font-size:13px;margin-top:28px;line-height:1.6">This link expires in 72 hours. If you need a new link, simply log in again.</p>
       </div>
     `,
   });

@@ -149,12 +149,19 @@ async function submitLogin() {
       showAlert(data.message || data.error || 'Invalid email or password');
       return;
     }
-    localStorage.setItem('medibook_token',       data.token);
-    localStorage.setItem('medibook_tenant_id',   data.tenantId);
-    localStorage.setItem('medibook_user_id',     data.userId);
-    localStorage.setItem('medibook_user_name',   data.fullName);
-    localStorage.setItem('medibook_tenant_name', data.tenantName);
-    window.location.href = '/app/dashboard.html';
+    localStorage.setItem('medibook_token',         data.token);
+    localStorage.setItem('medibook_tenant_id',     data.tenantId);
+    localStorage.setItem('medibook_user_id',       data.userId);
+    localStorage.setItem('medibook_user_name',     data.fullName);
+    localStorage.setItem('medibook_tenant_name',   data.tenantName);
+    localStorage.setItem('medibook_platform_role', data.platformRole ?? 'CLINIC');
+    if (data.redirect) {
+      window.location.href = data.redirect;
+    } else if (data.platformRole === 'SUPERADMIN') {
+      window.location.href = '/pages/admin/index.html';
+    } else {
+      window.location.href = '/app/dashboard.html';
+    }
   } catch {
     showAlert('Network error — please try again');
   } finally {
@@ -191,7 +198,8 @@ function clearFieldError(id) {
 
 // Redirect if already logged in
 if (localStorage.getItem('medibook_token')) {
-  window.location.href = '/app/dashboard.html';
+  const role = localStorage.getItem('medibook_platform_role');
+  window.location.href = role === 'SUPERADMIN' ? '/pages/admin/index.html' : '/app/dashboard.html';
 }
 </script>
 </body>
