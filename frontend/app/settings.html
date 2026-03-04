@@ -1,1261 +1,489 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Settings – Callora</title>
-<style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f9fb;color:#1a1d23;display:flex;height:100vh;overflow:hidden}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — Callora</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .settings-wrap { display: grid; grid-template-columns: 200px 1fr; gap: 24px; max-width: 860px; }
+    @media (max-width: 700px) { .settings-wrap { grid-template-columns: 1fr; } }
 
-  /* ── Sidebar ── */
-  .sidebar{width:220px;background:#fff;border-right:1px solid #e8eaed;display:flex;flex-direction:column;flex-shrink:0}
-  .logo{padding:20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e8eaed}
-  .logo-mark{width:32px;height:32px;background:linear-gradient(135deg,#6c63ff,#4ecdc4);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px}
-  .logo-text{font-weight:700;font-size:16px;color:#1a1d23}
-  .nav{padding:12px 8px;flex:1;overflow-y:auto}
-  .nav-label{font-size:10px;font-weight:600;color:#9aa0ab;text-transform:uppercase;letter-spacing:.8px;padding:8px 8px 4px}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:#5a6070;font-size:13.5px;font-weight:500;text-decoration:none;transition:background .15s,color .15s}
-  .nav-item:hover{background:#f4f5f8;color:#1a1d23}
-  .nav-item.active{background:#f0eeff;color:#6c63ff}
-  .nav-item svg{opacity:.65;flex-shrink:0}
-  .nav-item.active svg{opacity:1}
-  .nav-divider{height:1px;background:#e8eaed;margin:8px 0}
-  .nav-bottom{padding:12px 8px;border-top:1px solid #e8eaed}
-  .user-pill{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer}
-  .user-pill:hover{background:#f4f5f8}
-  .avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;background:#e0deff;color:#6c63ff;flex-shrink:0}
-  .user-info{flex:1;min-width:0}
-  .user-name{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .user-role{font-size:11px;color:#9aa0ab}
-  .sign-out-btn{font-size:12px;color:#9aa0ab;cursor:pointer;padding:4px 8px;border-radius:6px}
-  .sign-out-btn:hover{color:#e05252;background:#fff0f0}
+    /* Settings sidebar nav */
+    .settings-nav { display: flex; flex-direction: column; gap: 2px; }
+    .settings-nav-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 9px 12px; border-radius: var(--radius);
+      cursor: pointer; color: var(--text-muted);
+      font-size: 13.5px; font-weight: 500;
+      transition: background 0.12s, color 0.12s;
+      text-decoration: none; border: none;
+      background: none; font-family: inherit;
+      text-align: left; width: 100%;
+    }
+    .settings-nav-item:hover { background: var(--surface-2); color: var(--text-2); }
+    .settings-nav-item.active { background: var(--brand-dim); color: var(--brand-text); font-weight: 600; }
+    .settings-nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
 
-  /* ── Main ── */
-  .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-  .topbar{padding:16px 28px;background:#fff;border-bottom:1px solid #e8eaed;display:flex;align-items:center;gap:16px}
-  .topbar h1{font-size:18px;font-weight:700}
-  .content{flex:1;overflow-y:auto;padding:28px}
+    /* Panel visibility */
+    .settings-panel { display: none; }
+    .settings-panel.active { display: block; }
 
-  /* ── Settings layout ── */
-  .settings-layout{display:flex;gap:24px;max-width:900px}
-  .settings-nav{width:180px;flex-shrink:0}
-  .settings-nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;cursor:pointer;color:#5a6070;font-size:13.5px;font-weight:500;transition:background .15s,color .15s;margin-bottom:2px}
-  .settings-nav-item:hover{background:#f4f5f8;color:#1a1d23}
-  .settings-nav-item.active{background:#f0eeff;color:#6c63ff;font-weight:600}
-  .settings-nav-item svg{opacity:.6;flex-shrink:0}
-  .settings-nav-item.active svg{opacity:1}
-  .panel{flex:1;min-width:0}
+    /* Save button row */
+    .save-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+    .save-indicator { font-size: 13px; color: var(--green); font-weight: 500; opacity: 0; transition: opacity 0.3s; }
+    .save-indicator.show { opacity: 1; }
 
-  /* ── Card ── */
-  .card{background:#fff;border:1px solid #e8eaed;border-radius:12px;padding:24px;margin-bottom:20px}
-  .card-title{font-size:15px;font-weight:700;margin-bottom:4px}
-  .card-sub{font-size:13px;color:#6b7280;margin-bottom:20px}
-
-  /* ── Form fields ── */
-  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-  .form-row.single{grid-template-columns:1fr}
-  .form-group{display:flex;flex-direction:column;gap:6px}
-  .form-group label{font-size:12.5px;font-weight:600;color:#374151}
-  .form-group input,.form-group select,.form-group textarea{padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13.5px;color:#1a1d23;outline:none;transition:border-color .15s;background:#fff}
-  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#6c63ff;box-shadow:0 0 0 3px rgba(108,99,255,.1)}
-  .form-group textarea{resize:vertical;min-height:80px}
-  .save-btn{padding:9px 20px;background:#6c63ff;color:#fff;border:none;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;transition:opacity .15s}
-  .save-btn:hover{opacity:.9}
-  .save-btn:disabled{opacity:.5;cursor:not-allowed}
-
-  /* ── Toggle ── */
-  .toggle-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid #f0f1f3}
-  .toggle-row:last-child{border-bottom:none}
-  .toggle-label{font-size:13.5px;font-weight:500}
-  .toggle-desc{font-size:12px;color:#6b7280;margin-top:2px}
-  .toggle{position:relative;width:40px;height:22px;flex-shrink:0;margin-top:2px}
-  .toggle input{opacity:0;width:0;height:0}
-  .toggle-slider{position:absolute;inset:0;background:#d1d5db;border-radius:11px;transition:.25s;cursor:pointer}
-  .toggle-slider:before{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;left:3px;transition:.25s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-  .toggle input:checked+.toggle-slider{background:#6c63ff}
-  .toggle input:checked+.toggle-slider:before{transform:translateX(18px)}
-
-  /* ── Services ── */
-  .service-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f1f3}
-  .service-item:last-child{border-bottom:none}
-  .service-color{width:12px;height:12px;border-radius:3px;flex-shrink:0}
-  .service-name{font-size:13.5px;font-weight:600;flex:1}
-  .service-meta{font-size:12px;color:#6b7280}
-  .service-badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
-  .badge-active{background:#e8f5e9;color:#2e7d32}
-  .badge-inactive{background:#f5f5f5;color:#9aa0ab}
-  .icon-btn{width:30px;height:30px;border:1px solid #e8eaed;border-radius:7px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6b7280;transition:background .15s,color .15s}
-  .icon-btn:hover{background:#f4f5f8;color:#1a1d23}
-  .add-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;background:#f0eeff;color:#6c63ff;border:1px dashed #c4beff;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;margin-top:12px;transition:background .15s}
-  .add-btn:hover{background:#e8e4ff}
-
-  /* ── Phone numbers ── */
-  .phone-num-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f1f3}
-  .phone-num-row:last-child{border-bottom:none}
-  .phone-num{font-size:14px;font-weight:600;flex:1}
-  .phone-status{font-size:11px;padding:2px 8px;border-radius:20px;background:#e8f5e9;color:#2e7d32;font-weight:500}
-  .search-area-row{display:flex;gap:10px;margin-top:12px}
-  .search-area-row input{flex:1;padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13.5px;outline:none}
-  .search-area-row input:focus{border-color:#6c63ff;box-shadow:0 0 0 3px rgba(108,99,255,.1)}
-  .search-area-row button{padding:9px 16px;background:#6c63ff;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
-
-  /* ── Billing ── */
-  .plan-card{background:linear-gradient(135deg,#6c63ff,#4ecdc4);color:#fff;border-radius:12px;padding:24px;margin-bottom:16px}
-  .plan-name{font-size:22px;font-weight:700}
-  .plan-desc{font-size:13px;opacity:.85;margin-top:4px}
-  .plan-features{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}
-  .plan-feat{background:rgba(255,255,255,.2);padding:4px 12px;border-radius:20px;font-size:12px}
-  .billing-detail{font-size:13px;color:#6b7280;margin-bottom:6px}
-  .portal-btn{padding:10px 20px;background:#fff;color:#6c63ff;border:2px solid #6c63ff;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;transition:background .15s}
-  .portal-btn:hover{background:#f0eeff}
-
-  /* ── Integrations ── */
-  .integration-item{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #f0f1f3}
-  .integration-item:last-child{border-bottom:none}
-  .int-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:#f4f5f8}
-  .int-name{font-size:13.5px;font-weight:600}
-  .int-desc{font-size:12px;color:#6b7280;margin-top:2px}
-  .int-status{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;flex-shrink:0}
-  .int-connected{background:#e8f5e9;color:#2e7d32}
-  .int-disconnected{background:#f5f5f5;color:#9aa0ab}
-  .connect-btn{padding:6px 14px;background:#6c63ff;color:#fff;border:none;border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;flex-shrink:0}
-  .connect-btn:hover{opacity:.9}
-  .disconnect-btn{padding:6px 14px;background:#fff;color:#e05252;border:1px solid #e05252;border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;flex-shrink:0}
-  .disconnect-btn:hover{background:#fff5f5}
-
-  /* ── Team ── */
-  .member-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f1f3}
-  .member-row:last-child{border-bottom:none}
-  .member-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
-  .member-name{font-size:13.5px;font-weight:600}
-  .member-email{font-size:12px;color:#6b7280}
-  .role-badge{font-size:11px;padding:2px 10px;border-radius:20px;font-weight:600}
-  .role-OWNER{background:#fff3cd;color:#7d5a00}
-  .role-ADMIN{background:#e8eeff;color:#3b3ddb}
-  .role-STAFF{background:#f4f5f8;color:#5a6070}
-  .role-select{padding:5px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:12.5px;outline:none;color:#1a1d23}
-  .remove-btn{padding:5px 10px;background:#fff;color:#e05252;border:1px solid #e05252;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer}
-  .remove-btn:hover{background:#fff5f5}
-
-  /* ── Modal ── */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s}
-  .overlay.open{opacity:1;pointer-events:all}
-  .modal{background:#fff;border-radius:16px;padding:28px;width:440px;max-width:95vw;transform:translateY(16px);transition:transform .2s;max-height:90vh;overflow-y:auto}
-  .overlay.open .modal{transform:translateY(0)}
-  .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-  .modal-title{font-size:16px;font-weight:700}
-  .close-btn{width:28px;height:28px;border:none;background:#f4f5f8;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:#6b7280}
-  .close-btn:hover{background:#e8eaed}
-  .modal-footer{margin-top:20px;display:flex;justify-content:flex-end;gap:10px}
-  .cancel-btn{padding:9px 18px;background:#f4f5f8;color:#5a6070;border:none;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer}
-  .cancel-btn:hover{background:#e8eaed}
-
-  /* ── Alerts ── */
-  .toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13.5px;font-weight:600;z-index:2000;display:none;box-shadow:0 4px 20px rgba(0,0,0,.15)}
-  .toast.success{background:#1e7e34;color:#fff}
-  .toast.error{background:#c62828;color:#fff}
-  .alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:16px}
-  .alert-success{background:#e8f5e9;color:#2e7d32;border:1px solid #c8e6c9}
-  .alert-error{background:#ffebee;color:#c62828;border:1px solid #ffcdd2}
-
-  /* ── Skeleton ── */
-  .skel{background:linear-gradient(90deg,#f0f1f3 25%,#e4e5e9 50%,#f0f1f3 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px}
-  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-  /* ── Extra role ── */
-  .role-MEMBER{background:#f4f5f8;color:#5a6070}
-
-  /* ── Plan status badges ── */
-  .plan-status-badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;flex-shrink:0}
-  .pstatus-active{background:#e8f5e9;color:#2e7d32}
-  .pstatus-trialing{background:#fff3e0;color:#e65100}
-  .pstatus-past_due{background:#ffebee;color:#c62828}
-  .pstatus-cancelled,.pstatus-none{background:#f5f5f5;color:#9aa0ab}
-
-  /* ── Plan option cards (billing) ── */
-  .plan-cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:4px}
-  @media(max-width:760px){.plan-cards-grid{grid-template-columns:1fr}}
-  .plan-option-card{border:2px solid #e8eaed;border-radius:12px;padding:20px;position:relative;transition:border-color .15s,background .15s}
-  .plan-option-card.is-current{border-color:#6c63ff;background:#f9f8ff}
-  .plan-option-card.is-popular::before{content:'Most Popular';position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:#6c63ff;color:#fff;font-size:10px;font-weight:600;letter-spacing:.06em;padding:3px 10px;border-radius:10px;white-space:nowrap}
-  .pon-tier{font-size:10.5px;font-weight:600;color:#9aa0ab;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
-  .pon-price{font-size:28px;font-weight:700;color:#1a1d23;line-height:1}
-  .pon-per{font-size:12px;color:#9aa0ab;margin-bottom:14px;margin-top:2px}
-  .pon-feats{list-style:none;margin-bottom:14px}
-  .pon-feat{font-size:12.5px;color:#374151;padding:5px 0;border-bottom:1px solid #f0f1f3;display:flex;align-items:flex-start;gap:7px}
-  .pon-feat:last-child{border-bottom:none}
-  .pon-feat::before{content:'✓';color:#6c63ff;font-weight:700;font-size:11px;margin-top:1px;flex-shrink:0}
-  .pon-feat.off::before{content:'✕';color:#d1d5db}
-  .pon-feat.off{color:#b0b7c3}
-  .pon-btn{width:100%;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;border:none}
-  .pon-btn-current{background:#f0eeff;color:#6c63ff;border:2px solid #6c63ff;cursor:default}
-  .pon-btn-upgrade{background:#6c63ff;color:#fff}
-  .pon-btn-upgrade:hover{opacity:.9}
-  .pon-btn-enterprise{background:#fff;color:#1a1d23;border:2px solid #e8eaed}
-  .pon-btn-enterprise:hover{border-color:#6c63ff;color:#6c63ff}
-
-  /* ── Phone number search ── */
-  .phone-search-bar{display:grid;grid-template-columns:160px 1fr auto;gap:10px;align-items:end;margin-top:20px;padding-top:20px;border-top:1px solid #f0f1f3}
-  @media(max-width:600px){.phone-search-bar{grid-template-columns:1fr;}}
-  .phone-num-row .release-btn{padding:5px 10px;background:#fff;color:#e05252;border:1px solid #e05252;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0}
-  .phone-num-row .release-btn:hover{background:#fff5f5}
-  .phone-num-caps{display:flex;gap:6px;flex-wrap:wrap}
-  .phone-cap{font-size:10px;padding:2px 7px;border-radius:10px;background:#f0eeff;color:#6c63ff;font-weight:600}
-  .phone-locality{font-size:12px;color:#6b7280}
-  .no-numbers-msg{background:#f9f8ff;border:1px dashed #c4beff;border-radius:10px;padding:20px;text-align:center;color:#9aa0ab;font-size:13px;margin-bottom:10px}
-
-  /* Responsive */
-  @media(max-width:640px){
-    .settings-layout{flex-direction:column}
-    .settings-nav{width:100%}
-  }
-</style>
+    /* Info banner */
+    .info-banner {
+      background: var(--brand-dim); border: 1px solid var(--brand-border);
+      border-radius: var(--radius); padding: 12px 16px;
+      font-size: 13px; color: var(--brand-text); margin-bottom: 20px;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .info-banner svg { flex-shrink: 0; margin-top: 1px; }
+  </style>
 </head>
 <body>
+<div class="app-shell">
 
-<!-- Sidebar -->
-<nav class="sidebar">
-  <div class="logo">
-    <div class="logo-mark">C</div>
-    <div class="logo-text">Callora</div>
-  </div>
-  <div class="nav">
-    <div class="nav-label">Clinic</div>
-    <a href="dashboard.html" class="nav-item">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      Overview
-    </a>
-    <a href="calendar.html" class="nav-item">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-      Calendar
-    </a>
-    <a href="bookings.html" class="nav-item">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
-      Bookings
-    </a>
-    <a href="calls.html" class="nav-item">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9.77a16 16 0 0 0 5.5 5.5l1.88-1.88a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-      Calls
-    </a>
-    <a href="performance.html" class="nav-item">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
-      Performance
-    </a>
-    <div class="nav-divider"></div>
-    <a href="settings.html" class="nav-item active">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Settings
-    </a>
-  </div>
-  <div class="nav-bottom">
-    <div class="user-pill">
-      <div class="avatar" id="sidebarAvatar">–</div>
-      <div class="user-info">
-        <div class="user-name" id="sidebarName">Loading…</div>
-        <div class="user-role" id="sidebarRole">–</div>
-      </div>
-      <span class="sign-out-btn" onclick="signOut()" title="Sign out">↩</span>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">C</div>
+      <span class="logo-text">Callora</span>
     </div>
-  </div>
-</nav>
-
-<!-- Main -->
-<div class="main">
-  <div class="topbar">
-    <h1>Settings</h1>
-  </div>
-  <div class="content">
-    <div id="alertBanner"></div>
-    <div class="settings-layout">
-      <!-- Settings nav -->
-      <div class="settings-nav">
-        <div class="settings-nav-item active" data-panel="clinic" onclick="showPanel('clinic')">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-          Clinic Info
-        </div>
-        <div class="settings-nav-item" data-panel="services" onclick="showPanel('services')">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
-          Services
-        </div>
-        <div class="settings-nav-item" data-panel="notifications" onclick="showPanel('notifications')">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          Notifications
-        </div>
-        <div class="settings-nav-item" data-panel="phone" onclick="showPanel('phone')">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.24h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.83a16 16 0 0 0 6.29 6.29l.95-.95a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          Phone Numbers
-        </div>
-        <div class="settings-nav-item" data-panel="billing" onclick="showPanel('billing')">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
-          Plan &amp; Billing
-        </div>
-        <div class="settings-nav-item" data-panel="integrations" onclick="showPanel('integrations')">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          Integrations
-        </div>
-        <div class="settings-nav-item" data-panel="team" onclick="showPanel('team')">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Team Access
+    <div class="sidebar-scroll">
+      <div class="nav-section">Clinic</div>
+      <a href="dashboard.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="6" height="6" rx="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.2"/><rect x="1" y="9" width="6" height="6" rx="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.2"/></svg>
+        Overview
+      </a>
+      <a href="calendar.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M5 1v3M11 1v3M1.5 6.5h13"/></svg>
+        Calendar
+      </a>
+      <a href="bookings.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V3a1 1 0 00-1-1z"/><path d="M5 6h6M5 9h4"/></svg>
+        Bookings
+      </a>
+      <a href="calls.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/></svg>
+        Calls
+      </a>
+      <a href="performance.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="2,12 6,8 9,11 14,5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 14h12"/></svg>
+        Performance
+      </a>
+      <div class="nav-section">Settings</div>
+      <a href="settings.html" class="nav-item active">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="2.2"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M2.697 2.697l1.06 1.06M12.243 12.243l1.06 1.06M13.303 2.697l-1.06 1.06M3.757 12.243l-1.06 1.06"/></svg>
+        Settings
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-av" id="userAv">--</div>
+        <div>
+          <div class="user-name" id="userName">Loading…</div>
+          <div class="user-role" id="userRole">Clinic Owner</div>
         </div>
       </div>
+      <a href="#" id="signOutBtn" style="display:block;text-align:center;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 0;margin-top:2px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">Sign out</a>
+    </div>
+  </aside>
 
-      <!-- Panels -->
-      <div class="panel">
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="page-title">Settings</span>
+      </div>
+    </header>
 
-        <!-- Clinic Info -->
-        <div id="panel-clinic">
-          <div class="card">
-            <div class="card-title">Clinic Information</div>
-            <div class="card-sub">Basic details shown to clients and used in communications.</div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Clinic Name</label>
-                <input type="text" id="clinicName" placeholder="e.g. Downtown Dental">
-              </div>
-              <div class="form-group">
-                <label>Phone</label>
-                <input type="text" id="clinicPhone" placeholder="+1 (555) 000-0000">
-              </div>
-            </div>
-            <div class="form-row single">
-              <div class="form-group">
-                <label>Address</label>
-                <input type="text" id="clinicAddress" placeholder="123 Main St, City, State">
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Timezone</label>
-                <select id="clinicTimezone">
-                  <option value="America/New_York">Eastern (ET)</option>
-                  <option value="America/Chicago">Central (CT)</option>
-                  <option value="America/Denver">Mountain (MT)</option>
-                  <option value="America/Los_Angeles">Pacific (PT)</option>
-                  <option value="America/Anchorage">Alaska (AKT)</option>
-                  <option value="Pacific/Honolulu">Hawaii (HT)</option>
-                  <option value="Europe/London">London (GMT/BST)</option>
-                  <option value="Europe/Paris">Paris (CET/CEST)</option>
-                  <option value="Asia/Dubai">Dubai (GST)</option>
-                  <option value="Asia/Singapore">Singapore (SGT)</option>
-                  <option value="Australia/Sydney">Sydney (AEST)</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Currency</label>
-                <select id="clinicCurrency">
-                  <option value="USD">USD – US Dollar</option>
-                  <option value="GBP">GBP – British Pound</option>
-                  <option value="EUR">EUR – Euro</option>
-                  <option value="CAD">CAD – Canadian Dollar</option>
-                  <option value="AUD">AUD – Australian Dollar</option>
-                  <option value="AED">AED – UAE Dirham</option>
-                  <option value="SGD">SGD – Singapore Dollar</option>
-                </select>
-              </div>
-            </div>
-            <button class="save-btn" id="saveClinicBtn" onclick="saveClinic()">Save Changes</button>
-          </div>
-        </div>
+    <main class="content">
+      <div class="settings-wrap">
 
-        <!-- Services -->
-        <div id="panel-services" style="display:none">
-          <div class="card">
-            <div class="card-title">Service Catalog</div>
-            <div class="card-sub">Services offered by your clinic. Clients can book these via the AI agent.</div>
-            <div id="servicesList"><div class="skel" style="height:48px;margin-bottom:10px"></div><div class="skel" style="height:48px;margin-bottom:10px"></div><div class="skel" style="height:48px"></div></div>
-            <div class="add-btn" onclick="openAddService()">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-              Add Service
-            </div>
-          </div>
-        </div>
+        <!-- SETTINGS NAV -->
+        <nav class="settings-nav">
+          <button class="settings-nav-item active" onclick="switchPanel('clinic', this)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="4" width="14" height="10" rx="1.5"/><path d="M5 4V3a3 3 0 016 0v1"/></svg>
+            Clinic Info
+          </button>
+          <button class="settings-nav-item" onclick="switchPanel('receptionist', this)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/></svg>
+            AI Receptionist
+          </button>
+          <button class="settings-nav-item" onclick="switchPanel('notifications', this)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 1.5a5 5 0 015 5v3l1.5 2H1.5L3 9.5v-3a5 5 0 015-5z"/><path d="M6.5 13.5a1.5 1.5 0 003 0"/></svg>
+            Notifications
+          </button>
+        </nav>
 
-        <!-- Notifications -->
-        <div id="panel-notifications" style="display:none">
-          <div class="card">
-            <div class="card-title">Notification Preferences</div>
-            <div class="card-sub">Control which emails and SMS messages are sent to you and your clients.</div>
-            <div id="notifList"><div class="skel" style="height:60px;margin-bottom:10px"></div><div class="skel" style="height:60px;margin-bottom:10px"></div><div class="skel" style="height:60px"></div></div>
-            <button class="save-btn" id="saveNotifBtn" onclick="saveNotifications()" style="margin-top:16px">Save Preferences</button>
-          </div>
-        </div>
-
-        <!-- Phone Numbers -->
-        <div id="panel-phone" style="display:none">
-          <div class="card">
-            <div class="card-title">Phone Numbers</div>
-            <div class="card-sub">Twilio numbers used by your AI agent for inbound and outbound calls.</div>
-
-            <!-- Assigned numbers -->
-            <div id="phoneList"><div class="skel" style="height:60px;margin-bottom:10px"></div></div>
-
-            <!-- Search new number -->
-            <div class="phone-search-bar">
-              <div class="form-group" style="margin-bottom:0">
-                <label>Country</label>
-                <select id="phoneCountry" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13.5px;width:100%;outline:none;color:#1a1d23;background:#fff">
-                  <option value="GB">🇬🇧 United Kingdom</option>
-                  <option value="US">🇺🇸 United States</option>
-                  <option value="CA">🇨🇦 Canada</option>
-                  <option value="AU">🇦🇺 Australia</option>
-                </select>
-              </div>
-              <div class="form-group" style="margin-bottom:0">
-                <label>Area Code / Locality <span style="font-weight:400;color:#9aa0ab">(optional)</span></label>
-                <input type="text" id="areaCodeInput" placeholder="e.g.  415  or  Manchester" maxlength="12"
-                  style="padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13.5px;width:100%;outline:none"
-                  onkeydown="if(event.key==='Enter')searchPhoneNumbers()">
-              </div>
-              <button class="save-btn" id="searchPhoneBtn" onclick="searchPhoneNumbers()" style="margin-bottom:0;white-space:nowrap">Search Numbers</button>
-            </div>
-
-            <div id="phoneSearchResults" style="margin-top:14px"></div>
-          </div>
-        </div>
-
-        <!-- Billing -->
-        <div id="panel-billing" style="display:none">
-
-          <!-- Current plan summary -->
-          <div class="card" style="margin-bottom:20px">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px">
+        <!-- PANEL: CLINIC INFO -->
+        <div class="settings-panel active" id="panel-clinic">
+          <div class="section">
+            <div class="section-header">
               <div>
-                <div style="font-size:11px;font-weight:600;color:#9aa0ab;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Your Current Plan</div>
-                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                  <span style="font-size:22px;font-weight:700;color:#1a1d23" id="billingPlanName"><div class="skel" style="height:28px;width:120px"></div></span>
-                  <span class="plan-status-badge" id="billingStatusBadge"></span>
+                <div class="section-title">Clinic Information</div>
+                <div class="section-subtitle">Your clinic's basic details visible to clients</div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-bottom:20px;">
+              <div class="card-body">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Clinic Name <span style="color:var(--red)">*</span></label>
+                    <input type="text" class="input" id="clinicName" placeholder="e.g. Glow Med Spa" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" class="input" id="clinicPhone" placeholder="+44 20 7000 0000" />
+                  </div>
                 </div>
-                <div id="billingTrialNote" style="font-size:13px;color:#e65100;margin-top:4px;font-weight:500"></div>
+                <div class="form-group">
+                  <label class="form-label">Address</label>
+                  <input type="text" class="input" id="clinicAddress" placeholder="123 Harley Street" />
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">City</label>
+                    <input type="text" class="input" id="clinicCity" placeholder="London" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Postcode</label>
+                    <input type="text" class="input" id="clinicPostcode" placeholder="W1G 6AD" />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Timezone</label>
+                    <select class="select" id="clinicTimezone">
+                      <option value="Europe/London">Europe/London (GMT/BST)</option>
+                      <option value="America/New_York">America/New_York (ET)</option>
+                      <option value="America/Chicago">America/Chicago (CT)</option>
+                      <option value="America/Denver">America/Denver (MT)</option>
+                      <option value="America/Los_Angeles">America/Los_Angeles (PT)</option>
+                      <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
+                      <option value="Europe/Paris">Europe/Paris (CET)</option>
+                      <option value="Europe/Berlin">Europe/Berlin (CET)</option>
+                      <option value="Asia/Dubai">Asia/Dubai (GST)</option>
+                      <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Currency</label>
+                    <select class="select" id="clinicCurrency">
+                      <option value="GBP">GBP — British Pound (£)</option>
+                      <option value="USD">USD — US Dollar ($)</option>
+                      <option value="EUR">EUR — Euro (€)</option>
+                      <option value="AUD">AUD — Australian Dollar (A$)</option>
+                      <option value="CAD">CAD — Canadian Dollar (C$)</option>
+                    </select>
+                  </div>
+                </div>
               </div>
-              <div style="text-align:right">
-                <div style="font-size:32px;font-weight:700;color:#1a1d23;line-height:1" id="billingPriceDisplay"></div>
-                <div style="font-size:12px;color:#9aa0ab;margin-top:2px" id="billingPricePer"></div>
-                <button class="portal-btn" style="margin-top:12px" onclick="openBillingPortal()">Manage Billing &amp; Invoices →</button>
+              <div class="card-footer">
+                <div class="save-row">
+                  <button class="btn btn-primary" id="saveClinicBtn" onclick="saveClinicSettings()">Save Changes</button>
+                  <span class="save-indicator" id="clinicSaveOk">✓ Saved</span>
+                </div>
               </div>
             </div>
-            <div style="margin-top:16px;padding-top:16px;border-top:1px solid #f0f1f3;display:flex;gap:28px;flex-wrap:wrap">
-              <div>
-                <div style="font-size:11px;color:#9aa0ab;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Status</div>
-                <div id="billingStatusText" style="font-size:13.5px;font-weight:600;margin-top:3px;color:#1a1d23">–</div>
-              </div>
-              <div>
-                <div style="font-size:11px;color:#9aa0ab;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Next Billing</div>
-                <div id="billingNextDate" style="font-size:13.5px;font-weight:600;margin-top:3px;color:#1a1d23">–</div>
-              </div>
-              <div>
-                <div style="font-size:11px;color:#9aa0ab;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Billing Cycle</div>
-                <div id="billingCycle" style="font-size:13.5px;font-weight:600;margin-top:3px;color:#1a1d23">–</div>
-              </div>
-            </div>
-            <div id="billingCancelNote" style="margin-top:12px;padding:10px 14px;background:#fff5f5;border:1px solid #ffcdd2;border-radius:8px;font-size:13px;color:#c62828;display:none">
-              ⚠ Your plan will cancel at the end of the current billing period.
-              <a href="#" onclick="reactivatePlan(event)" style="color:#6c63ff;font-weight:600;text-decoration:none;margin-left:8px">Reactivate →</a>
-            </div>
-          </div>
-
-          <!-- Plan comparison cards -->
-          <div class="card">
-            <div class="card-title">Choose Your Plan</div>
-            <div class="card-sub">All plans include a 30-day free trial. Upgrade or downgrade any time, prorated automatically.</div>
-            <div class="plan-cards-grid" id="planCardsGrid">
-              <div class="skel" style="height:300px;border-radius:12px"></div>
-              <div class="skel" style="height:300px;border-radius:12px"></div>
-              <div class="skel" style="height:300px;border-radius:12px"></div>
-            </div>
-            <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f0f1f3;display:flex;align-items:center;gap:8px">
-              <svg width="14" height="14" fill="none" stroke="#9aa0ab" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
-              <span style="font-size:12.5px;color:#6b7280">Payments processed securely by Stripe. <a href="#" onclick="openBillingPortal();return false" style="color:#6c63ff;text-decoration:none;font-weight:500">View invoices →</a></span>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Integrations -->
-        <div id="panel-integrations" style="display:none">
-          <div class="card">
-            <div class="card-title">Connected Integrations</div>
-            <div class="card-sub">Third-party services powering your Callora workspace.</div>
-            <div id="integrationsList"><div class="skel" style="height:60px;margin-bottom:10px"></div><div class="skel" style="height:60px;margin-bottom:10px"></div><div class="skel" style="height:60px"></div></div>
           </div>
         </div>
 
-        <!-- Team Access -->
-        <div id="panel-team" style="display:none">
-          <div class="card">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <!-- PANEL: AI RECEPTIONIST -->
+        <div class="settings-panel" id="panel-receptionist">
+          <div class="section">
+            <div class="section-header">
               <div>
-                <div class="card-title" style="margin-bottom:0">Team Members</div>
-                <div class="card-sub" style="margin-bottom:0">Manage who has access to your Callora workspace.</div>
+                <div class="section-title">AI Receptionist Basics</div>
+                <div class="section-subtitle">Configure how your AI receptionist handles calls</div>
               </div>
-              <button class="save-btn" onclick="openInviteModal()">+ Invite</button>
             </div>
-            <div id="teamList"><div class="skel" style="height:52px;margin-bottom:10px"></div><div class="skel" style="height:52px;margin-bottom:10px"></div><div class="skel" style="height:52px"></div></div>
+
+            <div class="info-banner">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 5.5v.5"/></svg>
+              <div>These are the basic settings your AI uses on every call. For advanced AI configuration, contact your account manager.</div>
+            </div>
+
+            <div class="card" style="margin-bottom:20px;">
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">Greeting Message</label>
+                  <textarea class="textarea" id="agentGreeting" placeholder="Hello! Thank you for calling. How can I help you today?" style="min-height:80px;"></textarea>
+                  <div class="form-hint">This is the first thing your AI says when answering a call.</div>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label class="form-label">Transfer Number</label>
+                  <div class="input-prefix">
+                    <span class="input-prefix-label">
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/></svg>
+                    </span>
+                    <input type="tel" class="input" id="agentTransferNumber" placeholder="+44 7700 900000" />
+                  </div>
+                  <div class="form-hint">When a caller asks to speak to a human, the AI will transfer them here.</div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div class="save-row">
+                  <button class="btn btn-primary" id="saveAgentBtn" onclick="saveAgentSettings()">Save Changes</button>
+                  <span class="save-indicator" id="agentSaveOk">✓ Saved</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-      </div><!-- /panel -->
-    </div><!-- /settings-layout -->
+        <!-- PANEL: NOTIFICATIONS -->
+        <div class="settings-panel" id="panel-notifications">
+          <div class="section">
+            <div class="section-header">
+              <div>
+                <div class="section-title">Notification Preferences</div>
+                <div class="section-subtitle">Choose how you want to be notified about activity</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-body">
+                <div class="toggle-row">
+                  <div>
+                    <div class="toggle-label">Booking Confirmation Emails</div>
+                    <div class="toggle-desc">Send email confirmations to clients when bookings are made</div>
+                  </div>
+                  <label class="toggle">
+                    <input type="checkbox" id="notifBookingConfirm" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-row">
+                  <div>
+                    <div class="toggle-label">SMS Reminders</div>
+                    <div class="toggle-desc">Send SMS reminders to clients before their appointment</div>
+                  </div>
+                  <label class="toggle">
+                    <input type="checkbox" id="notifSmsReminders" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-row">
+                  <div>
+                    <div class="toggle-label">Notify Me on AI Bookings</div>
+                    <div class="toggle-desc">Receive an alert when the AI receptionist books an appointment</div>
+                  </div>
+                  <label class="toggle">
+                    <input type="checkbox" id="notifAiBooking" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-row">
+                  <div>
+                    <div class="toggle-label">Daily Summary Email</div>
+                    <div class="toggle-desc">Receive a daily digest of bookings, calls, and revenue</div>
+                  </div>
+                  <label class="toggle">
+                    <input type="checkbox" id="notifDailySummary" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-row">
+                  <div>
+                    <div class="toggle-label">Payment Failure Alerts</div>
+                    <div class="toggle-desc">Get notified immediately if a payment fails or is declined</div>
+                  </div>
+                  <label class="toggle">
+                    <input type="checkbox" id="notifPaymentFailure" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div class="save-row">
+                  <button class="btn btn-primary" id="saveNotifBtn" onclick="saveNotifSettings()">Save Preferences</button>
+                  <span class="save-indicator" id="notifSaveOk">✓ Saved</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
   </div>
 </div>
 
-<!-- Add Service Modal -->
-<div class="overlay" id="serviceModal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="serviceModalTitle">Add Service</div>
-      <button class="close-btn" onclick="closeServiceModal()">✕</button>
-    </div>
-    <div class="form-group" style="margin-bottom:14px">
-      <label>Service Name *</label>
-      <input type="text" id="svcName" placeholder="e.g. Teeth Cleaning">
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Duration (min) *</label>
-        <input type="number" id="svcDuration" placeholder="60" min="5" step="5">
-      </div>
-      <div class="form-group">
-        <label>Price ($) *</label>
-        <input type="number" id="svcPrice" placeholder="120" min="0" step="0.01">
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Color</label>
-        <input type="color" id="svcColor" value="#6c63ff">
-      </div>
-      <div class="form-group">
-        <label>Category</label>
-        <input type="text" id="svcCategory" placeholder="e.g. Preventive">
-      </div>
-    </div>
-    <div class="form-group" style="margin-bottom:0">
-      <label>Description</label>
-      <textarea id="svcDesc" placeholder="Optional description…"></textarea>
-    </div>
-    <div class="modal-footer">
-      <button class="cancel-btn" onclick="closeServiceModal()">Cancel</button>
-      <button class="save-btn" onclick="saveService()">Save Service</button>
-    </div>
-  </div>
-</div>
-
-<!-- Invite Team Modal -->
-<div class="overlay" id="inviteModal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Invite Team Member</div>
-      <button class="close-btn" onclick="closeInviteModal()">✕</button>
-    </div>
-    <div class="form-group" style="margin-bottom:14px">
-      <label>Full Name *</label>
-      <input type="text" id="inviteName" placeholder="Jane Smith">
-    </div>
-    <div class="form-group" style="margin-bottom:14px">
-      <label>Email *</label>
-      <input type="email" id="inviteEmail" placeholder="jane@clinic.com">
-    </div>
-    <div class="form-group" style="margin-bottom:14px">
-      <label>Title</label>
-      <input type="text" id="inviteTitle" placeholder="Hygienist, Front Desk…">
-    </div>
-    <div class="form-group" style="margin-bottom:0">
-      <label>Role *</label>
-      <select id="inviteRole">
-        <option value="MEMBER">Staff – View only</option>
-        <option value="ADMIN">Admin – Full access</option>
-      </select>
-    </div>
-    <div class="modal-footer">
-      <button class="cancel-btn" onclick="closeInviteModal()">Cancel</button>
-      <button class="save-btn" onclick="sendInvite()">Send Invite</button>
-    </div>
-  </div>
-</div>
-
-<!-- Toast -->
-<div class="toast" id="toast"></div>
+<div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-const TOKEN = localStorage.getItem('medibook_token');
+const API    = (location.hostname==='localhost'||location.hostname==='127.0.0.1') ? 'http://localhost:3001' : 'https://medibook-backend-production-dfb2.up.railway.app';
+const TOKEN  = localStorage.getItem('medibook_token');
 const TENANT = localStorage.getItem('medibook_tenant_id');
-if (!TOKEN || !TENANT) location.href = '../pages/login.html';
+const CLINIC = localStorage.getItem('medibook_tenant_name') || 'My Clinic';
+const ROLE   = localStorage.getItem('medibook_role') || 'OWNER';
 
-// Production API base — use full backend URL when frontend hosted separately
-const API_HOST = (location.hostname === 'callora.me' || location.hostname === 'www.callora.me') 
-  ? 'https://api.callora.me' 
-  : '';
-const BASE = `${API_HOST}/api/tenants/${TENANT}`;
-const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${TOKEN}` };
+if (!TOKEN||!TENANT) location.href='/pages/login.html';
+document.getElementById('userName').textContent = CLINIC;
+document.getElementById('userAv').textContent   = CLINIC.slice(0,2).toUpperCase();
+document.getElementById('signOutBtn').addEventListener('click', e=>{ e.preventDefault(); localStorage.clear(); location.href='/pages/login.html'; });
 
-function escHtml(s) {
-  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ─── Panel switching ──────────────────────────────────────────────────────────
+function switchPanel(id, btn) {
+  document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
 }
 
-// ── Sidebar user info ──
-(async () => {
+// ─── API helpers ──────────────────────────────────────────────────────────────
+async function apiFetch(path) {
+  const r = await fetch(`${API}${path}`, { headers: { Authorization: `Bearer ${TOKEN}` } });
+  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || `HTTP ${r.status}`); }
+  return r.json();
+}
+async function apiPut(path, body) {
+  const r = await fetch(`${API}${path}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TOKEN}` },
+    body: JSON.stringify(body),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+  return d;
+}
+
+// ─── Flash saved indicator ────────────────────────────────────────────────────
+function flashSaved(id) {
+  const el = document.getElementById(id);
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ─── Load settings ────────────────────────────────────────────────────────────
+async function loadSettings() {
   try {
-    const r = await fetch(`${BASE}/me`, { headers });
-    if (!r.ok) return;
-    const u = await r.json();
-    const initials = (u.fullName || u.email || '?').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
-    document.getElementById('sidebarAvatar').textContent = initials;
-    document.getElementById('sidebarName').textContent = u.fullName || u.email;
-    document.getElementById('sidebarRole').textContent = u.role;
-  } catch {}
-})();
+    const [clinic, agent] = await Promise.all([
+      apiFetch(`/api/tenants/${TENANT}/settings/clinic`),
+      apiFetch(`/api/tenants/${TENANT}/agent-settings`).catch(() => null),
+    ]);
 
-function signOut() {
-  localStorage.clear();
-  location.href = '../pages/login.html';
+    // Clinic info
+    document.getElementById('clinicName').value     = clinic.name       ?? '';
+    document.getElementById('clinicPhone').value    = clinic.phone      ?? '';
+    document.getElementById('clinicAddress').value  = clinic.address    ?? '';
+    document.getElementById('clinicCity').value     = clinic.city       ?? '';
+    document.getElementById('clinicPostcode').value = clinic.postcode   ?? '';
+    setSelectVal('clinicTimezone', clinic.timezone  ?? 'Europe/London');
+    setSelectVal('clinicCurrency', clinic.currency  ?? 'GBP');
+
+    // Notifications
+    const n = clinic.notifications ?? {};
+    document.getElementById('notifBookingConfirm').checked  = n.emailBookingConfirmations ?? true;
+    document.getElementById('notifSmsReminders').checked    = n.smsReminders             ?? true;
+    document.getElementById('notifAiBooking').checked       = n.notifyOwnerOnAiBooking   ?? true;
+    document.getElementById('notifDailySummary').checked    = n.dailySummaryEmail        ?? false;
+    document.getElementById('notifPaymentFailure').checked  = n.paymentFailureAlerts     ?? true;
+
+    // Agent settings
+    if (agent) {
+      document.getElementById('agentGreeting').value        = agent.greeting        ?? '';
+      document.getElementById('agentTransferNumber').value  = agent.transferNumber  ?? '';
+    }
+  } catch (err) {
+    showToast('Could not load settings: ' + err.message, '⚠️', 'error');
+  }
 }
 
-// ── Toast ──
-function showToast(msg, type = 'success') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = `toast ${type}`;
-  t.style.display = 'block';
-  setTimeout(() => { t.style.display = 'none'; }, 3500);
+function setSelectVal(id, val) {
+  const el = document.getElementById(id);
+  for (const opt of el.options) {
+    if (opt.value === val) { el.value = val; return; }
+  }
 }
 
-// ── Panel switching ──
-const loaded = {};
-function showPanel(name) {
-  document.querySelectorAll('.settings-nav-item').forEach(el => el.classList.remove('active'));
-  document.querySelector(`[data-panel="${name}"]`).classList.add('active');
-  document.querySelectorAll('.panel > div[id^="panel-"]').forEach(el => el.style.display = 'none');
-  document.getElementById(`panel-${name}`).style.display = '';
-  if (!loaded[name]) { loaded[name] = true; loadPanel(name); }
-}
-
-function loadPanel(name) {
-  if (name === 'clinic') loadClinic();
-  else if (name === 'services') loadServices();
-  else if (name === 'notifications') loadNotifications();
-  else if (name === 'phone') loadPhone();
-  else if (name === 'billing') loadBilling();
-  else if (name === 'integrations') loadIntegrations();
-  else if (name === 'team') loadTeam();
-}
-
-// Load clinic panel immediately (default)
-loaded['clinic'] = true;
-loadPanel('clinic');
-
-// ── Handle redirect params (Google OAuth callback) ──
-const urlParams = new URLSearchParams(location.search);
-if (urlParams.get('googleConnected') === '1') {
-  showPanel('integrations');
-  document.getElementById('alertBanner').innerHTML = '<div class="alert alert-success">Google Calendar connected successfully.</div>';
-  setTimeout(() => document.getElementById('alertBanner').innerHTML = '', 4000);
-}
-if (urlParams.get('googleError') === '1') {
-  showPanel('integrations');
-  document.getElementById('alertBanner').innerHTML = '<div class="alert alert-error">Google Calendar connection failed. Please try again.</div>';
-  setTimeout(() => document.getElementById('alertBanner').innerHTML = '', 5000);
-}
-
-// ══════════════════════════════
-// CLINIC INFO
-// ══════════════════════════════
-let clinicData = {};
-async function loadClinic() {
-  try {
-    const r = await fetch(`${BASE}/settings/clinic`, { headers });
-    if (!r.ok) throw new Error();
-    clinicData = await r.json();
-    document.getElementById('clinicName').value = clinicData.name || '';
-    document.getElementById('clinicPhone').value = clinicData.phone || '';
-    document.getElementById('clinicAddress').value = clinicData.address || '';
-    const tzSel = document.getElementById('clinicTimezone');
-    if (clinicData.timezone) tzSel.value = clinicData.timezone;
-    const curSel = document.getElementById('clinicCurrency');
-    if (clinicData.currency) curSel.value = clinicData.currency;
-  } catch { showToast('Failed to load clinic settings', 'error'); }
-}
-
-async function saveClinic() {
+// ─── Save clinic settings ─────────────────────────────────────────────────────
+async function saveClinicSettings() {
   const btn = document.getElementById('saveClinicBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
   try {
-    const r = await fetch(`${BASE}/settings/clinic`, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify({
-        name: document.getElementById('clinicName').value.trim(),
-        phone: document.getElementById('clinicPhone').value.trim(),
-        address: document.getElementById('clinicAddress').value.trim(),
-        timezone: document.getElementById('clinicTimezone').value,
-        currency: document.getElementById('clinicCurrency').value,
-      })
+    await apiPut(`/api/tenants/${TENANT}/settings/clinic`, {
+      name:     document.getElementById('clinicName').value.trim(),
+      phone:    document.getElementById('clinicPhone').value.trim(),
+      address:  document.getElementById('clinicAddress').value.trim(),
+      city:     document.getElementById('clinicCity').value.trim(),
+      postcode: document.getElementById('clinicPostcode').value.trim(),
+      timezone: document.getElementById('clinicTimezone').value,
+      currency: document.getElementById('clinicCurrency').value,
     });
-    if (!r.ok) throw new Error();
-    showToast('Clinic settings saved');
-  } catch { showToast('Failed to save settings', 'error'); }
-  finally { btn.disabled = false; btn.textContent = 'Save Changes'; }
-}
-
-// ══════════════════════════════
-// SERVICES
-// ══════════════════════════════
-let services = [];
-let editingServiceId = null;
-
-async function loadServices() {
-  try {
-    const r = await fetch(`${BASE}/service-catalog`, { headers });
-    if (!r.ok) throw new Error();
-    services = (await r.json()).services ?? [];
-    renderServices();
-  } catch {
-    document.getElementById('servicesList').innerHTML = '<p style="color:#e05252;font-size:13px">Failed to load services.</p>';
+    // Update the name in localStorage so sidebar reflects changes
+    localStorage.setItem('medibook_tenant_name', document.getElementById('clinicName').value.trim() || CLINIC);
+    document.getElementById('userName').textContent = localStorage.getItem('medibook_tenant_name');
+    document.getElementById('userAv').textContent = localStorage.getItem('medibook_tenant_name').slice(0,2).toUpperCase();
+    flashSaved('clinicSaveOk');
+    showToast('Clinic settings saved.', '✅', 'success');
+  } catch (err) {
+    showToast('Save failed: ' + err.message, '❌', 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Changes';
   }
 }
 
-function renderServices() {
-  if (!services.length) {
-    document.getElementById('servicesList').innerHTML = '<p style="color:#9aa0ab;font-size:13px">No services yet. Add your first service.</p>';
-    return;
-  }
-  document.getElementById('servicesList').innerHTML = services.map(s => `
-    <div class="service-item">
-      <div class="service-color" style="background:${escHtml(s.color || '#6c63ff')}"></div>
-      <div style="flex:1;min-width:0">
-        <div class="service-name">${escHtml(s.name)}</div>
-        <div class="service-meta">${s.durationMins} min · $${(s.priceCents/100).toFixed(2)}</div>
-      </div>
-      <span class="service-badge ${s.isActive ? 'badge-active' : 'badge-inactive'}">${s.isActive ? 'Active' : 'Inactive'}</span>
-      <button class="icon-btn" onclick="toggleService('${s.id}')" title="${s.isActive ? 'Disable' : 'Enable'}">
-        ${s.isActive
-          ? '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>'
-          : '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'}
-      </button>
-      <button class="icon-btn" onclick="openEditService('${s.id}')" title="Edit">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      </button>
-    </div>
-  `).join('');
-}
-
-async function toggleService(id) {
+// ─── Save agent settings ──────────────────────────────────────────────────────
+async function saveAgentSettings() {
+  const btn = document.getElementById('saveAgentBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
   try {
-    const r = await fetch(`${BASE}/service-catalog/${id}/toggle`, { method: 'PATCH', headers });
-    if (!r.ok) throw new Error();
-    const updated = await r.json();
-    services = services.map(s => s.id === id ? { ...s, isActive: updated.isActive } : s);
-    renderServices();
-  } catch { showToast('Failed to toggle service', 'error'); }
-}
-
-function openAddService() {
-  editingServiceId = null;
-  document.getElementById('serviceModalTitle').textContent = 'Add Service';
-  ['svcName','svcDuration','svcPrice','svcCategory','svcDesc'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('svcColor').value = '#6c63ff';
-  document.getElementById('serviceModal').classList.add('open');
-}
-
-function openEditService(id) {
-  editingServiceId = id;
-  const s = services.find(x => x.id === id);
-  if (!s) return;
-  document.getElementById('serviceModalTitle').textContent = 'Edit Service';
-  document.getElementById('svcName').value = s.name;
-  document.getElementById('svcDuration').value = s.durationMins;
-  document.getElementById('svcPrice').value = (s.priceCents / 100).toFixed(2);
-  document.getElementById('svcColor').value = s.color || '#6c63ff';
-  document.getElementById('svcCategory').value = s.category || '';
-  document.getElementById('svcDesc').value = s.description || '';
-  document.getElementById('serviceModal').classList.add('open');
-}
-
-function closeServiceModal() {
-  document.getElementById('serviceModal').classList.remove('open');
-}
-
-async function saveService() {
-  const name = document.getElementById('svcName').value.trim();
-  const durationMins = parseInt(document.getElementById('svcDuration').value);
-  const priceDollars = parseFloat(document.getElementById('svcPrice').value);
-  if (!name || !durationMins || isNaN(priceDollars)) { showToast('Please fill required fields', 'error'); return; }
-  const body = {
-    name,
-    durationMins,
-    priceCents: Math.round(priceDollars * 100),
-    color: document.getElementById('svcColor').value,
-    category: document.getElementById('svcCategory').value.trim() || null,
-    description: document.getElementById('svcDesc').value.trim() || null,
-  };
-  try {
-    let r;
-    if (editingServiceId) {
-      r = await fetch(`${BASE}/service-catalog/${editingServiceId}`, { method: 'PUT', headers, body: JSON.stringify(body) });
-    } else {
-      r = await fetch(`${BASE}/service-catalog`, { method: 'POST', headers, body: JSON.stringify(body) });
-    }
-    if (!r.ok) throw new Error();
-    closeServiceModal();
-    showToast(editingServiceId ? 'Service updated' : 'Service created');
-    loaded['services'] = false;
-    loadServices();
-    loaded['services'] = true;
-  } catch { showToast('Failed to save service', 'error'); }
-}
-
-// ══════════════════════════════
-// NOTIFICATIONS
-// ══════════════════════════════
-let notifData = {};
-async function loadNotifications() {
-  try {
-    const r = await fetch(`${BASE}/settings/notifications`, { headers });
-    if (!r.ok) throw new Error();
-    notifData = await r.json();
-    renderNotifications();
-  } catch {
-    document.getElementById('notifList').innerHTML = '<p style="color:#e05252;font-size:13px">Failed to load notification settings.</p>';
+    await apiPut(`/api/tenants/${TENANT}/agent-settings`, {
+      greeting:       document.getElementById('agentGreeting').value.trim(),
+      transferNumber: document.getElementById('agentTransferNumber').value.trim(),
+    });
+    flashSaved('agentSaveOk');
+    showToast('Receptionist settings saved.', '✅', 'success');
+  } catch (err) {
+    showToast('Save failed: ' + err.message, '❌', 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Changes';
   }
 }
 
-const NOTIF_LABELS = {
-  emailBookingConfirmations: { label: 'Email booking confirmations', desc: 'Send clients an email when they book an appointment.' },
-  smsReminders: { label: 'SMS appointment reminders', desc: 'Text clients 24 hours before their appointment.' },
-  notifyOwnerOnAiBooking: { label: 'Notify owner on AI bookings', desc: 'Email the owner when the AI agent books an appointment.' },
-  dailySummaryEmail: { label: 'Daily summary email', desc: 'Send a daily digest of appointments and activity.' },
-  paymentFailureAlerts: { label: 'Payment failure alerts', desc: 'Alert the owner when a payment fails or is declined.' },
-};
-
-function renderNotifications() {
-  document.getElementById('notifList').innerHTML = Object.entries(NOTIF_LABELS).map(([key, info]) => `
-    <div class="toggle-row">
-      <div>
-        <div class="toggle-label">${info.label}</div>
-        <div class="toggle-desc">${info.desc}</div>
-      </div>
-      <label class="toggle">
-        <input type="checkbox" id="notif_${key}" ${notifData[key] ? 'checked' : ''}>
-        <span class="toggle-slider"></span>
-      </label>
-    </div>
-  `).join('');
-}
-
-async function saveNotifications() {
+// ─── Save notification settings ───────────────────────────────────────────────
+async function saveNotifSettings() {
   const btn = document.getElementById('saveNotifBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
   try {
-    const notifications = {};
-    Object.keys(NOTIF_LABELS).forEach(key => {
-      notifications[key] = document.getElementById(`notif_${key}`)?.checked ?? false;
+    await apiPut(`/api/tenants/${TENANT}/settings/notifications`, {
+      emailBookingConfirmations: document.getElementById('notifBookingConfirm').checked,
+      smsReminders:              document.getElementById('notifSmsReminders').checked,
+      notifyOwnerOnAiBooking:    document.getElementById('notifAiBooking').checked,
+      dailySummaryEmail:         document.getElementById('notifDailySummary').checked,
+      paymentFailureAlerts:      document.getElementById('notifPaymentFailure').checked,
     });
-    const r = await fetch(`${BASE}/settings/notifications`, { method: 'PUT', headers, body: JSON.stringify(notifications) });
-    if (!r.ok) throw new Error();
-    showToast('Notification preferences saved');
-  } catch { showToast('Failed to save preferences', 'error'); }
-  finally { btn.disabled = false; btn.textContent = 'Save Preferences'; }
-}
-
-// ══════════════════════════════
-// PHONE NUMBERS
-// ══════════════════════════════
-async function loadPhone() {
-  try {
-    const r = await fetch(`${BASE}/phone-numbers`, { headers });
-    if (!r.ok) throw new Error();
-    const data = await r.json();
-    const nums = data.numbers ?? [];
-    const planLimitReached = data.limit !== -1 && nums.length >= data.limit && data.limit > 0;
-
-    if (!nums.length) {
-      document.getElementById('phoneList').innerHTML = `
-        <div class="no-numbers-msg">
-          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom:8px;opacity:.4"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.24h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.83a16 16 0 0 0 6.29 6.29l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          <div style="font-weight:600;color:#374151;margin-bottom:4px">No phone numbers yet</div>
-          <div>Search below to find and provision a Twilio number for your AI agent.</div>
-        </div>`;
-      return;
-    }
-
-    document.getElementById('phoneList').innerHTML = nums.map(n => `
-      <div class="phone-num-row">
-        <div style="flex:1;min-width:0">
-          <div class="phone-num">${escHtml(n.phoneNumber)}</div>
-          <div class="phone-locality" style="margin-top:2px">AI Voice Agent · Active</div>
-        </div>
-        <span class="phone-status">Active</span>
-        <button class="release-btn" onclick="releaseNumber('${escHtml(n.phoneNumber)}', this)" title="Release number">Release</button>
-      </div>
-    `).join('');
-
-    if (planLimitReached) {
-      document.getElementById('phoneList').insertAdjacentHTML('beforeend',
-        '<p style="font-size:12.5px;color:#9aa0ab;margin-top:8px">Plan limit reached. Release your current number or upgrade to provision more.</p>');
-    }
-  } catch {
-    document.getElementById('phoneList').innerHTML = '<p style="color:#e05252;font-size:13px">Failed to load phone numbers.</p>';
-  }
-}
-
-async function releaseNumber(number, btn) {
-  if (!confirm(`Release ${number}? This will disconnect the AI agent from this number.`)) return;
-  btn.disabled = true; btn.textContent = 'Releasing…';
-  try {
-    const r = await fetch(`${BASE}/phone-numbers/${encodeURIComponent(number)}`, { method: 'DELETE', headers });
-    if (!r.ok) throw new Error();
-    showToast('Number released');
-    loaded['phone'] = false; loadPhone(); loaded['phone'] = true;
-  } catch { showToast('Failed to release number', 'error'); btn.disabled = false; btn.textContent = 'Release'; }
-}
-
-async function searchPhoneNumbers() {
-  const areaCode = document.getElementById('areaCodeInput').value.trim();
-  const country = document.getElementById('phoneCountry').value;
-  const container = document.getElementById('phoneSearchResults');
-  const btn = document.getElementById('searchPhoneBtn');
-  btn.disabled = true; btn.textContent = 'Searching…';
-  container.innerHTML = '<div class="skel" style="height:52px;margin-bottom:8px"></div><div class="skel" style="height:52px;margin-bottom:8px"></div><div class="skel" style="height:52px"></div>';
-  try {
-    let url = `${BASE}/available-numbers?country=${encodeURIComponent(country)}`;
-    if (areaCode) url += `&areaCode=${encodeURIComponent(areaCode)}`;
-    const r = await fetch(url, { headers });
-    if (!r.ok) {
-      const err = await r.json().catch(() => ({}));
-      throw new Error(err.error || 'Search failed');
-    }
-    const { numbers: nums } = await r.json();
-    if (!nums || !nums.length) {
-      container.innerHTML = '<p style="color:#9aa0ab;font-size:13px;padding:8px 0">No numbers found. Try a different area code or country.</p>';
-      return;
-    }
-    container.innerHTML = `
-      <div style="font-size:12px;color:#9aa0ab;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">${nums.length} number${nums.length !== 1 ? 's' : ''} available</div>
-      ${nums.map(n => `
-        <div class="phone-num-row" style="background:#f9f8ff;border-radius:8px;padding:12px 14px;margin-bottom:6px;border:1px solid #e8eaed">
-          <div style="flex:1;min-width:0">
-            <div class="phone-num">${escHtml(n.phoneNumber)}</div>
-            <div class="phone-locality">${escHtml([n.locality, n.region].filter(Boolean).join(', ') || n.country)}</div>
-          </div>
-          <div class="phone-num-caps">
-            ${n.capabilities?.voice ? '<span class="phone-cap">Voice</span>' : ''}
-            ${n.capabilities?.sms ? '<span class="phone-cap" style="background:#e8f5e9;color:#2e7d32">SMS</span>' : ''}
-          </div>
-          <button class="save-btn" style="padding:7px 14px;font-size:12.5px;flex-shrink:0" onclick="provisionNumber('${escHtml(n.phoneNumber)}', this)">
-            Provision
-          </button>
-        </div>
-      `).join('')}
-    `;
+    flashSaved('notifSaveOk');
+    showToast('Notification preferences saved.', '✅', 'success');
   } catch (err) {
-    container.innerHTML = `<p style="color:#e05252;font-size:13px;padding:8px 0">${escHtml(err.message || 'Search failed. Please try again.')}</p>`;
+    showToast('Save failed: ' + err.message, '❌', 'error');
   } finally {
-    btn.disabled = false; btn.textContent = 'Search Numbers';
+    btn.disabled = false; btn.textContent = 'Save Preferences';
   }
 }
 
-async function provisionNumber(number, btn) {
-  btn.disabled = true; btn.textContent = 'Provisioning…';
-  try {
-    const r = await fetch(`${BASE}/buy-number`, { method: 'POST', headers, body: JSON.stringify({ phoneNumber: number }) });
-    if (!r.ok) {
-      const err = await r.json().catch(() => ({ error: 'Unknown error' }));
-      throw new Error(err.error || 'Request failed');
-    }
-    showToast('Number provisioned successfully');
-    document.getElementById('phoneSearchResults').innerHTML = '';
-    loaded['phone'] = false; loadPhone(); loaded['phone'] = true;
-  } catch (e) { 
-    showToast('Failed: ' + e.message, 'error'); 
-    btn.disabled = false; 
-    btn.textContent = 'Provision'; 
-  }
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function showToast(msg, icon='✅', type='') {
+  const wrap = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-content"><div class="toast-title">${esc(msg)}</div></div>`;
+  wrap.appendChild(t);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));
+  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),350); }, 3500);
 }
 
-// ══════════════════════════════
-// BILLING
-// ══════════════════════════════
-const PLAN_DEFS = {
-  starter:    { name: 'Starter',    price: '£49',  per: '/mo · 1 location', features: ['Up to 2 staff','Unlimited bookings','Client CRM (500)','Email & SMS reminders','Stripe payments',{off:'AI Voice Agent'},{off:'Multi-location'}] },
-  pro:        { name: 'Pro',        price: '£129', per: '/mo · up to 3 locations', popular: true, features: ['Unlimited staff','Unlimited bookings & clients','Full CRM + notes','WhatsApp + SMS + email','Stripe deposits & invoicing','AI Voice Agent included','No-show prediction AI'] },
-  enterprise: { name: 'Enterprise', price: 'Custom', per: '· unlimited locations', features: ['Everything in Pro','Unlimited locations & staff','White-label & custom domain','SSO & SAML','Dedicated account manager','HIPAA BAA + custom DPA','Priority SLA (99.9%)'] },
-};
-
-let billingData = {};
-
-async function loadBilling() {
-  try {
-    const r = await fetch('/billing/subscription', { headers });
-    if (r.ok) {
-      billingData = await r.json();
-    } else {
-      billingData = { hasSubscription: false, plan: 'none', status: 'none' };
-    }
-  } catch {
-    billingData = { hasSubscription: false, plan: 'none', status: 'none' };
-  }
-
-  const plan = billingData.plan ?? 'none';
-  const status = billingData.status ?? 'none';
-  const planDef = PLAN_DEFS[plan] ?? null;
-
-  // Plan name
-  document.getElementById('billingPlanName').textContent = planDef ? planDef.name : 'No active plan';
-
-  // Status badge
-  const badgeEl = document.getElementById('billingStatusBadge');
-  const statusLabels = { active: 'Active', trialing: 'Free Trial', past_due: 'Past Due', cancelled: 'Cancelled', none: 'No Subscription' };
-  badgeEl.textContent = statusLabels[status] ?? status;
-  badgeEl.className = `plan-status-badge pstatus-${status}`;
-
-  // Price display
-  document.getElementById('billingPriceDisplay').textContent = planDef ? planDef.price : '–';
-  document.getElementById('billingPricePer').textContent = planDef ? planDef.per : '';
-
-  // Trial note
-  const trialEl = document.getElementById('billingTrialNote');
-  if (status === 'trialing' && billingData.trialEnd) {
-    const d = new Date(billingData.trialEnd);
-    const daysLeft = Math.max(0, Math.ceil((d - Date.now()) / 86400000));
-    trialEl.textContent = `🎁 Free trial — ${daysLeft} day${daysLeft !== 1 ? 's' : ''} remaining (ends ${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })})`;
-  } else {
-    trialEl.textContent = '';
-  }
-
-  // Billing details
-  const statusTextMap = { active: 'Active ✓', trialing: 'Trial Active', past_due: '⚠ Payment overdue', cancelled: 'Cancelled', none: 'No subscription' };
-  document.getElementById('billingStatusText').textContent = statusTextMap[status] ?? '–';
-  if (billingData.currentPeriodEnd) {
-    const d = new Date(billingData.currentPeriodEnd);
-    document.getElementById('billingNextDate').textContent = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-  }
-  document.getElementById('billingCycle').textContent = 'Monthly';
-
-  // Cancel note
-  const cancelNote = document.getElementById('billingCancelNote');
-  if (billingData.cancelAtPeriodEnd) cancelNote.style.display = '';
-  else cancelNote.style.display = 'none';
-
-  // Render plan cards
-  renderPlanCards(plan);
-}
-
-function renderPlanCards(currentPlan) {
-  const grid = document.getElementById('planCardsGrid');
-  grid.innerHTML = Object.entries(PLAN_DEFS).map(([key, def]) => {
-    const isCurrent = key === currentPlan;
-    const isEnterprise = key === 'enterprise';
-    const featsHtml = def.features.map(f => {
-      if (typeof f === 'object' && f.off) return `<li class="pon-feat off">${escHtml(f.off)}</li>`;
-      return `<li class="pon-feat">${escHtml(f)}</li>`;
-    }).join('');
-    let btnHtml;
-    if (isCurrent) {
-      btnHtml = `<button class="pon-btn pon-btn-current" disabled>Current Plan</button>`;
-    } else if (isEnterprise) {
-      btnHtml = `<button class="pon-btn pon-btn-enterprise" onclick="location.href='mailto:sales@callora.ai'">Contact Sales</button>`;
-    } else {
-      btnHtml = `<button class="pon-btn pon-btn-upgrade" onclick="startUpgrade('${key}')">
-        ${billingData.hasSubscription ? 'Switch to ' + def.name : 'Start Free Trial'}
-      </button>`;
-    }
-    return `
-      <div class="plan-option-card ${isCurrent ? 'is-current' : ''} ${def.popular && !isCurrent ? 'is-popular' : ''}">
-        <div class="pon-tier">${escHtml(key.toUpperCase())}</div>
-        <div class="pon-price">${escHtml(def.price)}</div>
-        <div class="pon-per">${escHtml(def.per)}</div>
-        <ul class="pon-feats">${featsHtml}</ul>
-        ${btnHtml}
-      </div>`;
-  }).join('');
-}
-
-async function startUpgrade(planKey) {
-  try {
-    if (billingData.hasSubscription) {
-      // Upgrade existing subscription
-      const r = await fetch('/billing/upgrade', { method: 'POST', headers, body: JSON.stringify({ newPlanKey: planKey }) });
-      if (!r.ok) throw new Error();
-      showToast(`Switched to ${PLAN_DEFS[planKey].name} plan`);
-      loaded['billing'] = false; loadBilling(); loaded['billing'] = true;
-    } else {
-      // Start checkout flow
-      const successUrl = window.location.origin + window.location.pathname + '?billingSuccess=1';
-      const cancelUrl = window.location.href;
-      const r = await fetch('/billing/checkout', { method: 'POST', headers, body: JSON.stringify({ planKey, successUrl, cancelUrl }) });
-      if (!r.ok) throw new Error();
-      const { url } = await r.json();
-      if (url) window.location.href = url;
-    }
-  } catch { showToast('Unable to start upgrade. Please try again.', 'error'); }
-}
-
-async function reactivatePlan(e) {
-  e.preventDefault();
-  try {
-    const r = await fetch('/billing/reactivate', { method: 'POST', headers });
-    if (!r.ok) throw new Error();
-    showToast('Subscription reactivated');
-    loaded['billing'] = false; loadBilling(); loaded['billing'] = true;
-  } catch { showToast('Failed to reactivate', 'error'); }
-}
-
-async function openBillingPortal() {
-  try {
-    const r = await fetch('/billing/portal', { method: 'POST', headers });
-    if (!r.ok) throw new Error();
-    const { url } = await r.json();
-    if (url) window.open(url, '_blank');
-    else showToast('No billing portal configured yet', 'error');
-  } catch { showToast('Unable to open billing portal', 'error'); }
-}
-
-// Show billing success banner if redirected from Stripe
-if (new URLSearchParams(location.search).get('billingSuccess') === '1') {
-  document.getElementById('alertBanner').innerHTML = '<div class="alert alert-success">🎉 Plan activated successfully! Your subscription is now live.</div>';
-  setTimeout(() => document.getElementById('alertBanner').innerHTML = '', 5000);
-}
-
-// ══════════════════════════════
-// INTEGRATIONS
-// ══════════════════════════════
-async function loadIntegrations() {
-  try {
-    const r = await fetch(`${BASE}/integrations`, { headers });
-    if (!r.ok) throw new Error();
-    const integrations = await r.json();
-    renderIntegrations(integrations);
-  } catch {
-    document.getElementById('integrationsList').innerHTML = '<p style="color:#e05252;font-size:13px">Failed to load integrations.</p>';
-  }
-}
-
-function renderIntegrations(list) {
-  document.getElementById('integrationsList').innerHTML = list.map(intg => `
-    <div class="integration-item">
-      <div class="int-icon">${escHtml(intg.icon || '🔌')}</div>
-      <div style="flex:1;min-width:0">
-        <div class="int-name">${escHtml(intg.name)}</div>
-        <div class="int-desc">${escHtml(intg.description || '')}</div>
-      </div>
-      <span class="int-status ${intg.connected ? 'int-connected' : 'int-disconnected'}">${intg.connected ? 'Connected' : 'Not connected'}</span>
-      ${intg.type === 'oauth' ? (
-        intg.connected
-          ? `<button class="disconnect-btn" onclick="disconnectIntegration('${escHtml(intg.key)}')">Disconnect</button>`
-          : `<button class="connect-btn" onclick="connectGoogleCalendar()">Connect</button>`
-      ) : ''}
-    </div>
-  `).join('');
-}
-
-async function connectGoogleCalendar() {
-  try {
-    const r = await fetch(`${BASE}/integrations/google-calendar/connect`, { headers });
-    if (!r.ok) throw new Error();
-    const { authUrl } = await r.json();
-    if (authUrl) location.href = authUrl;
-  } catch { showToast('Failed to initiate Google Calendar connection', 'error'); }
-}
-
-async function disconnectIntegration(key) {
-  if (!confirm('Disconnect this integration?')) return;
-  try {
-    const r = await fetch(`${BASE}/integrations/${key}`, { method: 'DELETE', headers });
-    if (!r.ok) throw new Error();
-    showToast('Integration disconnected');
-    loaded['integrations'] = false; loadIntegrations(); loaded['integrations'] = true;
-  } catch { showToast('Failed to disconnect integration', 'error'); }
-}
-
-// ══════════════════════════════
-// TEAM
-// ══════════════════════════════
-let teamMembers = [];
-async function loadTeam() {
-  try {
-    const r = await fetch(`${BASE}/team`, { headers });
-    if (!r.ok) throw new Error();
-    teamMembers = (await r.json()).members ?? [];
-    renderTeam();
-  } catch {
-    document.getElementById('teamList').innerHTML = '<p style="color:#e05252;font-size:13px">Failed to load team members.</p>';
-  }
-}
-
-function renderTeam() {
-  if (!teamMembers.length) {
-    document.getElementById('teamList').innerHTML = '<p style="color:#9aa0ab;font-size:13px">No team members yet.</p>';
-    return;
-  }
-  document.getElementById('teamList').innerHTML = teamMembers.map(m => `
-    <div class="member-row">
-      <div class="member-avatar" style="background:${escHtml(m.avatarBg || '#e0deff')};color:${escHtml(m.avatarColor || '#6c63ff')}">${escHtml(m.initials || '?')}</div>
-      <div style="flex:1;min-width:0">
-        <div class="member-name">${escHtml(m.fullName || m.email)}</div>
-        <div class="member-email">${escHtml(m.email)}</div>
-      </div>
-      <span class="role-badge role-${escHtml(m.role)}">${escHtml(m.roleLabel || m.role)}</span>
-      ${m.role !== 'OWNER' ? `
-        <select class="role-select" onchange="updateMemberRole('${m.id}', this.value)">
-          <option value="MEMBER" ${m.role === 'MEMBER' ? 'selected' : ''}>Staff</option>
-          <option value="ADMIN" ${m.role === 'ADMIN' ? 'selected' : ''}>Admin</option>
-        </select>
-        <button class="remove-btn" onclick="removeMember('${m.id}', '${escHtml(m.fullName || m.email)}')">Remove</button>
-      ` : '<span style="font-size:12px;color:#9aa0ab;padding:0 8px">Owner</span>'}
-    </div>
-  `).join('');
-}
-
-async function updateMemberRole(userId, role) {
-  try {
-    const r = await fetch(`${BASE}/team/${userId}`, { method: 'PUT', headers, body: JSON.stringify({ role }) });
-    if (!r.ok) throw new Error();
-    showToast('Role updated');
-    teamMembers = teamMembers.map(m => m.id === userId ? { ...m, role } : m);
-    renderTeam();
-  } catch { showToast('Failed to update role', 'error'); }
-}
-
-async function removeMember(userId, name) {
-  if (!confirm(`Remove ${name} from the team?`)) return;
-  try {
-    const r = await fetch(`${BASE}/team/${userId}`, { method: 'DELETE', headers });
-    if (!r.ok) throw new Error();
-    showToast(`${name} removed`);
-    teamMembers = teamMembers.filter(m => m.id !== userId);
-    renderTeam();
-  } catch { showToast('Failed to remove member', 'error'); }
-}
-
-function openInviteModal() {
-  ['inviteName','inviteEmail','inviteTitle'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('inviteRole').value = 'STAFF';
-  document.getElementById('inviteModal').classList.add('open');
-}
-
-function closeInviteModal() {
-  document.getElementById('inviteModal').classList.remove('open');
-}
-
-async function sendInvite() {
-  const fullName = document.getElementById('inviteName').value.trim();
-  const email = document.getElementById('inviteEmail').value.trim();
-  const title = document.getElementById('inviteTitle').value.trim();
-  const role = document.getElementById('inviteRole').value;
-  if (!fullName || !email) { showToast('Name and email are required', 'error'); return; }
-  try {
-    const r = await fetch(`${BASE}/team/invite`, { method: 'POST', headers, body: JSON.stringify({ fullName, email, title, role }) });
-    if (r.status === 409) { showToast('A user with that email already exists', 'error'); return; }
-    if (!r.ok) throw new Error();
-    closeInviteModal();
-    showToast(`Invite sent to ${email}`);
-    loaded['team'] = false; loadTeam(); loaded['team'] = true;
-  } catch { showToast('Failed to send invite', 'error'); }
-}
-
-// Close modals on overlay click
-document.getElementById('serviceModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeServiceModal(); });
-document.getElementById('inviteModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeInviteModal(); });
+// ─── Init ─────────────────────────────────────────────────────────────────────
+loadSettings();
 </script>
 </body>
 </html>

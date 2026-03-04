@@ -6,17 +6,46 @@
   <title>Performance — Callora</title>
   <link rel="stylesheet" href="./styles.css" />
   <style>
-    .metric-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); }
-    .metric-row:last-child { border-bottom:none; }
-    .metric-label { font-size:13.5px; font-weight:500; color:var(--text-2); }
-    .metric-value { font-size:15px; font-weight:700; color:var(--text); }
-    .bar-wrap { margin-top:6px; background:var(--border); border-radius:4px; height:6px; overflow:hidden; }
-    .bar-fill { height:100%; border-radius:4px; transition:width 0.6s ease; }
-    .service-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
-    .service-row:last-child { border-bottom:none; }
-    .service-rank { width:22px; height:22px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--text-muted); flex-shrink:0; }
-    .period-btn { padding:6px 14px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); font-size:12.5px; font-weight:600; color:var(--text-muted); cursor:pointer; font-family:inherit; transition:all 0.15s; }
-    .period-btn.active { background:var(--brand); color:#fff; border-color:var(--brand); }
+    .metric-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 0; border-bottom: 1px solid var(--border);
+    }
+    .metric-row:last-child { border-bottom: none; }
+    .metric-label { font-size: 13.5px; font-weight: 500; color: var(--text-2); }
+    .metric-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+    .metric-value { font-size: 15px; font-weight: 700; color: var(--text); text-align: right; }
+    .metric-badge { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .bar-wrap { margin-top: 6px; background: var(--border); border-radius: 4px; height: 5px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+
+    /* Source items */
+    .source-item { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+    .source-item:last-child { border-bottom: none; }
+    .source-dot-lg { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+    .source-info { flex: 1; min-width: 0; }
+    .source-label { font-size: 13.5px; font-weight: 600; color: var(--text); }
+    .source-bar-wrap { margin-top: 5px; background: var(--border); border-radius: 4px; height: 5px; overflow: hidden; }
+    .source-bar { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+    .source-count { font-size: 15px; font-weight: 700; color: var(--text); flex-shrink: 0; min-width: 40px; text-align: right; }
+
+    /* Top services */
+    .service-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .service-row:last-child { border-bottom: none; }
+    .service-rank { width: 22px; height: 22px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--text-muted); flex-shrink: 0; }
+
+    /* Period toggle */
+    .period-btn { padding: 6px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); font-size: 12.5px; font-weight: 600; color: var(--text-muted); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .period-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .period-btn:hover:not(.active) { background: var(--surface-2); }
+
+    /* AI highlight */
+    .ai-highlight { background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%); border: 1px solid var(--blue-border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 24px; }
+    .ai-highlight-title { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; }
+    .ai-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .ai-kpi { text-align: center; }
+    .ai-kpi-val { font-size: 24px; font-weight: 700; color: var(--text); letter-spacing: -0.03em; }
+    .ai-kpi-lbl { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; font-weight: 500; }
+    @media (max-width: 700px) { .ai-kpi-grid { grid-template-columns: repeat(2,1fr); } }
   </style>
 </head>
 <body>
@@ -73,6 +102,7 @@
     <header class="topbar">
       <div class="topbar-left">
         <span class="page-title">Performance</span>
+        <span class="breadcrumb" id="periodLabel"></span>
       </div>
       <div class="topbar-right">
         <div style="display:flex;gap:4px;">
@@ -87,7 +117,7 @@
 
       <!-- TOP STAT CARDS -->
       <div class="stat-grid" style="margin-bottom:24px;">
-        <div class="stat-card">
+        <div class="stat-card accent-teal">
           <div class="stat-icon" style="background:#f0fdfa;">
             <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#0d9488" stroke-width="1.7"><path d="M8 2v12M5 5h4.5a2 2 0 010 4H5m0-4v4m0 0H9"/></svg>
           </div>
@@ -95,15 +125,15 @@
           <div class="stat-value" id="statRevenue">—</div>
           <div class="stat-meta" id="revMeta"></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card accent-green">
           <div class="stat-icon" style="background:#f0fdf4;">
             <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#16a34a" stroke-width="1.7"><path d="M13 5l-7 7-4-4"/></svg>
           </div>
-          <div class="stat-label">Completion Rate</div>
-          <div class="stat-value" id="statCompletion">—</div>
-          <div class="stat-meta" id="compMeta"></div>
+          <div class="stat-label">Booking Conversion Rate</div>
+          <div class="stat-value" id="statConversion">—</div>
+          <div class="stat-meta" id="convMeta"></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card accent-red">
           <div class="stat-icon" style="background:#fef2f2;">
             <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#dc2626" stroke-width="1.7"><path d="M8 5v3l2 2"/><circle cx="8" cy="8" r="6"/></svg>
           </div>
@@ -111,13 +141,39 @@
           <div class="stat-value" id="statCancellation">—</div>
           <div class="stat-meta" id="cancelMeta"></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card accent-purple">
           <div class="stat-icon" style="background:#f5f3ff;">
             <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#7c3aed" stroke-width="1.7"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M5 1v3M11 1v3M1.5 6.5h13"/></svg>
           </div>
           <div class="stat-label">Total Appointments</div>
           <div class="stat-value" id="statAppts">—</div>
           <div class="stat-meta" id="apptMeta"></div>
+        </div>
+      </div>
+
+      <!-- AI RECEPTIONIST KPIs -->
+      <div class="ai-highlight">
+        <div class="ai-highlight-title">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#6366f1" stroke-width="2" style="vertical-align:-1px;margin-right:5px;"><circle cx="8" cy="8" r="6.5"/><path d="M5.5 8.5l2 2L11 6"/></svg>
+          AI Receptionist Impact
+        </div>
+        <div class="ai-kpi-grid">
+          <div class="ai-kpi">
+            <div class="ai-kpi-val" id="aiConvRate">—</div>
+            <div class="ai-kpi-lbl">Call→Booking Rate</div>
+          </div>
+          <div class="ai-kpi">
+            <div class="ai-kpi-val" id="aiAfterHours">—</div>
+            <div class="ai-kpi-lbl">After-Hours Calls Captured</div>
+          </div>
+          <div class="ai-kpi">
+            <div class="ai-kpi-val" id="aiMissedRecovered">—</div>
+            <div class="ai-kpi-lbl">Missed Calls Recovered</div>
+          </div>
+          <div class="ai-kpi">
+            <div class="ai-kpi-val" id="aiTotalCalls">—</div>
+            <div class="ai-kpi-lbl">Total AI Calls Handled</div>
+          </div>
         </div>
       </div>
 
@@ -128,59 +184,81 @@
         <div class="card">
           <div class="card-header">
             <div class="card-title">Booking Sources</div>
+            <span class="card-subtitle" id="sourceTotal">— total</span>
           </div>
-          <div class="card-body">
-            <div id="sourceBreakdown">
-              <div class="metric-row">
-                <div>
-                  <div class="metric-label" style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:2px;background:#3b82f6;display:inline-block;"></span>AI Bookings</div>
-                  <div class="bar-wrap" style="width:180px;margin-top:6px;"><div class="bar-fill" id="barAI" style="width:0%;background:#3b82f6;"></div></div>
-                </div>
-                <div class="metric-value" id="valAI">—</div>
+          <div id="sourceBreakdown">
+            <div class="source-item">
+              <div class="source-dot-lg" style="background:var(--blue);"></div>
+              <div class="source-info">
+                <div class="source-label">AI Bookings</div>
+                <div class="source-bar-wrap"><div class="source-bar" id="barAI" style="width:0%;background:var(--blue);"></div></div>
               </div>
-              <div class="metric-row">
-                <div>
-                  <div class="metric-label" style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:2px;background:#16a34a;display:inline-block;"></span>Manual Bookings</div>
-                  <div class="bar-wrap" style="width:180px;margin-top:6px;"><div class="bar-fill" id="barManual" style="width:0%;background:#16a34a;"></div></div>
-                </div>
-                <div class="metric-value" id="valManual">—</div>
+              <div class="source-count" id="valAI">—</div>
+            </div>
+            <div class="source-item">
+              <div class="source-dot-lg" style="background:var(--green);"></div>
+              <div class="source-info">
+                <div class="source-label">Manual Bookings</div>
+                <div class="source-bar-wrap"><div class="source-bar" id="barManual" style="width:0%;background:var(--green);"></div></div>
               </div>
-              <div class="metric-row">
-                <div>
-                  <div class="metric-label" style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:2px;background:#94a3b8;display:inline-block;"></span>Blocked / Unavailable</div>
-                  <div class="bar-wrap" style="width:180px;margin-top:6px;"><div class="bar-fill" id="barBlocked" style="width:0%;background:#94a3b8;"></div></div>
-                </div>
-                <div class="metric-value" id="valBlocked">—</div>
+              <div class="source-count" id="valManual">—</div>
+            </div>
+            <div class="source-item">
+              <div class="source-dot-lg" style="background:var(--border-strong);"></div>
+              <div class="source-info">
+                <div class="source-label">Blocked / Unavailable</div>
+                <div class="source-bar-wrap"><div class="source-bar" id="barBlocked" style="width:0%;background:var(--border-strong);"></div></div>
               </div>
+              <div class="source-count" id="valBlocked">—</div>
             </div>
           </div>
         </div>
 
-        <!-- Status Breakdown -->
+        <!-- Appointment Status -->
         <div class="card">
           <div class="card-header">
             <div class="card-title">Appointment Status</div>
           </div>
           <div class="card-body">
             <div class="metric-row">
-              <span class="metric-label">Confirmed</span>
-              <span class="metric-value" id="s_confirmed">—</span>
+              <div>
+                <div class="metric-label">Confirmed</div>
+              </div>
+              <div class="metric-badge">
+                <span class="badge badge-brand" id="s_confirmed">—</span>
+              </div>
             </div>
             <div class="metric-row">
-              <span class="metric-label">Completed</span>
-              <span class="metric-value" id="s_completed">—</span>
+              <div>
+                <div class="metric-label">Completed</div>
+              </div>
+              <div class="metric-badge">
+                <span class="badge badge-green" id="s_completed">—</span>
+              </div>
             </div>
             <div class="metric-row">
-              <span class="metric-label">Pending</span>
-              <span class="metric-value" id="s_pending">—</span>
+              <div>
+                <div class="metric-label">Pending</div>
+              </div>
+              <div class="metric-badge">
+                <span class="badge badge-gold" id="s_pending">—</span>
+              </div>
             </div>
             <div class="metric-row">
-              <span class="metric-label">Cancelled</span>
-              <span class="metric-value" id="s_cancelled">—</span>
+              <div>
+                <div class="metric-label">Cancelled</div>
+              </div>
+              <div class="metric-badge">
+                <span class="badge badge-gray" id="s_cancelled">—</span>
+              </div>
             </div>
             <div class="metric-row">
-              <span class="metric-label">No Show</span>
-              <span class="metric-value" id="s_noshow">—</span>
+              <div>
+                <div class="metric-label">No Show</div>
+              </div>
+              <div class="metric-badge">
+                <span class="badge badge-orange" id="s_noshow">—</span>
+              </div>
             </div>
           </div>
         </div>
@@ -190,7 +268,7 @@
       <div class="card">
         <div class="card-header">
           <div class="card-title">Top Services</div>
-          <span class="card-subtitle" id="servicesSubtitle">by booking count</span>
+          <span class="card-subtitle">by booking count</span>
         </div>
         <div class="card-body" id="topServices">
           <div style="padding:20px;text-align:center;color:var(--text-muted);">Loading…</div>
@@ -228,10 +306,11 @@ function setPeriod(p, btn) {
 function getDateRange(period) {
   const now = new Date();
   let start;
-  if (period==='week') {
-    const day = now.getDay(); const diff = day===0?-6:1-day;
-    start = new Date(now.getFullYear(), now.getMonth(), now.getDate()+diff);
-  } else if (period==='month') {
+  if (period === 'week') {
+    const day = now.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
+  } else if (period === 'month') {
     start = new Date(now.getFullYear(), now.getMonth(), 1);
   } else {
     start = new Date(now.getFullYear(), Math.floor(now.getMonth()/3)*3, 1);
@@ -242,14 +321,15 @@ function getDateRange(period) {
 function renderSourceBreakdown(appts) {
   const ai      = appts.filter(a=>a.source==='AI'||a.bookedViaAI).length;
   const blocked = appts.filter(a=>a.type==='BLOCKED'||a.status==='BLOCKED').length;
-  const manual  = appts.length - ai - blocked;
+  const manual  = Math.max(0, appts.length - ai - blocked);
   const total   = Math.max(1, appts.length);
   document.getElementById('valAI').textContent      = ai;
-  document.getElementById('valManual').textContent  = Math.max(0,manual);
+  document.getElementById('valManual').textContent  = manual;
   document.getElementById('valBlocked').textContent = blocked;
-  setTimeout(()=>{
+  document.getElementById('sourceTotal').textContent = `${appts.length} total`;
+  setTimeout(() => {
     document.getElementById('barAI').style.width      = (ai/total*100)+'%';
-    document.getElementById('barManual').style.width  = (Math.max(0,manual)/total*100)+'%';
+    document.getElementById('barManual').style.width  = (manual/total*100)+'%';
     document.getElementById('barBlocked').style.width = (blocked/total*100)+'%';
   }, 50);
 }
@@ -267,7 +347,7 @@ function renderTopServices(appts) {
   const svcMap = {};
   appts.forEach(a => {
     const name = a.serviceName ?? a.service?.name ?? 'Unknown';
-    if (!svcMap[name]) svcMap[name] = { count:0, revenue:0 };
+    if (!svcMap[name]) svcMap[name] = { count: 0, revenue: 0 };
     svcMap[name].count++;
     svcMap[name].revenue += a.priceCents ?? 0;
   });
@@ -278,51 +358,94 @@ function renderTopServices(appts) {
     return;
   }
   const max = sorted[0][1].count;
-  el.innerHTML = sorted.map(([name,data],i)=>`
+  el.innerHTML = sorted.map(([name, data], i) => `
     <div class="service-row">
       <div class="service-rank">${i+1}</div>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:4px;">${esc(name)}</div>
+        <div style="font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:5px;">${esc(name)}</div>
         <div class="bar-wrap"><div class="bar-fill" style="width:${(data.count/max*100)}%;background:var(--brand);"></div></div>
       </div>
-      <div style="text-align:right;flex-shrink:0;">
-        <div style="font-size:13.5px;font-weight:700;color:var(--text);">${data.count} <span style="font-size:11.5px;font-weight:500;color:var(--text-muted);">bookings</span></div>
+      <div style="text-align:right;flex-shrink:0;min-width:90px;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);">${data.count} <span style="font-size:11.5px;font-weight:500;color:var(--text-muted);">bookings</span></div>
         ${data.revenue ? `<div style="font-size:12px;color:var(--text-muted);">£${(data.revenue/100).toFixed(0)} revenue</div>` : ''}
       </div>
     </div>`).join('');
 }
 
+// After-hours = calls between 6pm-8am or weekends
+function isAfterHours(dateStr) {
+  const d = new Date(dateStr);
+  const h = d.getHours();
+  const day = d.getDay();
+  return h >= 18 || h < 8 || day === 0 || day === 6;
+}
+
 async function loadPerformance() {
   const start = getDateRange(currentPeriod);
-  try {
-    const data = await fetch(`${API}/api/tenants/${TENANT}/calendar/upcoming?start=${start}&limit=500`, { headers:{Authorization:`Bearer ${TOKEN}`} });
-    if (!data.ok) throw new Error(`HTTP ${data.status}`);
-    const json = await data.json();
-    const appts = json.appointments ?? [];
+  const periodLabels = { week: 'this week', month: 'this month', quarter: 'this quarter' };
+  document.getElementById('periodLabel').textContent = periodLabels[currentPeriod];
 
+  try {
+    // Load appointments and calls in parallel
+    const [apptRes, callsRes] = await Promise.all([
+      fetch(`${API}/api/tenants/${TENANT}/calendar/upcoming?start=${start}&limit=500`, { headers: { Authorization: `Bearer ${TOKEN}` } }),
+      fetch(`${API}/api/tenants/${TENANT}/calls?start=${start}`, { headers: { Authorization: `Bearer ${TOKEN}` } }).catch(() => null),
+    ]);
+
+    if (!apptRes.ok) throw new Error(`HTTP ${apptRes.status}`);
+    const apptJson = await apptRes.json();
+    const appts = apptJson.appointments ?? [];
+
+    // Call data (non-critical — may not exist)
+    let calls = [];
+    if (callsRes && callsRes.ok) {
+      const callJson = await callsRes.json();
+      calls = callJson.calls ?? [];
+    }
+
+    // ── Appointment metrics ───────────────────────────────────────────
     const completed  = appts.filter(a=>a.status?.toUpperCase()==='COMPLETED').length;
     const cancelled  = appts.filter(a=>a.status?.toUpperCase()==='CANCELLED').length;
     const total      = appts.length;
-    const revenue    = appts.reduce((sum,a)=>sum+(a.priceCents??0),0);
-    const compRate   = total ? Math.round(completed/total*100) : 0;
-    const cancelRate = total ? Math.round(cancelled/total*100) : 0;
+    const revenue    = appts.reduce((s,a)=>s+(a.priceCents??0),0);
+    const aiCount    = appts.filter(a=>a.source==='AI'||a.bookedViaAI).length;
 
-    document.getElementById('statRevenue').textContent     = `£${(revenue/100).toLocaleString('en-GB',{minimumFractionDigits:0})}`;
-    document.getElementById('statCompletion').textContent  = `${compRate}%`;
+    // Booking conversion rate = completed / total (excluding blocked/cancelled)
+    const bookable = appts.filter(a=>a.type!=='BLOCKED'&&a.status!=='BLOCKED').length;
+    const convRate = bookable > 0 ? Math.round(completed/bookable*100) : 0;
+    const cancelRate = total > 0 ? Math.round(cancelled/total*100) : 0;
+
+    document.getElementById('statRevenue').textContent      = `£${(revenue/100).toLocaleString('en-GB',{minimumFractionDigits:0})}`;
+    document.getElementById('statConversion').textContent   = `${convRate}%`;
     document.getElementById('statCancellation').textContent = `${cancelRate}%`;
-    document.getElementById('statAppts').textContent       = total;
-    document.getElementById('revMeta').innerHTML           = `<span style="color:var(--text-muted);">this ${currentPeriod}</span>`;
-    document.getElementById('compMeta').innerHTML          = `<span style="color:var(--text-muted);">${completed} of ${total}</span>`;
-    document.getElementById('cancelMeta').innerHTML        = `<span style="color:var(--red);">${cancelled} cancelled</span>`;
-    document.getElementById('apptMeta').innerHTML          = `<span style="color:var(--text-muted);">${currentPeriod}</span>`;
+    document.getElementById('statAppts').textContent        = total;
+    document.getElementById('revMeta').innerHTML            = `<span style="color:var(--text-muted);">${periodLabels[currentPeriod]}</span>`;
+    document.getElementById('convMeta').innerHTML           = `<span style="color:var(--text-muted);">${completed} of ${bookable} completed</span>`;
+    document.getElementById('cancelMeta').innerHTML         = `<span style="color:${cancelRate>20?'var(--red)':'var(--text-muted)'};">${cancelled} cancelled</span>`;
+    document.getElementById('apptMeta').innerHTML           = `<span style="color:var(--text-muted);">${aiCount} via AI</span>`;
+
+    // ── AI receptionist KPIs ──────────────────────────────────────────
+    const totalCalls      = calls.length;
+    const bookedFromCalls = calls.filter(c=>c.outcome==='booked'||c.appointmentId).length;
+    const afterHoursCalls = calls.filter(c=>isAfterHours(c.startedAt??c.createdAt)).length;
+    // Missed recovered = calls that previously had no answer but AI answered (approximate by after-hours calls that converted)
+    const missedRecovered = calls.filter(c=>isAfterHours(c.startedAt??c.createdAt)&&(c.outcome==='booked'||c.appointmentId)).length;
+    const aiCallRate      = totalCalls > 0 ? Math.round(bookedFromCalls/totalCalls*100)+'%' : (aiCount > 0 ? '—' : '—');
+
+    document.getElementById('aiConvRate').textContent       = aiCallRate;
+    document.getElementById('aiAfterHours').textContent     = afterHoursCalls || (totalCalls > 0 ? '0' : '—');
+    document.getElementById('aiMissedRecovered').textContent = missedRecovered || (totalCalls > 0 ? '0' : '—');
+    document.getElementById('aiTotalCalls').textContent     = totalCalls || '—';
 
     renderSourceBreakdown(appts);
     renderStatusBreakdown(appts);
     renderTopServices(appts);
-  } catch {
-    document.getElementById('topServices').innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted);">Could not load performance data.</div>`;
-    ['statRevenue','statCompletion','statCancellation','statAppts'].forEach(id => {
-      document.getElementById(id).textContent = '—';
+  } catch (err) {
+    console.error(err);
+    document.getElementById('topServices').innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted);">Could not load performance data. Please try again.</div>`;
+    ['statRevenue','statConversion','statCancellation','statAppts','aiConvRate','aiAfterHours','aiMissedRecovered','aiTotalCalls'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '—';
     });
   }
 }
