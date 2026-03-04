@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bookings — Callora</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .filter-bar { display:flex; align-items:center; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+    .source-dot { width:8px; height:8px; border-radius:50%; display:inline-block; flex-shrink:0; }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">C</div>
+      <span class="logo-text">Callora</span>
+    </div>
+    <div class="sidebar-scroll">
+      <div class="nav-section">Clinic</div>
+      <a href="dashboard.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="6" height="6" rx="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.2"/><rect x="1" y="9" width="6" height="6" rx="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.2"/></svg>
+        Overview
+      </a>
+      <a href="calendar.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M5 1v3M11 1v3M1.5 6.5h13"/></svg>
+        Calendar
+      </a>
+      <a href="bookings.html" class="nav-item active">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V3a1 1 0 00-1-1z"/><path d="M5 6h6M5 9h4"/></svg>
+        Bookings
+      </a>
+      <a href="calls.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/></svg>
+        Calls
+      </a>
+      <a href="performance.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="2,12 6,8 9,11 14,5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 14h12"/></svg>
+        Performance
+      </a>
+      <div class="nav-section">Settings</div>
+      <a href="settings.html" class="nav-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="2.2"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M2.697 2.697l1.06 1.06M12.243 12.243l1.06 1.06M13.303 2.697l-1.06 1.06M3.757 12.243l-1.06 1.06"/></svg>
+        Settings
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-av" id="userAv">--</div>
+        <div>
+          <div class="user-name" id="userName">Loading…</div>
+          <div class="user-role">Clinic Owner</div>
+        </div>
+      </div>
+      <a href="#" id="signOutBtn" style="display:block;text-align:center;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 0;margin-top:2px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-muted)'">Sign out</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="page-title">Bookings</span>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary" onclick="openModal()">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
+          New Booking
+        </button>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- STAT CARDS -->
+      <div class="stat-grid" style="margin-bottom:20px;">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#f0fdfa;">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#0d9488" stroke-width="1.7"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M5 1v3M11 1v3M1.5 6.5h13"/></svg>
+          </div>
+          <div class="stat-label">Total Bookings</div>
+          <div class="stat-value" id="statTotal">—</div>
+          <div class="stat-meta" id="statTotalMeta"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#eff6ff;">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#3b82f6" stroke-width="1.7"><path d="M13 10.5c0 .276-.06.536-.168.77A2.5 2.5 0 0110.5 13c-4.142 0-7.5-3.358-7.5-7.5A2.5 2.5 0 015.23 3.168C5.464 3.06 5.724 3 6 3c.138 0 .25.112.25.25v.002l.75 3a.25.25 0 01-.062.244L5.75 7.684a7.04 7.04 0 002.566 2.566l1.188-1.188a.25.25 0 01.244-.062l3 .75c.138.034.252.15.252.25z"/></svg>
+          </div>
+          <div class="stat-label">AI Bookings</div>
+          <div class="stat-value" id="statAI">—</div>
+          <div class="stat-meta" id="statAIMeta"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#f0fdf4;">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#16a34a" stroke-width="1.7"><circle cx="8" cy="5.5" r="3"/><path d="M2 13.5c0-2.761 2.686-5 6-5s6 2.239 6 5"/></svg>
+          </div>
+          <div class="stat-label">Manual Bookings</div>
+          <div class="stat-value" id="statManual">—</div>
+          <div class="stat-meta" id="statManualMeta"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fff7ed;">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#ea580c" stroke-width="1.7"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.5l2 2"/></svg>
+          </div>
+          <div class="stat-label">Upcoming</div>
+          <div class="stat-value" id="statUpcoming">—</div>
+          <div class="stat-meta"></div>
+        </div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="filter-bar">
+        <div class="tabs" style="margin-bottom:0;border:none;">
+          <button class="tab active" onclick="setFilter('all',this)">All</button>
+          <button class="tab" onclick="setFilter('AI',this)">
+            <span class="source-dot" style="background:#3b82f6;"></span> AI
+          </button>
+          <button class="tab" onclick="setFilter('MANUAL',this)">
+            <span class="source-dot" style="background:#16a34a;"></span> Manual
+          </button>
+          <button class="tab" onclick="setFilter('BLOCKED',this)">
+            <span class="source-dot" style="background:#94a3b8;"></span> Blocked
+          </button>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+          <select class="select" id="statusFilter" style="width:150px;" onchange="applyFilters()">
+            <option value="">All statuses</option>
+            <option value="CONFIRMED">Confirmed</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="PENDING">Pending</option>
+            <option value="CANCELLED">Cancelled</option>
+            <option value="NO_SHOW">No Show</option>
+          </select>
+          <div class="search-wrap" style="width:220px;">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6.5" cy="6.5" r="4"/><path d="M11 11l3 3"/></svg>
+            <input type="text" class="search-input" id="searchInput" placeholder="Search client or service…" oninput="applyFilters()" />
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date &amp; Time</th>
+              <th>Client</th>
+              <th>Service</th>
+              <th>Staff</th>
+              <th>Source</th>
+              <th>Duration</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="bookingsTbody">
+            <tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">Loading bookings…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- NEW BOOKING MODAL -->
+<div class="modal-overlay" id="bookingModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">New Booking</span>
+      <button class="btn-icon" onclick="closeModal()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="validationBanner" style="display:none;margin-bottom:14px;padding:10px 14px;background:var(--red-dim);border:1px solid var(--red-border);border-radius:var(--radius);font-size:13px;color:var(--red);"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date <span style="color:var(--red)">*</span></label>
+          <input type="date" class="input" id="bookDate" onchange="clearValidation()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Time <span style="color:var(--red)">*</span></label>
+          <input type="time" class="input" id="bookTime" value="10:00" onchange="clearValidation()" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Client Name <span style="color:var(--red)">*</span></label>
+          <input type="text" class="input" id="bookClientName" placeholder="Full name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Client Phone</label>
+          <input type="tel" class="input" id="bookClientPhone" placeholder="+44 7700 900000" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Service <span style="color:var(--red)">*</span></label>
+          <select class="select" id="bookService" onchange="clearValidation()">
+            <option value="">Loading services…</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Staff <span style="color:var(--red)">*</span></label>
+          <select class="select" id="bookStaff" onchange="clearValidation()">
+            <option value="">Loading staff…</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Notes</label>
+        <textarea class="textarea" id="bookNotes" placeholder="Optional notes…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="bookBtn" onclick="bookAppointment()">Book Appointment</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+const API    = (location.hostname==='localhost'||location.hostname==='127.0.0.1') ? 'http://localhost:3001' : 'https://medibook-backend-production-dfb2.up.railway.app';
+const TOKEN  = localStorage.getItem('medibook_token');
+const TENANT = localStorage.getItem('medibook_tenant_id');
+const CLINIC = localStorage.getItem('medibook_tenant_name') || 'My Clinic';
+
+if (!TOKEN || !TENANT) location.href = '/pages/login.html';
+
+document.getElementById('userName').textContent = CLINIC;
+document.getElementById('userAv').textContent   = CLINIC.slice(0,2).toUpperCase();
+document.getElementById('signOutBtn').addEventListener('click', e => { e.preventDefault(); localStorage.clear(); location.href='/pages/login.html'; });
+
+async function apiFetch(path) {
+  const r = await fetch(API+path, { headers:{Authorization:`Bearer ${TOKEN}`} });
+  if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.error||`HTTP ${r.status}`); }
+  return r.json();
+}
+async function apiPost(path, body) {
+  const r = await fetch(API+path, { method:'POST', headers:{Authorization:`Bearer ${TOKEN}`,'Content-Type':'application/json'}, body:JSON.stringify(body) });
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(d.error||`HTTP ${r.status}`);
+  return d;
+}
+
+function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let allBookings = [];
+let activeSource = 'all';
+let modalDataLoaded = false;
+
+// ── Source badge ──────────────────────────────────────────────────────────────
+function sourceBadge(b) {
+  if (b.type==='BLOCKED'||b.status==='BLOCKED')
+    return `<span class="badge badge-gray"><span class="source-dot" style="background:#94a3b8;margin-right:4px;"></span>Blocked</span>`;
+  if (b.source==='AI'||b.bookedViaAI)
+    return `<span class="badge badge-blue"><span class="source-dot" style="background:#3b82f6;margin-right:4px;"></span>AI</span>`;
+  return `<span class="badge badge-green"><span class="source-dot" style="background:#16a34a;margin-right:4px;"></span>Manual</span>`;
+}
+
+function statusBadge(s) {
+  return ({
+    'CONFIRMED':  '<span class="badge badge-brand">Confirmed</span>',
+    'COMPLETED':  '<span class="badge badge-green">Completed</span>',
+    'PENDING':    '<span class="badge badge-gold">Pending</span>',
+    'CANCELLED':  '<span class="badge badge-gray">Cancelled</span>',
+    'NO_SHOW':    '<span class="badge badge-orange">No Show</span>',
+    'BLOCKED':    '<span class="badge badge-gray">Blocked</span>',
+  }[s?.toUpperCase()] ?? `<span class="badge badge-gray">${esc(s)}</span>`);
+}
+
+// ── Filters ───────────────────────────────────────────────────────────────────
+function setFilter(source, btn) {
+  activeSource = source;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  const status  = document.getElementById('statusFilter').value;
+  const search  = document.getElementById('searchInput').value.toLowerCase();
+
+  const rows = allBookings.filter(b => {
+    // Source filter
+    if (activeSource !== 'all') {
+      if (activeSource === 'BLOCKED' && b.type !== 'BLOCKED' && b.status !== 'BLOCKED') return false;
+      if (activeSource === 'AI'      && !(b.source === 'AI' || b.bookedViaAI))           return false;
+      if (activeSource === 'MANUAL'  && (b.source === 'AI' || b.bookedViaAI || b.type === 'BLOCKED')) return false;
+    }
+    // Status filter
+    if (status && b.status?.toUpperCase() !== status) return false;
+    // Search filter
+    if (search) {
+      const haystack = `${b.clientName??''} ${b.serviceName??''} ${b.staffName??''}`.toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+    return true;
+  });
+
+  renderTable(rows);
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderTable(bookings) {
+  const tbody = document.getElementById('bookingsTbody');
+  if (!bookings.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No bookings found</div><div class="empty-text">Try adjusting your filters.</div></div></td></tr>`;
+    return;
+  }
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  tbody.innerHTML = bookings.map(b => {
+    const d = new Date(b.startsAt);
+    const t = `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
+    const dateStr = `${days[d.getDay()]} ${d.getDate()} ${d.toLocaleDateString('en-GB',{month:'short'})}, ${t}`;
+    return `<tr class="clickable">
+      <td style="font-variant-numeric:tabular-nums;">${esc(dateStr)}</td>
+      <td><span style="font-weight:600;">${esc(b.clientName??'—')}</span></td>
+      <td>${esc(b.serviceName??'—')}</td>
+      <td>${esc(b.staffName??'—')}</td>
+      <td>${sourceBadge(b)}</td>
+      <td>${b.durationMins??'—'}${b.durationMins?'min':''}</td>
+      <td>${statusBadge(b.status)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderStats(bookings) {
+  const ai      = bookings.filter(b => b.source==='AI'||b.bookedViaAI).length;
+  const manual  = bookings.filter(b => !(b.source==='AI'||b.bookedViaAI) && b.type!=='BLOCKED').length;
+  const upcoming = bookings.filter(b => new Date(b.startsAt) > new Date() && b.status!=='CANCELLED').length;
+  document.getElementById('statTotal').textContent    = bookings.length;
+  document.getElementById('statAI').textContent       = ai;
+  document.getElementById('statManual').textContent   = manual;
+  document.getElementById('statUpcoming').textContent = upcoming;
+  if (bookings.length > 0) {
+    document.getElementById('statAIMeta').innerHTML    = `<span class="stat-up">↑ ${Math.round(ai/bookings.length*100)}%</span> <span style="color:var(--text-muted);">of total</span>`;
+    document.getElementById('statTotalMeta').innerHTML = `<span style="color:var(--text-muted);">${upcoming} upcoming</span>`;
+  }
+}
+
+// ── Load ──────────────────────────────────────────────────────────────────────
+async function loadBookings() {
+  try {
+    const data = await apiFetch(`/api/tenants/${TENANT}/calendar/upcoming?limit=200`);
+    allBookings = data.appointments ?? [];
+    renderStats(allBookings);
+    applyFilters();
+  } catch (err) {
+    document.getElementById('bookingsTbody').innerHTML =
+      `<tr><td colspan="7" style="padding:30px;text-align:center;color:var(--red);">Failed to load: ${esc(err.message)}</td></tr>`;
+  }
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+async function openModal() {
+  document.getElementById('bookingModal').classList.add('open');
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('bookDate').value = today;
+  clearValidation();
+  if (!modalDataLoaded) {
+    try {
+      const {services, staff} = await apiFetch(`/api/tenants/${TENANT}/modal-data`);
+      document.getElementById('bookService').innerHTML = services.length
+        ? services.map(s=>`<option value="${s.id}">${esc(s.name)} (${s.durationMins}min · £${(s.priceCents/100).toFixed(0)})</option>`).join('')
+        : '<option value="">No services configured</option>';
+      document.getElementById('bookStaff').innerHTML = staff.length
+        ? staff.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')
+        : '<option value="">No staff configured</option>';
+      modalDataLoaded = true;
+    } catch { showToast('Could not load services/staff.','⚠️','error'); }
+  }
+}
+
+function closeModal() { document.getElementById('bookingModal').classList.remove('open'); }
+function clearValidation() { document.getElementById('validationBanner').style.display='none'; }
+function showValidation(msg) {
+  const el = document.getElementById('validationBanner');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function bookAppointment() {
+  const clientName  = document.getElementById('bookClientName').value.trim();
+  const clientPhone = document.getElementById('bookClientPhone').value.trim();
+  const serviceId   = document.getElementById('bookService').value;
+  const staffId     = document.getElementById('bookStaff').value;
+  const date        = document.getElementById('bookDate').value;
+  const time        = document.getElementById('bookTime').value;
+  const notes       = document.getElementById('bookNotes').value.trim();
+
+  if (!clientName) { showValidation('Client name is required.'); return; }
+  if (!serviceId)  { showValidation('Please select a service.'); return; }
+  if (!staffId)    { showValidation('Please select a staff member.'); return; }
+  if (!date||!time){ showValidation('Date and time are required.'); return; }
+
+  const btn = document.getElementById('bookBtn');
+  btn.disabled = true; btn.textContent = 'Checking availability…';
+
+  try {
+    // BookingEngine validates: staff availability, working hours, conflicts, notice period
+    await apiPost(`/api/tenants/${TENANT}/appointments`, {
+      clientName, clientPhone, serviceId, staffId, date, time, notes,
+      source: 'MANUAL',
+    });
+    closeModal();
+    showToast('Booking confirmed!','📅','success');
+    ['bookClientName','bookClientPhone','bookNotes'].forEach(id => { document.getElementById(id).value=''; });
+    loadBookings();
+  } catch (err) {
+    // Show BookingEngine validation errors inline
+    showValidation(err.message || 'Could not create booking — slot may be unavailable.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Book Appointment';
+  }
+}
+
+document.getElementById('bookingModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, icon='✅', type='') {
+  const wrap = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-content"><div class="toast-title">${esc(msg)}</div></div>`;
+  wrap.appendChild(t);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));
+  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),350); }, 3500);
+}
+
+loadBookings();
+</script>
+</body>
+</html>
