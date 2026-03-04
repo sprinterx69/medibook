@@ -548,12 +548,6 @@ export async function handleStripeWebhook(rawBody, signature) {
         data:  { status: 'PAST_DUE' },
       });
 
-      // Pause clinic — access suspended until payment resolves
-      await prisma.tenant.update({
-        where: { id: tenantId },
-        data:  { clinicStatus: 'paused' },
-      });
-
       const tenant = await prisma.tenant.findFirst({
         where: { OR: [{ stripeCustomerId: String(invoice.customer) }, { stripeSubscriptionId: invoice.subscription }] },
       });

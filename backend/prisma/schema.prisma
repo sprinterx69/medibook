@@ -44,13 +44,6 @@ model Tenant {
   bookingEngineLogs BookingEngineLog[]
   brandVoice        BrandVoice?
 
-  // Relations (new)
-  onboardingToken   OnboardingToken?
-  consultationRule  ConsultationRule?
-  blackoutDates     BlackoutDate[]
-  bookingEngineLogs BookingEngineLog[]
-  brandVoice        BrandVoice?
-
   @@map("tenants")
 }
 
