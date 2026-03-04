@@ -52,11 +52,23 @@ const server = Fastify({
 await server.register(websocketPlugin);
 await server.register(formbodyPlugin);
 
-// CORS — allow requests from the frontend (app.medibook.io or localhost during dev)
+// CORS — allow requests from the frontend
+const ALLOWED_ORIGINS = [
+  'https://callora.me',
+  'https://www.callora.me',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3001',
+];
+if (process.env.FRONTEND_URL) ALLOWED_ORIGINS.push(process.env.FRONTEND_URL);
+
 await server.register(corsPlugin, {
-  origin: process.env.FRONTEND_URL
-    ? [process.env.FRONTEND_URL, 'http://localhost:3000', 'http://127.0.0.1:3000']
-    : true,
+  origin: (origin, cb) => {
+    // Allow requests with no origin (server-to-server, curl, etc.)
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    cb(new Error(`CORS: origin ${origin} not allowed`), false);
+  },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   credentials: true,
 });
