@@ -406,7 +406,7 @@
     </button>
     <button class="nav-item" data-view="clinics" onclick="switchView('clinics', this)">
       <span class="nav-icon">🏥</span> Clinics
-      <span class="nav-badge">48</span>
+      <span class="nav-badge" id="nav-badge-clinics"></span>
     </button>
     <button class="nav-item" data-view="revenue" onclick="switchView('revenue', this)">
       <span class="nav-icon">💷</span> Revenue
@@ -417,14 +417,12 @@
     <div class="sidebar-section-label">Operations</div>
     <button class="nav-item" data-view="alerts" onclick="switchView('alerts', this)">
       <span class="nav-icon">🔔</span> Alerts
-      <span class="nav-badge warn">3</span>
     </button>
     <button class="nav-item" data-view="voice" onclick="switchView('voice', this)">
       <span class="nav-icon">📞</span> Voice Health
     </button>
     <button class="nav-item" data-view="trials" onclick="switchView('trials', this)">
       <span class="nav-icon">🧪</span> Trials
-      <span class="nav-badge">12</span>
     </button>
   </div>
 
@@ -446,6 +444,7 @@
         <div class="admin-role">⬤ Platform Access</div>
       </div>
     </div>
+    <a href="#" id="signOutBtn" style="display:block;text-align:center;font-size:12px;color:var(--muted);text-decoration:none;padding:6px 0;margin-top:4px;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--muted)'">Sign out</a>
   </div>
 </aside>
 
@@ -466,33 +465,33 @@
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-label">Active Clinics</div>
-          <div class="stat-value" style="color:var(--brand)">48</div>
-          <div class="stat-change up">↑ 4 this month</div>
+          <div class="stat-value" style="color:var(--brand)" id="stat-live">—</div>
+          <div class="stat-change neutral" id="stat-live-sub">Loading…</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Monthly Revenue</div>
-          <div class="stat-value">£18,240</div>
-          <div class="stat-change up">↑ 12% vs last month</div>
+          <div class="stat-value" id="stat-mrr">—</div>
+          <div class="stat-change neutral" id="stat-mrr-sub">Loading…</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">AI Calls Today</div>
-          <div class="stat-value">1,847</div>
-          <div class="stat-change up">↑ 231 vs yesterday</div>
+          <div class="stat-value" id="stat-calls">—</div>
+          <div class="stat-change neutral" id="stat-calls-sub">Loading…</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Bookings Captured</div>
-          <div class="stat-value">423</div>
-          <div class="stat-change neutral">22.9% conversion</div>
+          <div class="stat-value" id="stat-bookings">—</div>
+          <div class="stat-change neutral" id="stat-bookings-sub">Loading…</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Active Trials</div>
-          <div class="stat-value" style="color:var(--warning)">12</div>
-          <div class="stat-change neutral">3 expire this week</div>
+          <div class="stat-label">Total Clinics</div>
+          <div class="stat-value" style="color:var(--warning)" id="stat-total">—</div>
+          <div class="stat-change neutral" id="stat-total-sub">Loading…</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Avg Handle Time</div>
-          <div class="stat-value">2m 14s</div>
-          <div class="stat-change down">↑ 18s vs last week</div>
+          <div class="stat-label">Onboarding</div>
+          <div class="stat-value" id="stat-onboarding">—</div>
+          <div class="stat-change neutral">in setup</div>
         </div>
       </div>
 
@@ -581,43 +580,9 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Clinic</th><th>Plan</th><th>Monthly</th><th>Calls</th><th>Conversion</th><th>Status</th></tr></thead>
-            <tbody>
-              <tr>
-                <td><strong>Harley Street Aesthetics</strong><br><span style="color:var(--muted);font-size:11px">London, W1G</span></td>
-                <td><span class="badge badge-teal">Enterprise</span></td>
-                <td><strong>£349</strong></td><td>3,241</td>
-                <td><span style="color:var(--success);font-weight:600">31.4%</span></td>
-                <td><span class="badge badge-green">⬤ Live</span></td>
-              </tr>
-              <tr>
-                <td><strong>City Dental Group</strong><br><span style="color:var(--muted);font-size:11px">Manchester</span></td>
-                <td><span class="badge badge-blue">Growth</span></td>
-                <td><strong>£129</strong></td><td>2,187</td>
-                <td><span style="color:var(--success);font-weight:600">28.1%</span></td>
-                <td><span class="badge badge-green">⬤ Live</span></td>
-              </tr>
-              <tr>
-                <td><strong>Bloom Physio Clinic</strong><br><span style="color:var(--muted);font-size:11px">Bristol</span></td>
-                <td><span class="badge badge-blue">Growth</span></td>
-                <td><strong>£129</strong></td><td>1,854</td>
-                <td><span style="color:var(--success);font-weight:600">24.6%</span></td>
-                <td><span class="badge badge-green">⬤ Live</span></td>
-              </tr>
-              <tr>
-                <td><strong>Mindwell Psychology</strong><br><span style="color:var(--muted);font-size:11px">Edinburgh</span></td>
-                <td><span class="badge badge-gray">Starter</span></td>
-                <td><strong>£49</strong></td><td>892</td>
-                <td><span style="color:var(--warning);font-weight:600">18.2%</span></td>
-                <td><span class="badge badge-green">⬤ Live</span></td>
-              </tr>
-              <tr>
-                <td><strong>Peak Performance Sports</strong><br><span style="color:var(--muted);font-size:11px">Leeds</span></td>
-                <td><span class="badge badge-yellow">Trial</span></td>
-                <td><strong>—</strong></td><td>234</td>
-                <td><span style="color:var(--muted);font-weight:600">12.4%</span></td>
-                <td><span class="badge badge-yellow">Trial (0d left)</span></td>
-              </tr>
+            <thead><tr><th>Clinic</th><th>Plan</th><th>Owner</th><th>Since</th><th>Status</th><th></th></tr></thead>
+            <tbody id="overview-clinics-tbody">
+              <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -654,97 +619,41 @@
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-label">MRR</div>
-          <div class="stat-value">£18,240</div>
-          <div class="stat-change up">↑ £1,620 vs Jan</div>
+          <div class="stat-value" id="stat-rev-mrr">—</div>
+          <div class="stat-change neutral" id="stat-rev-mrr-sub">Loading…</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">ARR (projected)</div>
-          <div class="stat-value">£218,880</div>
-          <div class="stat-change up">↑ 18% YoY</div>
+          <div class="stat-value" id="stat-rev-arr">—</div>
+          <div class="stat-change neutral">MRR × 12</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Avg Revenue / Clinic</div>
-          <div class="stat-value">£380</div>
-          <div class="stat-change up">↑ £24 vs Jan</div>
+          <div class="stat-value" id="stat-rev-avg">—</div>
+          <div class="stat-change neutral">Loading…</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Churn Rate</div>
-          <div class="stat-value" style="color:var(--success)">1.2%</div>
-          <div class="stat-change up">↓ 0.3% improvement</div>
+          <div class="stat-value" style="color:var(--muted)">—</div>
+          <div class="stat-change neutral">Not yet tracked</div>
         </div>
       </div>
 
       <div class="two-col" style="margin-bottom:16px">
         <div class="card">
           <div class="card-header"><span class="card-title">Revenue by Plan</span></div>
-          <div class="card-body">
-            <div style="margin-bottom:16px">
-              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
-                <span>Enterprise (6 clinics)</span><span style="font-weight:700">£2,094</span>
-              </div>
-              <div class="progress"><div class="progress-fill" style="width:65%"></div></div>
-            </div>
-            <div style="margin-bottom:16px">
-              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
-                <span>Growth (24 clinics)</span><span style="font-weight:700">£3,096</span>
-              </div>
-              <div class="progress"><div class="progress-fill" style="width:45%"></div></div>
-            </div>
-            <div>
-              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
-                <span>Starter (18 clinics)</span><span style="font-weight:700">£882</span>
-              </div>
-              <div class="progress"><div class="progress-fill" style="width:20%"></div></div>
+          <div class="card-body" id="rev-by-plan-body">
+            <div style="text-align:center;padding:32px 0;color:var(--muted);font-size:13px">
+              Revenue breakdown will appear here once Stripe billing is connected.
             </div>
           </div>
         </div>
 
         <div class="card">
-          <div class="card-header"><span class="card-title">MRR Growth (6 months)</span></div>
+          <div class="card-header"><span class="card-title">MRR Growth</span></div>
           <div class="card-body">
-            <div class="mini-bars" style="height:100px;gap:8px;align-items:flex-end">
-              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
-                <span style="font-size:10px;color:var(--muted)">£12.4k</span>
-                <div style="flex:1;width:100%;display:flex;align-items:flex-end">
-                  <div class="mini-bar" style="height:68%;width:100%"></div>
-                </div>
-                <span style="font-size:10px;color:var(--muted)">Sep</span>
-              </div>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
-                <span style="font-size:10px;color:var(--muted)">£13.8k</span>
-                <div style="flex:1;width:100%;display:flex;align-items:flex-end">
-                  <div class="mini-bar" style="height:76%;width:100%"></div>
-                </div>
-                <span style="font-size:10px;color:var(--muted)">Oct</span>
-              </div>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
-                <span style="font-size:10px;color:var(--muted)">£14.9k</span>
-                <div style="flex:1;width:100%;display:flex;align-items:flex-end">
-                  <div class="mini-bar" style="height:82%;width:100%"></div>
-                </div>
-                <span style="font-size:10px;color:var(--muted)">Nov</span>
-              </div>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
-                <span style="font-size:10px;color:var(--muted)">£15.7k</span>
-                <div style="flex:1;width:100%;display:flex;align-items:flex-end">
-                  <div class="mini-bar" style="height:86%;width:100%"></div>
-                </div>
-                <span style="font-size:10px;color:var(--muted)">Dec</span>
-              </div>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
-                <span style="font-size:10px;color:var(--muted)">£16.6k</span>
-                <div style="flex:1;width:100%;display:flex;align-items:flex-end">
-                  <div class="mini-bar" style="height:91%;width:100%"></div>
-                </div>
-                <span style="font-size:10px;color:var(--muted)">Jan</span>
-              </div>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
-                <span style="font-size:10px;color:var(--muted)">£18.2k</span>
-                <div style="flex:1;width:100%;display:flex;align-items:flex-end">
-                  <div class="mini-bar today" style="height:100%;width:100%"></div>
-                </div>
-                <span style="font-size:10px;color:var(--brand);font-weight:600">Feb</span>
-              </div>
+            <div style="text-align:center;padding:32px 0;color:var(--muted);font-size:13px">
+              Growth chart will appear once monthly billing data is available.
             </div>
           </div>
         </div>
@@ -756,11 +665,7 @@
           <table>
             <thead><tr><th>Clinic</th><th>Type</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
             <tbody>
-              <tr><td>Harley Street Aesthetics</td><td>Monthly renewal</td><td><strong>£349</strong></td><td>1 Feb 2026</td><td><span class="badge badge-green">Paid</span></td></tr>
-              <tr><td>City Dental Group</td><td>Monthly renewal</td><td><strong>£129</strong></td><td>1 Feb 2026</td><td><span class="badge badge-green">Paid</span></td></tr>
-              <tr><td>Bloom Physio Clinic</td><td>Plan upgrade</td><td><strong>£80</strong></td><td>14 Feb 2026</td><td><span class="badge badge-green">Paid</span></td></tr>
-              <tr><td>Apex Dermatology</td><td>Monthly renewal</td><td><strong>£49</strong></td><td>18 Feb 2026</td><td><span class="badge badge-yellow">Pending</span></td></tr>
-              <tr><td>Northside Physio</td><td>Monthly renewal</td><td><strong>£129</strong></td><td>20 Feb 2026</td><td><span class="badge badge-red">Failed</span></td></tr>
+              <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Transaction history will appear once Stripe webhooks are active.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1104,6 +1009,18 @@
 </div>
 
 <script>
+  // ── Auth guard ──────────────────────────────────────────────
+  const API   = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+                  ? 'http://localhost:3001'
+                  : 'https://medibook-backend-production-dfb2.up.railway.app';
+  const TOKEN = localStorage.getItem('medibook_token');
+  const ROLE  = localStorage.getItem('medibook_platform_role');
+
+  if (!TOKEN || ROLE !== 'SUPERADMIN') {
+    location.href = '/pages/login.html';
+  }
+
+  // ── View navigation ─────────────────────────────────────────
   const VIEW_TITLES = {
     overview: 'Platform Overview',
     clinics: 'Clinic Management',
@@ -1127,53 +1044,136 @@
 
   function openModal(id) { document.getElementById(id).classList.add('open'); }
   function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-  function refreshData() { document.getElementById('topbar-meta').textContent = 'Last updated: just now'; }
+  function refreshData() { loadOverview(); loadClinics(); document.getElementById('topbar-meta').textContent = 'Last updated: just now'; }
 
-  const CLINICS = [
-    { name: 'Harley Street Aesthetics', city: 'London, W1G', plan: 'Enterprise', since: 'Jan 2025', calls: 3241, mrr: 349, agent: 'Live', status: 'Live' },
-    { name: 'City Dental Group', city: 'Manchester', plan: 'Growth', since: 'Mar 2025', calls: 2187, mrr: 129, agent: 'Live', status: 'Live' },
-    { name: 'Bloom Physio Clinic', city: 'Bristol', plan: 'Growth', since: 'Apr 2025', calls: 1854, mrr: 129, agent: 'Live', status: 'Live' },
-    { name: 'Mindwell Psychology', city: 'Edinburgh', plan: 'Starter', since: 'Jun 2025', calls: 892, mrr: 49, agent: 'Live', status: 'Live' },
-    { name: 'Apex Dermatology', city: 'London, EC2', plan: 'Growth', since: 'Aug 2025', calls: 621, mrr: 129, agent: 'Live', status: 'Live' },
-    { name: 'Sunrise Wellness', city: 'Leeds', plan: 'Starter', since: 'Sep 2025', calls: 0, mrr: 49, agent: 'Paused', status: 'Paused' },
-    { name: 'Northside Physio', city: 'Newcastle', plan: 'Growth', since: 'Oct 2025', calls: 412, mrr: 129, agent: 'Live', status: 'Live' },
-    { name: 'Metro Physio', city: 'Birmingham', plan: 'Starter', since: 'Nov 2025', calls: 288, mrr: 49, agent: 'Live', status: 'Live' },
-    { name: 'Peak Performance Sports', city: 'Leeds', plan: 'Trial', since: '8 Feb 2026', calls: 234, mrr: 0, agent: 'Live', status: 'Trial' },
-    { name: 'Westside Dermatology', city: 'Glasgow', plan: 'Trial', since: '10 Feb 2026', calls: 189, mrr: 0, agent: 'Live', status: 'Trial' },
-    { name: 'Urban Osteopathy', city: 'Birmingham', plan: 'Trial', since: '12 Feb 2026', calls: 156, mrr: 0, agent: 'Live', status: 'Trial' },
-    { name: 'Fresh Start Nutrition', city: 'Nottingham', plan: 'Trial', since: '17 Feb 2026', calls: 67, mrr: 0, agent: 'Live', status: 'Trial' },
-  ];
+  // ── API helper ───────────────────────────────────────────────
+  async function adminFetch(path) {
+    const res = await fetch(API + path, { headers: { Authorization: `Bearer ${TOKEN}` } });
+    if (res.status === 401 || res.status === 403) {
+      localStorage.clear();
+      location.href = '/pages/login.html';
+      return null;
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }
+
+  // ── Overview stats ───────────────────────────────────────────
+  async function loadOverview() {
+    try {
+      const data = await adminFetch('/api/admin/overview');
+      if (!data) return;
+
+      document.getElementById('stat-live').textContent      = data.liveClinics ?? '—';
+      document.getElementById('stat-live-sub').textContent  = 'active clinics';
+      document.getElementById('stat-mrr').textContent       = data.mrr ? `£${data.mrr.toLocaleString()}` : '—';
+      document.getElementById('stat-mrr-sub').textContent   = 'this month';
+      document.getElementById('stat-calls').textContent     = data.callsToday ?? '—';
+      document.getElementById('stat-calls-sub').textContent = 'today';
+      document.getElementById('stat-bookings').textContent  = data.bookingsToday ?? '—';
+      document.getElementById('stat-bookings-sub').textContent = 'today';
+      document.getElementById('stat-total').textContent     = data.totalClinics ?? '—';
+      document.getElementById('stat-total-sub').textContent = 'all time';
+      const onboarding = data.statusCounts?.ONBOARDING ?? data.statusCounts?.Trial ?? 0;
+      document.getElementById('stat-onboarding').textContent = onboarding;
+
+      // Revenue view
+      if (data.mrr) {
+        document.getElementById('stat-rev-mrr').textContent  = `£${data.mrr.toLocaleString()}`;
+        document.getElementById('stat-rev-mrr-sub').textContent = 'this month';
+        document.getElementById('stat-rev-arr').textContent  = `£${(data.mrr * 12).toLocaleString()}`;
+        if (data.totalClinics) {
+          document.getElementById('stat-rev-avg').textContent = `£${Math.round(data.mrr / data.totalClinics).toLocaleString()}`;
+        }
+      }
+    } catch (e) {
+      console.error('Overview load failed', e);
+    }
+  }
+
+  // ── Clinics ──────────────────────────────────────────────────
+  let CLINICS = [];
 
   function planBadge(plan) {
     const map = { Enterprise: 'badge-teal', Growth: 'badge-blue', Starter: 'badge-gray', Trial: 'badge-yellow' };
     return map[plan] || 'badge-gray';
   }
 
-  function renderClinics(data = CLINICS) {
+  function renderClinics(data) {
     const tbody = document.getElementById('clinic-tbody');
     if (!tbody) return;
-    tbody.innerHTML = data.map(c => `
-      <tr>
-        <td><strong>${c.name}</strong><br><span style="color:var(--muted);font-size:11px">${c.city}</span></td>
-        <td><span class="badge ${planBadge(c.plan)}">${c.plan}</span></td>
-        <td>${c.since}</td>
-        <td>${c.calls.toLocaleString()}</td>
-        <td>${c.mrr ? '<strong>£' + c.mrr + '</strong>' : '—'}</td>
-        <td>${c.agent === 'Live' ? '<span class="badge badge-green">⬤ Live</span>' : '<span class="badge badge-yellow">Paused</span>'}</td>
-        <td>${c.status === 'Trial' ? '<span class="badge badge-yellow">Trial</span>' : c.status === 'Paused' ? '<span class="badge badge-red">Paused</span>' : '<span class="badge badge-green">Active</span>'}</td>
-        <td><button class="btn btn-outline btn-sm">View</button></td>
-      </tr>
-    `).join('');
+    if (!data.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">No clinics found</td></tr>';
+    } else {
+      tbody.innerHTML = data.map(c => {
+        const since = c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : '—';
+        const isLive = c.isActive && c.clinicStatus !== 'PAUSED';
+        const statusBadge = c.clinicStatus === 'TRIAL' ? '<span class="badge badge-yellow">Trial</span>'
+                          : (!c.isActive || c.clinicStatus === 'PAUSED') ? '<span class="badge badge-red">Paused</span>'
+                          : '<span class="badge badge-green">Active</span>';
+        return `<tr>
+          <td><strong>${c.name}</strong><br><span style="color:var(--muted);font-size:11px">${c.slug ?? ''}</span></td>
+          <td><span class="badge ${planBadge(c.plan)}">${c.plan ?? '—'}</span></td>
+          <td>${since}</td>
+          <td>—</td>
+          <td>—</td>
+          <td>${isLive ? '<span class="badge badge-green">⬤ Live</span>' : '<span class="badge badge-yellow">Paused</span>'}</td>
+          <td>${statusBadge}</td>
+          <td><button class="btn btn-outline btn-sm">View</button></td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Populate overview top-clinics table
+    const ovTbody = document.getElementById('overview-clinics-tbody');
+    if (ovTbody) {
+      const top = CLINICS.slice(0, 5);
+      if (!top.length) {
+        ovTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">No clinics yet</td></tr>';
+      } else {
+        ovTbody.innerHTML = top.map(c => {
+          const since = c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : '—';
+          const contact = c.users?.[0]?.email ?? '—';
+          const statusBadge = c.clinicStatus === 'TRIAL' ? '<span class="badge badge-yellow">Trial</span>'
+                            : (!c.isActive || c.clinicStatus === 'PAUSED') ? '<span class="badge badge-red">Paused</span>'
+                            : '<span class="badge badge-green">Active</span>';
+          return `<tr>
+            <td><strong>${c.name}</strong></td>
+            <td><span class="badge ${planBadge(c.plan)}">${c.plan ?? '—'}</span></td>
+            <td>${contact}</td>
+            <td>${since}</td>
+            <td>${statusBadge}</td>
+            <td><button class="btn btn-outline btn-sm" onclick="switchView('clinics',document.querySelector('[data-view=clinics]'))">View</button></td>
+          </tr>`;
+        }).join('');
+      }
+    }
+  }
+
+  async function loadClinics() {
+    try {
+      const data = await adminFetch('/api/admin/clinics');
+      if (!data) return;
+      CLINICS = data.clinics ?? [];
+      const badge = document.getElementById('nav-badge-clinics');
+      if (badge) badge.textContent = CLINICS.length || '';
+      renderClinics(CLINICS);
+    } catch (e) {
+      console.error('Clinics load failed', e);
+      const tbody = document.getElementById('clinic-tbody');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">Failed to load clinics</td></tr>';
+    }
   }
 
   function filterClinics() {
-    const q = document.getElementById('clinic-search').value.toLowerCase();
-    const plan = document.getElementById('clinic-plan-filter').value;
+    const q      = document.getElementById('clinic-search').value.toLowerCase();
+    const plan   = document.getElementById('clinic-plan-filter').value;
     const status = document.getElementById('clinic-status-filter').value;
     renderClinics(CLINICS.filter(c => {
-      const matchQ = !q || c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q);
-      const matchPlan = !plan || c.plan === plan;
-      const matchStatus = !status || c.status === status;
+      const matchQ      = !q || (c.name ?? '').toLowerCase().includes(q) || (c.slug ?? '').toLowerCase().includes(q);
+      const matchPlan   = !plan || c.plan === plan;
+      const matchStatus = !status || c.clinicStatus === status.toUpperCase()
+                        || (status === 'Live' && c.isActive && c.clinicStatus !== 'PAUSED');
       return matchQ && matchPlan && matchStatus;
     }));
   }
@@ -1188,7 +1188,13 @@
     if (hash && document.getElementById('view-' + hash)) {
       switchView(hash, document.querySelector('[data-view="' + hash + '"]'));
     }
-    renderClinics();
+    document.getElementById('signOutBtn').addEventListener('click', e => {
+      e.preventDefault();
+      localStorage.clear();
+      location.href = '/pages/login.html';
+    });
+    loadOverview();
+    loadClinics();
   });
 </script>
 
