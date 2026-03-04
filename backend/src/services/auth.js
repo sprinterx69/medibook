@@ -262,30 +262,6 @@ export async function loginUser({ email, password }) {
     );
   }
 
-  // Paused accounts can still log in so they can update billing
-  // (clinicStatus checked per-route via requireOnboardingComplete guard)
-
-  const clinicStatus = user.tenant.clinicStatus;
-  let redirect = null;
-
-  // Auto-regenerate onboarding token so user is never blocked
-  if (clinicStatus === 'onboarding_required') {
-    let tokenRecord = await prisma.onboardingToken.findFirst({
-      where: { tenantId: user.tenantId, usedAt: null, expiresAt: { gt: new Date() } },
-      select: { token: true },
-    });
-    if (!tokenRecord) {
-      const newToken = crypto.randomBytes(32).toString('hex');
-      tokenRecord = await prisma.onboardingToken.upsert({
-        where:  { tenantId: user.tenantId },
-        create: { tenantId: user.tenantId, token: newToken, expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000) },
-        update: { token: newToken, expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000), usedAt: null },
-        select: { token: true },
-      });
-    }
-    redirect = `/app/onboarding.html?token=${tokenRecord.token}`;
-  }
-
   const clinicStatus    = user.tenant.clinicStatus ?? 'live';
   const platformRole    = user.platformRole ?? 'CLINIC';
 
