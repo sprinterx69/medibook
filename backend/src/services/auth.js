@@ -286,6 +286,53 @@ export async function loginUser({ email, password }) {
     redirect = `/app/onboarding.html?token=${tokenRecord.token}`;
   }
 
+  const clinicStatus    = user.tenant.clinicStatus ?? 'live';
+  const platformRole    = user.platformRole ?? 'CLINIC';
+
+  // ── Determine redirect based on clinicStatus ────────────────────────────────
+  // SUPERADMIN is never redirected by clinic status
+  let redirect = null;
+
+  if (platformRole !== 'SUPERADMIN') {
+    if (clinicStatus === 'onboarding_required') {
+      // Auto-regenerate token if expired or missing — user must never be blocked
+      let tokenRecord = await prisma.onboardingToken.findFirst({
+        where: {
+          tenantId:  user.tenantId,
+          usedAt:    null,
+          expiresAt: { gt: new Date() },
+        },
+        select: { token: true },
+      });
+
+      if (!tokenRecord) {
+        const newToken = crypto.randomBytes(32).toString('hex');
+        tokenRecord = await prisma.onboardingToken.upsert({
+          where:  { tenantId: user.tenantId },
+          create: {
+            tenantId:  user.tenantId,
+            token:     newToken,
+            expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000),
+          },
+          update: {
+            token:     newToken,
+            expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000),
+            usedAt:    null,
+          },
+        });
+      }
+
+      redirect = `/app/onboarding.html?token=${tokenRecord.token}`;
+
+    } else if (clinicStatus === 'onboarding_submitted' || clinicStatus === 'setup_in_progress') {
+      redirect = '/app/dashboard.html?status=pending_setup';
+
+    } else if (clinicStatus === 'paused') {
+      redirect = '/app/dashboard.html?status=paused';
+    }
+    // 'live' and 'testing' → no redirect
+  }
+
   return {
     userId:       user.id,
     tenantId:     user.tenantId,

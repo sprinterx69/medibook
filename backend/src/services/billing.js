@@ -3,14 +3,15 @@
 // MediBook — Complete Stripe Subscription & Billing Backend
 //
 // Covers:
-//   POST /billing/checkout          — Create Stripe Checkout Session (trial start)
-//   POST /billing/portal            — Create Billing Portal Session (manage plan)
-//   POST /billing/webhooks          — Handle all Stripe lifecycle events
-//   GET  /billing/subscription      — Get current subscription status
-//   POST /billing/cancel            — Cancel at period end
-//   POST /billing/reactivate        — Undo cancellation
-//   GET  /billing/invoices          — List past invoices
-//   POST /billing/upgrade           — Upgrade/downgrade plan immediately
+//   POST /billing/checkout                   — Create Stripe Checkout Session (legacy / tenant-first)
+//   POST /api/admin/clinics/initiate         — Create checkout for admin-initiated Stripe-first flow
+//   POST /billing/portal                     — Create Billing Portal Session (manage plan)
+//   POST /billing/webhooks                   — Handle all Stripe lifecycle events
+//   GET  /billing/subscription               — Get current subscription status
+//   POST /billing/cancel                     — Cancel at period end
+//   POST /billing/reactivate                 — Undo cancellation
+//   GET  /billing/invoices                   — List past invoices
+//   POST /billing/upgrade                    — Upgrade/downgrade plan immediately
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Stripe from 'stripe';
@@ -466,12 +467,13 @@ export async function handleStripeWebhook(rawBody, signature) {
     }
 
     // ── Subscription Deleted / Expired ───────────────────────────────────────
+    // Sets clinicStatus = 'paused'. Does NOT delete tenant, users, or data.
     case 'customer.subscription.deleted': {
       const stripeSub = event.data.object;
 
       await prisma.subscription.updateMany({
         where: { stripeSubscriptionId: stripeSub.id },
-        data: { status: 'CANCELLED' },
+        data:  { status: 'CANCELLED' },
       });
 
       // Find tenant by stripeCustomerId or stripeSubscriptionId
@@ -536,13 +538,20 @@ export async function handleStripeWebhook(rawBody, signature) {
     }
 
     // ── Payment Failed ────────────────────────────────────────────────────────
+    // Pauses clinic access until payment is resolved.
     case 'invoice.payment_failed': {
       const invoice = event.data.object;
       if (!invoice.subscription) break;
 
       await prisma.subscription.updateMany({
         where: { stripeSubscriptionId: invoice.subscription },
-        data: { status: 'PAST_DUE' },
+        data:  { status: 'PAST_DUE' },
+      });
+
+      // Pause clinic — access suspended until payment resolves
+      await prisma.tenant.update({
+        where: { id: tenantId },
+        data:  { clinicStatus: 'paused' },
       });
 
       const tenant = await prisma.tenant.findFirst({
@@ -571,6 +580,27 @@ export async function handleStripeWebhook(rawBody, signature) {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+// Transaction-aware version for use inside prisma.$transaction
+async function upsertSubscriptionTx(tx, tenantId, stripeSub, planKey) {
+  const statusMap = {
+    active: 'ACTIVE', trialing: 'TRIALING', past_due: 'PAST_DUE',
+    canceled: 'CANCELLED', incomplete: 'PAST_DUE',
+  };
+  const data = {
+    tenantId,
+    stripeSubscriptionId: stripeSub.id,
+    stripePriceId:        stripeSub.items.data[0]?.price.id ?? '',
+    status:               statusMap[stripeSub.status] ?? 'ACTIVE',
+    currentPeriodEnd:     new Date(stripeSub.current_period_end * 1000),
+    cancelAtPeriodEnd:    stripeSub.cancel_at_period_end,
+  };
+  await tx.subscription.upsert({
+    where:  { stripeSubscriptionId: stripeSub.id },
+    create: data,
+    update: data,
+  });
+}
 
 async function upsertSubscription(tenantId, stripeSub, planKey) {
   const statusMap = {

@@ -70,8 +70,12 @@ export default async function appointmentRoutes(fastify) {
       try {
         appointment = await BookingEngine.createAppointment(tenantId, request.body, 'manual');
       } catch (err) {
-        const status = err.code === 404 ? 404 : (err.code || 400);
-        return reply.code(status).send({ error: err.message });
+        const status = err.statusCode ?? (err.code === 404 ? 404 : (err.code || 400));
+        return reply.code(status).send({
+          error:  err.message,
+          code:   err.code ?? null,
+          errors: err.errors ?? undefined,
+        });
       }
 
       // Fire-and-forget activity log

@@ -161,6 +161,7 @@ export async function completeOnboarding(tenantId, data) {
   const normalizedHours = _normalizeBusinessHours(data.businessHours);
 
   // Build template system prompt immediately (always works, no API key needed)
+  // businessType is hardcoded to 'Med Spa' — no industry selector
   const templatePrompt = _buildTemplatePrompt({
     clinicName, agentName,
     businessType:   data.businessType ?? 'Med Spa',

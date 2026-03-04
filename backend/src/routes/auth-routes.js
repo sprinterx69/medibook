@@ -53,7 +53,14 @@ export default async function authRoutes(fastify) {
 
       // Issue a 7-day JWT containing the essentials
       const token = fastify.jwt.sign(
-        { userId: result.userId, tenantId: result.tenantId, email: result.email, role: 'OWNER' },
+        {
+          userId:       result.userId,
+          tenantId:     result.tenantId,
+          email:        result.email,
+          role:         'OWNER',
+          platformRole: 'CLINIC',
+          clinicStatus: 'live',
+        },
         { expiresIn: '7d' }
       );
 
@@ -95,6 +102,7 @@ export default async function authRoutes(fastify) {
         },
         { expiresIn: '7d' }
       );
+      // redirect is optional — present only for onboarding_required / paused clinics
       return { ...user, token };
     } catch (err) {
       return reply.status(err.statusCode ?? 500).send({ error: err.message, code: err.code ?? null });

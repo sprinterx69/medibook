@@ -44,6 +44,13 @@ model Tenant {
   bookingEngineLogs BookingEngineLog[]
   brandVoice        BrandVoice?
 
+  // Relations (new)
+  onboardingToken   OnboardingToken?
+  consultationRule  ConsultationRule?
+  blackoutDates     BlackoutDate[]
+  bookingEngineLogs BookingEngineLog[]
+  brandVoice        BrandVoice?
+
   @@map("tenants")
 }
 
@@ -85,7 +92,8 @@ enum UserRole {
 
 // ─── PENDING REGISTRATIONS ────────────────────────────────────────────────────
 // Holds signup state between form submission and email verification.
-// Deleted once the account is fully created.
+// Also used for admin-initiated Stripe-first clinic creation flow.
+// status: "awaiting_email_verify" | "awaiting_payment" | "processed"
 model PendingRegistration {
   id           String   @id @default(uuid())
   planKey      String   @db.VarChar(20)
@@ -98,6 +106,7 @@ model PendingRegistration {
   passwordHash String   @db.VarChar(255)
   verifyCode   String   @db.VarChar(6)
   verifyExpiry DateTime
+  status       String   @default("awaiting_email_verify")  // awaiting_email_verify | awaiting_payment | processed
   createdAt    DateTime @default(now())
 
   @@map("pending_registrations")
