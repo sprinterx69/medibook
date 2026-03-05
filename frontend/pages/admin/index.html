@@ -608,7 +608,7 @@
         <input type="text" class="search-input" placeholder="Search clinics by name, city, or plan…" id="clinic-search" oninput="filterClinics()" />
         <select class="filter-select" id="clinic-plan-filter" onchange="filterClinics()">
           <option value="">All Plans</option>
-          <option>Starter</option><option>Growth</option><option>Enterprise</option><option>Trial</option>
+          <option>Professional</option>
         </select>
         <select class="filter-select" id="clinic-status-filter" onchange="filterClinics()">
           <option value="">All Status</option>
@@ -994,8 +994,7 @@
         <div class="form-group">
           <label class="form-label">Plan</label>
           <select id="clinic-plan" class="form-input">
-            <option value="starter">Starter — £49/mo (30-day trial)</option>
-            <option value="pro">Pro — £129/mo (30-day trial)</option>
+            <option value="professional">Professional — £199/mo (30-day trial)</option>
           </select>
         </div>
         <div class="form-group">
@@ -1146,7 +1145,7 @@
   let CLINICS = [];
 
   function planBadge(plan) {
-    const map = { Enterprise: 'badge-teal', Growth: 'badge-blue', Starter: 'badge-gray', Trial: 'badge-yellow' };
+    const map = { Professional: 'badge-teal', Trial: 'badge-yellow' };
     return map[plan] || 'badge-gray';
   }
 
