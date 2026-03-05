@@ -426,7 +426,7 @@ export async function handleStripeWebhook(rawBody, signature) {
             data: {
               tenantId: tenant.id,
               token: onboardingToken,
-              expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000),
+              expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
             },
           });
 
