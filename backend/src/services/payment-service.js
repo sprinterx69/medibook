@@ -5,8 +5,8 @@
 
 import { prisma } from '../config/prisma.js';
 
-function fmtGBP(pence) {
-  return `£${(pence / 100).toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+function fmtUSD(cents) {
+  return `$${(cents / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
 /**
@@ -40,7 +40,7 @@ export async function listPayments(tenantId, { filter = 'all', search = '', limi
       date:        p.createdAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
       client:      p.client.fullName,
       service:     p.appointment?.service?.name ?? 'N/A',
-      amount:      fmtGBP(p.amountCents),
+      amount:      fmtUSD(p.amountCents),
       amountRaw:   p.amountCents,
       type:        p.type === 'FULL_PAYMENT' ? 'Full' : p.type === 'DEPOSIT' ? 'Deposit' : 'Refund',
       status:      p.status.toLowerCase().replace('_', '-'),
@@ -88,12 +88,12 @@ export async function getPaymentStats(tenantId) {
   const avgTransaction = countThisMonth > 0 ? Math.round(revenueThisMonth / countThisMonth) : 0;
 
   return {
-    revenueThisMonth: fmtGBP(revenueThisMonth),
+    revenueThisMonth: fmtUSD(revenueThisMonth),
     revenueChangeVsLast: changeVsLast,
-    outstanding: fmtGBP(totalPending),
+    outstanding: fmtUSD(totalPending),
     outstandingCount: pending.length,
-    avgTransaction: fmtGBP(avgTransaction),
-    refundsThisMonth: fmtGBP(refunds._sum.amountCents ?? 0),
+    avgTransaction: fmtUSD(avgTransaction),
+    refundsThisMonth: fmtUSD(refunds._sum.amountCents ?? 0),
     refundCount: refunds._count,
   };
 }

@@ -93,7 +93,7 @@ export async function listClients(tenantId, { search = '', filter = 'all', sort 
         since:        c.createdAt.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
         lastVisit:    lastAppt ? new Date(lastAppt.startsAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Never',
         visits:       c.appointments.length,
-        lifetimeSpend: `£${(lifetimeSpend / 100).toLocaleString()}`,
+        lifetimeSpend: `$${(lifetimeSpend / 100).toLocaleString()}`,
         lifetimeSpendPence: lifetimeSpend,
         tags:         c.tags,
         isVip:        c.tags.includes('VIP'),
@@ -146,7 +146,7 @@ export async function getClientStats(tenantId) {
     total,
     activeThisMonth,
     activeThisMonthDelta: activeThisMonth - activeLastMonth,
-    avgLifetimeSpend: `£${(avgSpend / 100).toLocaleString('en-GB', { maximumFractionDigits: 0 })}`,
+    avgLifetimeSpend: `$${(avgSpend / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
   };
 }
 
@@ -189,7 +189,7 @@ export async function getClientById(tenantId, clientId) {
     avatarColor:  color.col,
     since:        client.createdAt.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
     visits:       client.appointments.length,
-    lifetimeSpend: `£${(lifetimeSpend / 100).toLocaleString()}`,
+    lifetimeSpend: `$${(lifetimeSpend / 100).toLocaleString()}`,
     tags:         client.tags,
     isVip:        client.tags.includes('VIP'),
     medicalNotes: client.medicalNotes ?? '',
@@ -199,7 +199,7 @@ export async function getClientById(tenantId, clientId) {
       serviceName: a.service.name,
       staffName:   a.staff.name,
       date:        a.startsAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
-      amount:      `£${(a.service.priceCents / 100).toFixed(0)}`,
+      amount:      `$${(a.service.priceCents / 100).toFixed(0)}`,
       status:      a.status,
     })),
   };

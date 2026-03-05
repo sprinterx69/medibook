@@ -251,7 +251,7 @@ async function generateAndStoreSystemPrompt(tenantId, ctx) {
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
   const servicesList = (ctx.services ?? []).length
-    ? ctx.services.map(s => `* ${s.name}${s.durationMins ? ` — ${s.durationMins} mins` : ''}${s.priceCents ? `, £${(s.priceCents / 100).toFixed(0)}` : ''}`).join('\n')
+    ? ctx.services.map(s => `* ${s.name}${s.durationMins ? ` — ${s.durationMins} mins` : ''}${s.priceCents ? `, $${(s.priceCents / 100).toFixed(0)}` : ''}`).join('\n')
     : '* General appointments — please enquire for pricing';
 
   const staffBlock = (ctx.staff ?? []).length
@@ -358,7 +358,7 @@ function _buildTemplatePrompt(ctx) {
 
   const servicesBlock = (ctx.services ?? []).length
     ? ctx.services.map(s =>
-        `* ${s.name}${s.durationMins ? ` — ${s.durationMins} mins` : ''}${s.priceCents ? `, £${(s.priceCents / 100).toFixed(0)}` : ''}`
+        `* ${s.name}${s.durationMins ? ` — ${s.durationMins} mins` : ''}${s.priceCents ? `, $${(s.priceCents / 100).toFixed(0)}` : ''}`
       ).join('\n')
     : '* General appointments — please enquire for pricing and duration';
 

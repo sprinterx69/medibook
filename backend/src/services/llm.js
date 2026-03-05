@@ -193,7 +193,7 @@ function buildSystemPrompt(tenantContext) {
     ? (services ?? []).filter(s => enabledIds.includes(s.id))
     : (services ?? []);
   const servicesList = activeServices.length > 0
-    ? activeServices.map(s => `${s.name} (${s.durationMins} min, £${(s.priceCents / 100).toFixed(0)})`).join('; ')
+    ? activeServices.map(s => `${s.name} (${s.durationMins} min, $${(s.priceCents / 100).toFixed(0)})`).join('; ')
     : 'General appointments';
 
   const faqBlock = faqs.length > 0

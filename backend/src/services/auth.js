@@ -164,7 +164,7 @@ export async function verifyEmailAndActivate({ email, code, frontendUrl }) {
         plan: reg.planKey?.toUpperCase() ?? 'STARTER', // Use selected plan (Stripe webhook will update if needed)
         settings: {
           timezone:   'Europe/London',
-          currency:   'gbp',
+          currency:   'usd',
           brandColor: '#c9903a',
         },
       },

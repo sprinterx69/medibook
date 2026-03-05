@@ -133,8 +133,8 @@ export async function getDashboardStats(tenantId) {
     appointmentsToday: completedToday,
     newClientsMonth,
     aiCallsToday,
-    todayRevenuePence: todayRevenueCents,
-    todayRevenueFormatted: `£${(todayRevenueCents / 100).toFixed(0)}`,
+    todayRevenueCents: todayRevenueCents,
+    todayRevenueFormatted: `$${(todayRevenueCents / 100).toFixed(0)}`,
   };
 }
 
