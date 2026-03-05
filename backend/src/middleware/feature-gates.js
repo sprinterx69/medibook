@@ -39,6 +39,8 @@ export async function requirePlan(tenantId, minimumPlan) {
 }
 
 // ─── Require specific feature ─────────────────────────────────────────────────
+// Features currently gated behind Pro:
+//   integrations — connect external management systems / third-party APIs
 export async function requireFeature(tenantId, feature) {
   const currentPlan = await getTenantPlan(tenantId);
   const planKey = currentPlan.toLowerCase();
@@ -57,8 +59,9 @@ export async function checkLimit(tenantId, resource) {
   const features = PLANS[planKey]?.features ?? {};
 
   const LIMITS = {
-    staff: { featureKey: 'maxStaff', countFn: () => prisma.staff.count({ where: { tenantId, isActive: true } }) },
-    locations: { featureKey: 'maxLocations', countFn: () => prisma.location.count({ where: { tenantId, isActive: true } }) },
+    staff:     { featureKey: 'maxStaff',      countFn: () => prisma.staff.count({ where: { tenantId, isActive: true } }) },
+    locations: { featureKey: 'maxLocations',  countFn: () => prisma.location.count({ where: { tenantId, isActive: true } }) },
+    // phoneNumbers limit enforced inside settings-service.js via PHONE_LIMITS
   };
 
   const config = LIMITS[resource];
