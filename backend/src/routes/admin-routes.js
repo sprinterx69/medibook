@@ -16,11 +16,12 @@
 //   GET  /api/admin/billing/:tenantId
 //   POST /api/admin/clinics/initiate
 //   POST /api/admin/clinics/:tenantId/resend-onboarding
+//   POST /api/admin/clinics/:tenantId/create-stripe-link
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '../config/prisma.js';
 import { requirePlatformAdmin } from '../middleware/role-guards.js';
-import { createAdminCheckoutSession } from '../services/billing.js';
+import { createAdminCheckoutSession, createCheckoutSession } from '../services/billing.js';
 import { sendOnboardingEmail } from '../services/email.js';
 import crypto from 'crypto';
 
@@ -240,5 +241,26 @@ export default async function adminRoutes(fastify) {
     }
 
     return { success: true, onboardingUrl };
+  });
+
+  // ── POST /api/admin/clinics/:tenantId/create-stripe-link ──────────────────
+  // Creates a new Stripe Checkout session for an existing tenant and returns
+  // the checkout URL so the admin can send it directly to the clinic owner.
+  fastify.post('/api/admin/clinics/:tenantId/create-stripe-link', { preHandler: [guard] }, async (request, reply) => {
+    const { tenantId } = request.params;
+    const { planKey = 'professional', billingCycle = 'monthly' } = request.body ?? {};
+
+    try {
+      const result = await createCheckoutSession({
+        tenantId,
+        planKey,
+        billingCycle,
+        successUrl: `${process.env.PUBLIC_URL}/pages/payment-success.html`,
+        cancelUrl:  `${process.env.PUBLIC_URL}/pages/login.html`,
+      });
+      return { checkoutUrl: result.url, sessionId: result.sessionId };
+    } catch (err) {
+      return reply.code(500).send({ error: err.message });
+    }
   });
 }

@@ -1092,6 +1092,22 @@
     setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, url ? 8000 : 4000);
   }
 
+  // ── Stripe checkout link ─────────────────────────────────────
+  async function createStripeLink(tenantId) {
+    try {
+      const data = await adminPost(`/api/admin/clinics/${tenantId}/create-stripe-link`, {});
+      if (!data) return;
+      try {
+        await navigator.clipboard.writeText(data.checkoutUrl);
+        showToast('Stripe checkout link copied to clipboard!', 'success', data.checkoutUrl);
+      } catch {
+        showToast('Stripe link (copy manually):', 'success', data.checkoutUrl);
+      }
+    } catch (e) {
+      showToast('Failed: ' + e.message, 'error');
+    }
+  }
+
   // ── Onboarding link ──────────────────────────────────────────
   async function copyOnboardingLink(tenantId) {
     try {
@@ -1171,6 +1187,7 @@
           <td>${statusBadge}</td>
           <td style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="btn btn-outline btn-sm" onclick="copyOnboardingLink('${c.id}')">Onboarding Link</button>
+            <button class="btn btn-outline btn-sm" onclick="createStripeLink('${c.id}')">Stripe Link</button>
           </td>
         </tr>`;
       }).join('');
