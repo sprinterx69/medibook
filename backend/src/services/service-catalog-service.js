@@ -22,7 +22,7 @@ export async function listServices(tenantId, { activeOnly = false } = {}) {
     name:         s.name,
     description:  s.description ?? '',
     durationMins: s.durationMins,
-    price:        `£${(s.priceCents / 100).toFixed(0)}`,
+    price:        `$${(s.priceCents / 100).toFixed(0)}`,
     priceCents:   s.priceCents,
     depositCents: s.depositCents,
     category:     s.category ?? '',

@@ -84,7 +84,7 @@ function buildPromptFromSettings(tenant, voiceAgent, services, staffList = []) {
     ? services.filter(s => enabledIds.includes(s.id))
     : services;
   const servicesBlock = availableServices.length
-    ? availableServices.map(s => `* ${s.name}${s.durationMins ? ` — ${s.durationMins} mins` : ''}${s.priceCents ? `, £${(s.priceCents / 100).toFixed(0)}` : ''}`).join('\n')
+    ? availableServices.map(s => `* ${s.name}${s.durationMins ? ` — ${s.durationMins} mins` : ''}${s.priceCents ? `, $${(s.priceCents / 100).toFixed(0)}` : ''}`).join('\n')
     : '* General appointments — please enquire for pricing and duration';
 
   const staffBlock = staffList.length
@@ -464,7 +464,7 @@ export default async function agentRoutes(fastify) {
         : tenant.services;
 
       const servicesList = filteredServices.length
-        ? filteredServices.map(sv => `* ${sv.name}${sv.durationMins ? ` — ${sv.durationMins} mins` : ''}${sv.priceCents ? `, £${(sv.priceCents / 100).toFixed(0)}` : ''}`).join('\n')
+        ? filteredServices.map(sv => `* ${sv.name}${sv.durationMins ? ` — ${sv.durationMins} mins` : ''}${sv.priceCents ? `, $${(sv.priceCents / 100).toFixed(0)}` : ''}`).join('\n')
         : '* General appointments — please enquire for pricing';
 
       const staffList = staff.length

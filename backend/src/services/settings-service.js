@@ -50,7 +50,7 @@ export async function getClinicSettings(tenantId) {
     city:         s.city ?? '',
     postcode:     s.postcode ?? '',
     timezone:     s.timezone ?? 'Europe/London',
-    currency:     s.currency ?? 'GBP',
+    currency:     s.currency ?? 'USD',
     brandColor:   s.brandColor ?? '#0d9488',
     logoUrl:      s.logoUrl ?? '',
     createdAt:    tenant.createdAt,

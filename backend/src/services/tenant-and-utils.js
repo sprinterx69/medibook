@@ -82,13 +82,13 @@ export async function getClinicInfo({ tenantId, topic }) {
   switch (topic) {
     case 'services': {
       const list = ctx.services
-        .map(s => `${s.name} (${s.durationMins} mins, £${(s.priceCents / 100).toFixed(0)})`)
+        .map(s => `${s.name} (${s.durationMins} mins, $${(s.priceCents / 100).toFixed(0)})`)
         .join('; ');
       return { services: list };
     }
     case 'pricing': {
       const list = ctx.services
-        .map(s => `${s.name}: £${(s.priceCents / 100).toFixed(0)}`)
+        .map(s => `${s.name}: $${(s.priceCents / 100).toFixed(0)}`)
         .join('; ');
       return { pricing: list };
     }

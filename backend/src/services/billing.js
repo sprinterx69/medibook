@@ -35,19 +35,19 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 //   annual   — billed once per year (2 months free = ~16.7% saving)
 //
 // Annual pricing:
-//   start  £199/mo × 10 = £1,990/yr  (save £398)
-//   pr     £399/mo × 10 = £3,990/yr  (save £798)
+//   start  $199/mo × 10 = $1,990/yr  (save $398)
+//   pr     $399/mo × 10 = $3,990/yr  (save $798)
 export const PLANS = {
   start: {
     name: 'Start',
     monthly: {
       priceId: process.env.STRIPE_PRICE_START_MONTHLY,
-      amount: 19900,    // £199.00/month in pence
+      amount: 19900,    // $199.00/month in cents
     },
     annual: {
       priceId: process.env.STRIPE_PRICE_START_ANNUAL,
-      amount: 199000,   // £1,990.00/year in pence (2 months free)
-      monthlyEquivalent: 16583, // £165.83/month
+      amount: 199000,   // $1,990.00/year in cents (2 months free)
+      monthlyEquivalent: 16583, // $165.83/month
     },
     // Unlimited AI calls + full clinic access — staff, locations, voice agent, phone numbers included
     features: { maxStaff: -1, maxLocations: -1, voiceAgent: true, phoneNumbers: 1, integrations: false, maxCalls: -1 },
@@ -58,12 +58,12 @@ export const PLANS = {
     name: 'PR',
     monthly: {
       priceId: process.env.STRIPE_PRICE_PR_MONTHLY,
-      amount: 39900,    // £399.00/month in pence
+      amount: 39900,    // $399.00/month in cents
     },
     annual: {
       priceId: process.env.STRIPE_PRICE_PR_ANNUAL,
-      amount: 399000,   // £3,990.00/year in pence (2 months free)
-      monthlyEquivalent: 33250, // £332.50/month
+      amount: 399000,   // $3,990.00/year in cents (2 months free)
+      monthlyEquivalent: 33250, // $332.50/month
     },
     // Everything in Start + external API integrations and management system connections, unlimited calls
     features: { maxStaff: -1, maxLocations: -1, voiceAgent: true, phoneNumbers: 3, integrations: true, maxCalls: -1 },
@@ -265,7 +265,7 @@ export async function getSubscriptionStatus(tenantId) {
     cancelAtPeriodEnd: stripeSub.cancel_at_period_end,
     features: PLANS[planKey]?.features ?? {},
     amount: stripeSub.items.data[0]?.price.unit_amount ?? 0,
-    currency: stripeSub.items.data[0]?.price.currency ?? 'gbp',
+    currency: stripeSub.items.data[0]?.price.currency ?? 'usd',
   };
 }
 

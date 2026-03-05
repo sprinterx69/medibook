@@ -61,7 +61,7 @@ export async function getWeekAppointments(tenantId, weekStart) {
       id:          a.service.id,
       name:        a.service.name,
       durationMins: a.service.durationMins,
-      price:       `£${(a.service.priceCents / 100).toFixed(0)}`,
+      price:       `$${(a.service.priceCents / 100).toFixed(0)}`,
       color:       a.service.color,
     },
   }));
