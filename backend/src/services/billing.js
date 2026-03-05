@@ -86,7 +86,7 @@ export function getPlanKeyByPriceId(priceId) {
   return null;
 }
 
-const TRIAL_DAYS = 30;
+const TRIAL_DAYS = 0;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. CREATE CHECKOUT SESSION
@@ -125,19 +125,14 @@ export async function createCheckoutSession({ tenantId, planKey, billingCycle = 
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
     subscription_data: {
-      trial_period_days: TRIAL_DAYS,
       metadata: { tenantId, planKey, billingCycle },
     },
-    payment_method_collection: 'always',     // Collect card even during trial
+    payment_method_collection: 'always',
     billing_address_collection: 'required',
     allow_promotion_codes: true,
     success_url: successUrl + '?session_id={CHECKOUT_SESSION_ID}',
     cancel_url: cancelUrl,
     metadata: { tenantId, planKey, billingCycle },
-    // Customise Stripe-hosted page
-    custom_text: {
-      submit: { message: 'Your 30-day free trial starts today. No charge until the trial ends.' },
-    },
   });
 
   return { sessionId: session.id, url: session.url };
@@ -180,7 +175,6 @@ export async function createAdminCheckoutSession({ planKey, billingCycle = 'mont
     customer: customer.id,
     line_items: [{ price: priceId, quantity: 1 }],
     subscription_data: {
-      trial_period_days: TRIAL_DAYS,
       metadata: { businessName, fullName, email, planKey, billingCycle },
     },
     payment_method_collection: 'always',
