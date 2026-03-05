@@ -66,7 +66,7 @@ async function generateSlug(businessName) {
 // ─── Start registration ────────────────────────────────────────────────────────
 // Creates a PendingRegistration and sends a verification email.
 export async function startRegistration({ planKey, businessName, fullName, email, username, phone, password }) {
-  const VALID_PLANS = ['starter', 'pro', 'enterprise'];
+  const VALID_PLANS = ['starter', 'pro'];
   if (!VALID_PLANS.includes(planKey)) {
     throw Object.assign(new Error('Invalid plan selected.'), { statusCode: 400 });
   }
@@ -199,18 +199,16 @@ export async function verifyEmailAndActivate({ email, code, frontendUrl }) {
     return { tenant, user };
   });
 
-  // Create Stripe Checkout (30-day trial). Enterprise gets a manual quote instead.
+  // Create Stripe Checkout (30-day trial).
   let checkoutUrl = null;
-  if (reg.planKey !== 'enterprise') {
-    try {
-      const successUrl = `${frontendUrl}/pages/onboarding.html?success=1`;
-      const cancelUrl  = `${frontendUrl}/pages/onboarding.html`;
-      const checkout   = await createCheckoutSession({ tenantId: tenant.id, planKey: reg.planKey, successUrl, cancelUrl });
-      checkoutUrl = checkout.url;
-    } catch (err) {
-      console.error('[auth] Stripe checkout failed:', err.message);
-      // Don't fail account creation if Stripe is down
-    }
+  try {
+    const successUrl = `${frontendUrl}/pages/onboarding.html?success=1`;
+    const cancelUrl  = `${frontendUrl}/pages/onboarding.html`;
+    const checkout   = await createCheckoutSession({ tenantId: tenant.id, planKey: reg.planKey, successUrl, cancelUrl });
+    checkoutUrl = checkout.url;
+  } catch (err) {
+    console.error('[auth] Stripe checkout failed:', err.message);
+    // Don't fail account creation if Stripe is down
   }
 
   // Send welcome email (async, don't await)
@@ -229,7 +227,6 @@ export async function verifyEmailAndActivate({ email, code, frontendUrl }) {
     tenantName:  tenant.name,
     planKey:     reg.planKey,
     checkoutUrl,
-    isEnterprise: reg.planKey === 'enterprise',
   };
 }
 

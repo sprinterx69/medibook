@@ -50,7 +50,6 @@ model Tenant {
 enum Plan {
   STARTER
   PRO
-  ENTERPRISE
 }
 
 // ─── USERS (authentication) ───────────────────────────────────────────────────

@@ -8,9 +8,8 @@
 // existing call-routing logic in tenant-and-utils.js requires no changes.
 //
 // Plan limits:
-//   STARTER    → 0 numbers (voice agent feature not included)
+//   STARTER    → 1 number
 //   PRO        → 1 number
-//   ENTERPRISE → unlimited (-1)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '../config/prisma.js';
@@ -28,7 +27,7 @@ export function getTwilio() {
   return twilioClient;
 }
 
-const PHONE_LIMITS = { STARTER: 1, PRO: 1, ENTERPRISE: -1 }; // Allow all plans
+const PHONE_LIMITS = { STARTER: 1, PRO: 1 };
 
 export const SUPPORTED_COUNTRIES = [
   { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },

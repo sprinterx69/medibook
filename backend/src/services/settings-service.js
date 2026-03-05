@@ -15,8 +15,8 @@ function getTwilio() {
   return _twilio;
 }
 
-// Starter includes 1 number; Pro includes 3; Enterprise unlimited
-const PHONE_LIMITS = { STARTER: 1, PRO: 3, ENTERPRISE: -1 };
+// Starter includes 1 number; Pro includes 3
+const PHONE_LIMITS = { STARTER: 1, PRO: 3 };
 
 const DEFAULT_NOTIFICATIONS = {
   emailBookingConfirmations: true,

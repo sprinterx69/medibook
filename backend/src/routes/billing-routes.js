@@ -27,7 +27,7 @@ export async function billingRoutes(fastify) {
         type: 'object',
         required: ['planKey'],
         properties: {
-          planKey: { type: 'string', enum: ['start', 'pr', 'enterprise'] },
+          planKey: { type: 'string', enum: ['start', 'pr'] },
           billingCycle: { type: 'string', enum: ['monthly', 'annual'], default: 'monthly' },
           successUrl: { type: 'string' },
           cancelUrl: { type: 'string' },
