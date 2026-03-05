@@ -15,7 +15,8 @@ function getTwilio() {
   return _twilio;
 }
 
-const PHONE_LIMITS = { STARTER: 0, PRO: 1, ENTERPRISE: -1 };
+// Starter includes 1 number; Pro includes 3; Enterprise unlimited
+const PHONE_LIMITS = { STARTER: 1, PRO: 3, ENTERPRISE: -1 };
 
 const DEFAULT_NOTIFICATIONS = {
   emailBookingConfirmations: true,
@@ -100,7 +101,7 @@ export async function updateNotificationSettings(tenantId, notifications) {
 /**
  * Auto-searches for and purchases an available local phone number for the clinic.
  *
- * - Enforces plan limits (STARTER cannot purchase numbers).
+ * - Enforces plan limits (one number on Starter, three on Pro, unlimited on Enterprise).
  * - Prevents buying a second number if one already exists.
  * - Sets voiceUrl to /api/voice-webhook on the purchased Twilio number.
  * - Persists the number + SID into tenant.settings.voiceAgentPhone/voiceAgentPhoneSid.
@@ -124,7 +125,7 @@ export async function buyClinicNumber(tenantId, country = 'GB') {
   // ── Plan check ─────────────────────────────────────────────────────────────
   if (limit === 0) {
     throw Object.assign(
-      new Error('Your plan does not include phone numbers. Upgrade to Pro to enable the AI voice agent.'),
+      new Error('You have reached your phone number limit. Upgrade to Pro for additional numbers.'),
       { statusCode: 402, code: 'PLAN_UPGRADE_REQUIRED', requiredPlan: 'PRO' },
     );
   }

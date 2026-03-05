@@ -34,19 +34,21 @@ export const PLANS = {
     name: 'Starter',
     priceId: process.env.STRIPE_PRICE_STARTER,   // e.g. price_1Pxxx
     amount: 4900,     // £49.00 in pence
-    features: { maxStaff: 2, maxLocations: 1, voiceAgent: false },
+    // Full clinic access — staff, locations, voice agent, phone numbers included
+    features: { maxStaff: -1, maxLocations: -1, voiceAgent: true, phoneNumbers: 1, integrations: false },
   },
   pro: {
     name: 'Pro',
     priceId: process.env.STRIPE_PRICE_PRO,
     amount: 12900,    // £129.00
-    features: { maxStaff: -1, maxLocations: 3, voiceAgent: true },
+    // Everything in Starter + external API integrations and management system connections
+    features: { maxStaff: -1, maxLocations: -1, voiceAgent: true, phoneNumbers: 3, integrations: true },
   },
   enterprise: {
     name: 'Enterprise',
     priceId: process.env.STRIPE_PRICE_ENTERPRISE,
     amount: null,     // Custom pricing
-    features: { maxStaff: -1, maxLocations: -1, voiceAgent: true },
+    features: { maxStaff: -1, maxLocations: -1, voiceAgent: true, phoneNumbers: -1, integrations: true },
   },
 };
 
