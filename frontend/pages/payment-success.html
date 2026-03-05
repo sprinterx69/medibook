@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Callora — Payment Successful</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f9f7f4;
+  --white:#ffffff;
+  --ink:#0f1419;
+  --ink2:#2d3748;
+  --muted:#8896a8;
+  --border:#e8edf2;
+  --gold:#c9903a;
+  --gold-light:#f5e6cc;
+  --gold-pale:#fdf8f0;
+  --green:#16a34a;
+  --green-light:#f0fdf4;
+  --green-border:#bbf7d0;
+  --radius:10px;
+  --shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 16px rgba(0,0,0,0.04);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.1),0 2px 8px rgba(0,0,0,0.06);
+}
+html{height:100%}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Geist',sans-serif;
+  min-height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+
+.card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:52px 44px;
+  width:100%;
+  max-width:480px;
+  box-shadow:var(--shadow-lg);
+  text-align:center;
+}
+
+.logo{
+  font-family:'Instrument Serif',serif;
+  font-size:26px;
+  color:var(--ink);
+  letter-spacing:0.01em;
+  text-decoration:none;
+  display:inline-block;
+  margin-bottom:36px;
+}
+.logo span{color:var(--gold)}
+
+.check-wrap{
+  width:72px;
+  height:72px;
+  background:var(--green-light);
+  border:2px solid var(--green-border);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 28px;
+  animation:popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275) both;
+}
+@keyframes popIn{
+  from{transform:scale(0);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+
+.check-wrap svg{
+  color:var(--green);
+}
+
+.title{
+  font-family:'Instrument Serif',serif;
+  font-size:30px;
+  color:var(--ink);
+  margin-bottom:10px;
+  line-height:1.2;
+}
+.title em{font-style:italic;color:var(--gold)}
+
+.subtitle{
+  font-size:15px;
+  color:var(--muted);
+  line-height:1.7;
+  margin-bottom:32px;
+  max-width:360px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+.info-box{
+  background:var(--gold-pale);
+  border:1px solid var(--gold-light);
+  border-radius:12px;
+  padding:18px 20px;
+  margin-bottom:32px;
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  text-align:left;
+}
+.info-box svg{
+  color:var(--gold);
+  flex-shrink:0;
+  margin-top:2px;
+}
+.info-box-text{
+  font-size:13px;
+  color:var(--ink2);
+  line-height:1.6;
+}
+.info-box-text strong{
+  display:block;
+  font-size:13px;
+  font-weight:600;
+  color:var(--ink);
+  margin-bottom:3px;
+}
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:100%;
+  padding:13px 20px;
+  border-radius:var(--radius);
+  background:var(--gold);
+  color:white;
+  border:none;
+  font-family:'Geist',sans-serif;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+  text-decoration:none;
+  transition:all 0.2s;
+}
+.btn:hover{background:#b8802f;transform:translateY(-1px);box-shadow:0 8px 24px rgba(201,144,58,0.3)}
+.btn:active{transform:translateY(0)}
+
+.footer-note{
+  margin-top:20px;
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <a href="/pages/landing.html" class="logo">Call<span>ora</span></a>
+
+  <div class="check-wrap">
+    <svg width="34" height="34" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+      <path d="M20 6L9 17l-5-5"/>
+    </svg>
+  </div>
+
+  <h1 class="title">Payment <em>successful</em></h1>
+  <p class="subtitle">Your payment has been received. We've sent you an email with everything you need to complete your clinic setup.</p>
+
+  <div class="info-box">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+      <rect x="2" y="4" width="20" height="16" rx="2"/>
+      <path d="M2 8l10 7 10-7"/>
+    </svg>
+    <div class="info-box-text">
+      <strong>Check your inbox</strong>
+      Your onboarding link has been sent to your email. Take your time — the link is valid for <strong>7 days</strong>.
+    </div>
+  </div>
+
+  <a href="/pages/login.html" class="btn">
+    Go to Login
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  </a>
+
+  <p class="footer-note">Didn't receive the email? Check your spam folder or contact us at <strong>hello@callora.me</strong></p>
+</div>
+
+</body>
+</html>
