@@ -1093,15 +1093,16 @@
   }
 
   // ── Stripe checkout link ─────────────────────────────────────
-  async function createStripeLink(tenantId) {
+  async function createStripeLink(tenantId, billingCycle = 'monthly') {
     try {
-      const data = await adminPost(`/api/admin/clinics/${tenantId}/create-stripe-link`, {});
+      const data = await adminPost(`/api/admin/clinics/${tenantId}/create-stripe-link`, { billingCycle });
       if (!data) return;
+      const label = billingCycle === 'annual' ? 'annual' : 'monthly';
       try {
         await navigator.clipboard.writeText(data.checkoutUrl);
-        showToast('Stripe checkout link copied to clipboard!', 'success', data.checkoutUrl);
+        showToast(`Stripe ${label} link copied to clipboard!`, 'success', data.checkoutUrl);
       } catch {
-        showToast('Stripe link (copy manually):', 'success', data.checkoutUrl);
+        showToast(`Stripe ${label} link (copy manually):`, 'success', data.checkoutUrl);
       }
     } catch (e) {
       showToast('Failed: ' + e.message, 'error');
@@ -1187,7 +1188,8 @@
           <td>${statusBadge}</td>
           <td style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="btn btn-outline btn-sm" onclick="copyOnboardingLink('${c.id}')">Onboarding Link</button>
-            <button class="btn btn-outline btn-sm" onclick="createStripeLink('${c.id}')">Stripe Link</button>
+            <button class="btn btn-outline btn-sm" onclick="createStripeLink('${c.id}','monthly')">Stripe Monthly</button>
+            <button class="btn btn-outline btn-sm" onclick="createStripeLink('${c.id}','annual')">Stripe Annual</button>
           </td>
         </tr>`;
       }).join('');
