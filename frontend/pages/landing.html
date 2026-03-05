@@ -344,12 +344,16 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
 .section-sub.center { text-align: center; margin: 0 auto; }
 .text-center { text-align: center; }
 
-/* Entrance animation */
+/* Entrance animation — content is always visible; animation is an enhancement */
 .reveal {
-  opacity: 0; transform: translateY(28px);
+  opacity: 1; transform: translateY(0);
   transition: opacity 0.65s cubic-bezier(0.4,0,0.2,1), transform 0.65s cubic-bezier(0.4,0,0.2,1);
 }
-.reveal.visible { opacity: 1; transform: translateY(0); }
+/* JS adds .js-animate to <html> to opt into the hidden initial state */
+html.js-animate .reveal {
+  opacity: 0; transform: translateY(28px);
+}
+html.js-animate .reveal.visible { opacity: 1; transform: translateY(0); }
 .reveal-delay-1 { transition-delay: 0.1s; }
 .reveal-delay-2 { transition-delay: 0.2s; }
 .reveal-delay-3 { transition-delay: 0.3s; }
@@ -1774,7 +1778,16 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
 });
 
 // ============ INTERSECTION OBSERVER (ENTRANCE ANIMATIONS) ============
+// Opt-in: mark html so CSS hides elements initially (fallback = always visible)
+document.documentElement.classList.add('js-animate');
+
 const revealEls = document.querySelectorAll('.reveal');
+
+// Force all visible after 1.5s as a safety net
+const revealFallback = setTimeout(() => {
+  revealEls.forEach(el => el.classList.add('visible'));
+}, 1500);
+
 const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
@@ -1782,7 +1795,7 @@ const revealObserver = new IntersectionObserver((entries) => {
       revealObserver.unobserve(entry.target);
     }
   });
-}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+}, { threshold: 0, rootMargin: '0px 0px 0px 0px' });
 revealEls.forEach(el => revealObserver.observe(el));
 
 // ============ FAQ ACCORDION ============
