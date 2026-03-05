@@ -27,7 +27,8 @@ export async function billingRoutes(fastify) {
         type: 'object',
         required: ['planKey'],
         properties: {
-          planKey: { type: 'string', enum: ['starter', 'pro', 'enterprise'] },
+          planKey: { type: 'string', enum: ['start', 'pr', 'enterprise'] },
+          billingCycle: { type: 'string', enum: ['monthly', 'annual'], default: 'monthly' },
           successUrl: { type: 'string' },
           cancelUrl: { type: 'string' },
         },
@@ -35,11 +36,12 @@ export async function billingRoutes(fastify) {
     },
   }, async (request, reply) => {
     const tenantId = request.user.tenantId;
-    const { planKey, successUrl, cancelUrl } = request.body;
+    const { planKey, billingCycle = 'monthly', successUrl, cancelUrl } = request.body;
 
     const result = await createCheckoutSession({
       tenantId,
       planKey,
+      billingCycle,
       successUrl: successUrl ?? `${process.env.PUBLIC_URL}/dashboard?checkout=success`,
       cancelUrl:  cancelUrl  ?? `${process.env.PUBLIC_URL}/onboarding?step=4`,
     });
@@ -78,12 +80,16 @@ export async function billingRoutes(fastify) {
       body: {
         type: 'object',
         required: ['newPlanKey'],
-        properties: { newPlanKey: { type: 'string' } },
+        properties: {
+          newPlanKey: { type: 'string' },
+          billingCycle: { type: 'string', enum: ['monthly', 'annual'], default: 'monthly' },
+        },
       },
     },
   }, async (request, reply) => {
     const tenantId = request.user.tenantId;
-    const result = await changePlan({ tenantId, newPlanKey: request.body.newPlanKey });
+    const { newPlanKey, billingCycle = 'monthly' } = request.body;
+    const result = await changePlan({ tenantId, newPlanKey, billingCycle });
     return reply.send(result);
   });
 

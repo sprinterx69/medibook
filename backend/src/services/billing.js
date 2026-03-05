@@ -29,28 +29,75 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 // ─── Plan Configuration ───────────────────────────────────────────────────────
 // Map internal plan names to Stripe Price IDs.
 // Replace with your actual Stripe Price IDs from your dashboard.
+//
+// Billing cycles:
+//   monthly  — billed every month
+//   annual   — billed once per year (2 months free = ~16.7% saving)
+//
+// Annual pricing:
+//   start  £199/mo × 10 = £1,990/yr  (save £398)
+//   pr     £399/mo × 10 = £3,990/yr  (save £798)
 export const PLANS = {
-  starter: {
-    name: 'Starter',
-    priceId: process.env.STRIPE_PRICE_STARTER,   // e.g. price_1Pxxx
-    amount: 4900,     // £49.00 in pence
-    // Full clinic access — staff, locations, voice agent, phone numbers included
-    features: { maxStaff: -1, maxLocations: -1, voiceAgent: true, phoneNumbers: 1, integrations: false },
+  start: {
+    name: 'Start',
+    monthly: {
+      priceId: process.env.STRIPE_PRICE_START_MONTHLY,
+      amount: 19900,    // £199.00/month in pence
+    },
+    annual: {
+      priceId: process.env.STRIPE_PRICE_START_ANNUAL,
+      amount: 199000,   // £1,990.00/year in pence (2 months free)
+      monthlyEquivalent: 16583, // £165.83/month
+    },
+    // Unlimited AI calls + full clinic access — staff, locations, voice agent, phone numbers included
+    features: { maxStaff: -1, maxLocations: -1, voiceAgent: true, phoneNumbers: 1, integrations: false, maxCalls: -1 },
+    // DB enum value
+    dbPlan: 'STARTER',
   },
-  pro: {
-    name: 'Pro',
-    priceId: process.env.STRIPE_PRICE_PRO,
-    amount: 12900,    // £129.00
-    // Everything in Starter + external API integrations and management system connections
-    features: { maxStaff: -1, maxLocations: -1, voiceAgent: true, phoneNumbers: 3, integrations: true },
+  pr: {
+    name: 'PR',
+    monthly: {
+      priceId: process.env.STRIPE_PRICE_PR_MONTHLY,
+      amount: 39900,    // £399.00/month in pence
+    },
+    annual: {
+      priceId: process.env.STRIPE_PRICE_PR_ANNUAL,
+      amount: 399000,   // £3,990.00/year in pence (2 months free)
+      monthlyEquivalent: 33250, // £332.50/month
+    },
+    // Everything in Start + external API integrations and management system connections, unlimited calls
+    features: { maxStaff: -1, maxLocations: -1, voiceAgent: true, phoneNumbers: 3, integrations: true, maxCalls: -1 },
+    dbPlan: 'PRO',
   },
   enterprise: {
     name: 'Enterprise',
-    priceId: process.env.STRIPE_PRICE_ENTERPRISE,
-    amount: null,     // Custom pricing
-    features: { maxStaff: -1, maxLocations: -1, voiceAgent: true, phoneNumbers: -1, integrations: true },
+    monthly: {
+      priceId: process.env.STRIPE_PRICE_ENTERPRISE,
+      amount: null,     // Custom pricing
+    },
+    annual: {
+      priceId: process.env.STRIPE_PRICE_ENTERPRISE_ANNUAL,
+      amount: null,     // Custom pricing
+    },
+    features: { maxStaff: -1, maxLocations: -1, voiceAgent: true, phoneNumbers: -1, integrations: true, maxCalls: -1 },
+    dbPlan: 'ENTERPRISE',
   },
 };
+
+// Helper — get priceId for a plan + billing cycle combo
+export function getPlanPriceId(planKey, billingCycle = 'monthly') {
+  const plan = PLANS[planKey];
+  if (!plan) return null;
+  return plan[billingCycle]?.priceId ?? plan.monthly?.priceId ?? null;
+}
+
+// Backwards-compatible priceId lookup (used by webhook to identify plan from Stripe price ID)
+export function getPlanKeyByPriceId(priceId) {
+  for (const [key, plan] of Object.entries(PLANS)) {
+    if (plan.monthly?.priceId === priceId || plan.annual?.priceId === priceId) return key;
+  }
+  return null;
+}
 
 const TRIAL_DAYS = 30;
 
@@ -59,10 +106,11 @@ const TRIAL_DAYS = 30;
 //    Called during onboarding step 5.
 //    Creates a Stripe Checkout with a 14-day trial + card collection.
 // ─────────────────────────────────────────────────────────────────────────────
-export async function createCheckoutSession({ tenantId, planKey, successUrl, cancelUrl }) {
+export async function createCheckoutSession({ tenantId, planKey, billingCycle = 'monthly', successUrl, cancelUrl }) {
   const plan = PLANS[planKey];
-  if (!plan || !plan.priceId) {
-    throw new Error(`Invalid plan or missing Stripe Price ID for: ${planKey}`);
+  const priceId = getPlanPriceId(planKey, billingCycle);
+  if (!plan || !priceId) {
+    throw new Error(`Invalid plan or missing Stripe Price ID for: ${planKey} (${billingCycle})`);
   }
 
   const tenant = await prisma.tenant.findUnique({
@@ -88,17 +136,17 @@ export async function createCheckoutSession({ tenantId, planKey, successUrl, can
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: customerId,
-    line_items: [{ price: plan.priceId, quantity: 1 }],
+    line_items: [{ price: priceId, quantity: 1 }],
     subscription_data: {
       trial_period_days: TRIAL_DAYS,
-      metadata: { tenantId, planKey },
+      metadata: { tenantId, planKey, billingCycle },
     },
     payment_method_collection: 'always',     // Collect card even during trial
     billing_address_collection: 'required',
     allow_promotion_codes: true,
     success_url: successUrl + '?session_id={CHECKOUT_SESSION_ID}',
     cancel_url: cancelUrl,
-    metadata: { tenantId, planKey },
+    metadata: { tenantId, planKey, billingCycle },
     // Customise Stripe-hosted page
     custom_text: {
       submit: { message: 'Your 30-day free trial starts today. No charge until the trial ends.' },
@@ -113,9 +161,10 @@ export async function createCheckoutSession({ tenantId, planKey, successUrl, can
 //     Creates a Stripe Checkout for a not-yet-created clinic.
 //     On completion, the webhook creates the Tenant + User + OnboardingToken.
 // ─────────────────────────────────────────────────────────────────────────────
-export async function createAdminCheckoutSession({ planKey, businessName, email, fullName, successUrl, cancelUrl }) {
+export async function createAdminCheckoutSession({ planKey, billingCycle = 'monthly', businessName, email, fullName, successUrl, cancelUrl }) {
   const plan = PLANS[planKey];
-  if (!plan?.priceId) throw new Error(`Invalid plan or missing Stripe Price ID: ${planKey}`);
+  const priceId = getPlanPriceId(planKey, billingCycle);
+  if (!plan || !priceId) throw new Error(`Invalid plan or missing Stripe Price ID: ${planKey} (${billingCycle})`);
 
   // Create a Stripe Customer before checkout so we can link them later
   const customer = await stripe.customers.create({
@@ -142,17 +191,17 @@ export async function createAdminCheckoutSession({ planKey, businessName, email,
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: customer.id,
-    line_items: [{ price: plan.priceId, quantity: 1 }],
+    line_items: [{ price: priceId, quantity: 1 }],
     subscription_data: {
       trial_period_days: TRIAL_DAYS,
-      metadata: { businessName, fullName, email, planKey },
+      metadata: { businessName, fullName, email, planKey, billingCycle },
     },
     payment_method_collection: 'always',
     billing_address_collection: 'required',
     allow_promotion_codes: true,
     success_url: successUrl + '?session_id={CHECKOUT_SESSION_ID}',
     cancel_url: cancelUrl,
-    metadata: { businessName, fullName, email, planKey },
+    metadata: { businessName, fullName, email, planKey, billingCycle },
     customer_email: email,
   });
 
@@ -202,9 +251,7 @@ export async function getSubscriptionStatus(tenantId) {
   const stripeSub = await stripe.subscriptions.retrieve(sub.stripeSubscriptionId);
 
   // Identify plan from price ID
-  const planKey = Object.entries(PLANS).find(
-    ([, p]) => p.priceId === stripeSub.items.data[0]?.price.id
-  )?.[0] ?? 'unknown';
+  const planKey = getPlanKeyByPriceId(stripeSub.items.data[0]?.price.id) ?? 'unknown';
 
   return {
     hasSubscription: true,
@@ -226,9 +273,10 @@ export async function getSubscriptionStatus(tenantId) {
 // 4. UPGRADE / DOWNGRADE PLAN
 //    Changes the subscription's price immediately (prorated).
 // ─────────────────────────────────────────────────────────────────────────────
-export async function changePlan({ tenantId, newPlanKey }) {
+export async function changePlan({ tenantId, newPlanKey, billingCycle = 'monthly' }) {
   const newPlan = PLANS[newPlanKey];
-  if (!newPlan?.priceId) throw new Error('Invalid plan key');
+  const priceId = getPlanPriceId(newPlanKey, billingCycle);
+  if (!newPlan || !priceId) throw new Error('Invalid plan key');
 
   const sub = await prisma.subscription.findFirst({
     where: { tenantId, status: { in: ['ACTIVE', 'TRIALING'] } },
@@ -239,22 +287,21 @@ export async function changePlan({ tenantId, newPlanKey }) {
 
   // Update the subscription item price (Stripe handles proration automatically)
   const updated = await stripe.subscriptions.update(sub.stripeSubscriptionId, {
-    items: [{ id: stripeSub.items.data[0].id, price: newPlan.priceId }],
+    items: [{ id: stripeSub.items.data[0].id, price: priceId }],
     proration_behavior: 'create_prorations',
-    metadata: { planKey: newPlanKey },
+    metadata: { planKey: newPlanKey, billingCycle },
   });
 
   // Update our local record
   await prisma.subscription.update({
     where: { id: sub.id },
-    data: { stripePriceId: newPlan.priceId },
+    data: { stripePriceId: priceId },
   });
 
   // Update tenant plan
-  const planEnumMap = { starter: 'STARTER', pro: 'PRO', enterprise: 'ENTERPRISE' };
   await prisma.tenant.update({
     where: { id: tenantId },
-    data: { plan: planEnumMap[newPlanKey] ?? 'PRO' },
+    data: { plan: newPlan.dbPlan ?? 'PRO' },
   });
 
   return { success: true, plan: newPlanKey, status: updated.status };
@@ -386,7 +433,7 @@ export async function handleStripeWebhook(rawBody, signature) {
           const tenant = await tx.tenant.create({
             data: {
               slug, name: businessName || email,
-              plan: planKey?.toUpperCase() ?? 'PRO',
+              plan: PLANS[planKey]?.dbPlan ?? 'PRO',
               stripeCustomerId: String(session.customer),
               stripeSubscriptionId: stripeSub.id,
               clinicStatus: 'onboarding_required',
@@ -455,9 +502,7 @@ export async function handleStripeWebhook(rawBody, signature) {
       const tenantId = stripeSub.metadata?.tenantId;
       if (!tenantId) break;
 
-      const planKey = Object.entries(PLANS).find(
-        ([, p]) => p.priceId === stripeSub.items.data[0]?.price.id
-      )?.[0];
+      const planKey = getPlanKeyByPriceId(stripeSub.items.data[0]?.price.id);
 
       await upsertSubscription(tenantId, stripeSub, planKey);
 
@@ -623,11 +668,11 @@ async function upsertSubscription(tenantId, stripeSub, planKey) {
   });
 
   // Sync tenant plan
-  const planEnumMap = { starter: 'STARTER', pro: 'PRO', enterprise: 'ENTERPRISE' };
-  if (planKey && planEnumMap[planKey]) {
+  const dbPlan = PLANS[planKey]?.dbPlan;
+  if (planKey && dbPlan) {
     await prisma.tenant.update({
       where: { id: tenantId },
-      data: { plan: planEnumMap[planKey] },
+      data: { plan: dbPlan },
     });
   }
 }
