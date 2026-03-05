@@ -904,102 +904,158 @@ html.js-animate .reveal.visible { opacity: 1; transform: translateY(0); }
 .form-success h3 { font-size: 1.15rem; font-weight: 800; color: var(--slate-900); margin-bottom: 8px; }
 .form-success p { font-size: 0.9rem; color: var(--slate-500); line-height: 1.65; }
 
-/* AI Demo Modal */
-.demo-modal-box {
-  max-width: 600px;
+/* ===== CALL TEST MODAL ===== */
+.call-test-box {
+  max-width: 480px; width: 100%;
   background: var(--slate-900);
   border-radius: var(--radius-lg);
+  overflow: hidden;
 }
-.demo-modal-header {
-  padding: 24px 28px 20px; border-bottom: 1px solid rgba(255,255,255,0.08);
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+.ct-header {
+  padding: 20px 24px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  display: flex; align-items: center; justify-content: space-between;
 }
-.demo-modal-title { font-size: 1.1rem; font-weight: 800; color: var(--white); }
-.demo-modal-subtitle { font-size: 0.82rem; color: var(--slate-400); margin-top: 3px; }
-.demo-modal-close {
-  width: 32px; height: 32px; border-radius: 8px;
-  background: rgba(255,255,255,0.08); color: var(--slate-400);
+.ct-header-left { display: flex; align-items: center; gap: 10px; }
+.ct-live-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #22c55e; animation: pulse-dot 1.5s infinite;
+}
+.ct-live-dot.inactive { background: var(--slate-600); animation: none; }
+.ct-title { font-size: 0.95rem; font-weight: 700; color: var(--white); }
+.ct-subtitle { font-size: 0.75rem; color: var(--slate-400); margin-top: 1px; }
+.ct-close {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: rgba(255,255,255,0.07); color: var(--slate-400);
   display: flex; align-items: center; justify-content: center;
-  font-size: 0.9rem; cursor: pointer; transition: all 0.2s;
-  border: none;
+  font-size: 0.85rem; cursor: pointer; border: none; transition: all 0.2s;
 }
-.demo-modal-close:hover { background: rgba(255,255,255,0.15); color: var(--white); }
-.demo-chat-area { padding: 24px 28px; min-height: 360px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-height: 400px; }
-.demo-bubble {
-  display: flex; flex-direction: column; max-width: 78%;
-  opacity: 0; transform: translateY(8px);
-  transition: opacity 0.4s ease, transform 0.4s ease;
+.ct-close:hover { background: rgba(255,255,255,0.14); color: var(--white); }
+
+/* Avatar area */
+.ct-avatar-area {
+  padding: 32px 24px 24px; text-align: center;
 }
-.demo-bubble.ai-side { align-self: flex-start; }
-.demo-bubble.user-side { align-self: flex-end; }
-.demo-bubble.visible { opacity: 1; transform: translateY(0); }
-.demo-bubble-label {
-  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;
-  text-transform: uppercase; margin-bottom: 5px;
+.ct-avatar {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--teal-600), var(--teal-400));
+  margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
+  box-shadow: 0 0 0 0 rgba(20,184,166,0.3);
+  transition: box-shadow 0.3s;
 }
-.ai-side .demo-bubble-label { color: var(--teal-400); }
-.user-side .demo-bubble-label { color: var(--slate-400); text-align: right; }
-.demo-bubble-text {
-  padding: 12px 16px; border-radius: 16px;
-  font-size: 0.9rem; line-height: 1.6;
+.ct-avatar.speaking {
+  animation: ct-pulse-ring 1.4s ease-in-out infinite;
 }
-.ai-side .demo-bubble-text {
-  background: linear-gradient(135deg, var(--teal-700), var(--teal-600));
-  color: var(--white); border-bottom-left-radius: 4px;
+.ct-avatar.listening {
+  box-shadow: 0 0 0 12px rgba(99,102,241,0.15), 0 0 0 24px rgba(99,102,241,0.05);
 }
-.user-side .demo-bubble-text {
-  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85);
-  border-bottom-right-radius: 4px; text-align: right;
+@keyframes ct-pulse-ring {
+  0%   { box-shadow: 0 0 0 0   rgba(20,184,166,0.4); }
+  70%  { box-shadow: 0 0 0 20px rgba(20,184,166,0); }
+  100% { box-shadow: 0 0 0 0   rgba(20,184,166,0); }
 }
-.typing-indicator {
-  display: none; align-self: flex-start; max-width: 78%;
+.ct-status {
+  font-size: 0.88rem; font-weight: 600; color: var(--teal-400);
+  letter-spacing: 0.2px;
 }
-.typing-indicator.visible { display: flex; }
-.typing-dots {
-  background: rgba(255,255,255,0.08); border-radius: 16px; border-bottom-left-radius: 4px;
-  padding: 14px 18px; display: flex; gap: 4px; align-items: center;
+.ct-status.err { color: #f87171; }
+.ct-status.listening-st { color: #818cf8; }
+
+/* Voice waveform */
+.ct-waveform {
+  display: flex; align-items: center; justify-content: center;
+  gap: 3px; height: 28px; margin-top: 10px; opacity: 0;
+  transition: opacity 0.3s;
 }
-.typing-dots span {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--slate-400); animation: typing-bounce 1.2s infinite;
+.ct-waveform.active { opacity: 1; }
+.ct-waveform span {
+  display: block; width: 3px; border-radius: 3px;
+  background: var(--teal-500); animation: wave 1.2s ease-in-out infinite;
 }
-.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes typing-bounce {
-  0%, 100% { transform: translateY(0); opacity: 0.4; }
-  50% { transform: translateY(-5px); opacity: 1; }
+.ct-waveform span:nth-child(1) { height: 8px; animation-delay: 0s; }
+.ct-waveform span:nth-child(2) { height: 16px; animation-delay: 0.1s; }
+.ct-waveform span:nth-child(3) { height: 24px; animation-delay: 0.2s; }
+.ct-waveform span:nth-child(4) { height: 16px; animation-delay: 0.3s; }
+.ct-waveform span:nth-child(5) { height: 8px; animation-delay: 0.4s; }
+.ct-waveform.listen-wave span { background: #818cf8; }
+
+/* Transcript */
+.ct-transcript {
+  margin: 0 24px; max-height: 200px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 8px;
+  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
 }
-.demo-footer {
-  padding: 16px 28px 24px; border-top: 1px solid rgba(255,255,255,0.08);
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  flex-wrap: wrap;
+.ct-msg {
+  display: flex; flex-direction: column; max-width: 82%;
+  opacity: 0; transform: translateY(6px);
+  animation: ct-msg-in 0.35s ease forwards;
 }
-.demo-footer-cta {
-  font-size: 0.87rem; font-weight: 700;
+@keyframes ct-msg-in { to { opacity: 1; transform: translateY(0); } }
+.ct-msg.ct-ai { align-self: flex-start; }
+.ct-msg.ct-user { align-self: flex-end; }
+.ct-msg-label {
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px;
+  text-transform: uppercase; margin-bottom: 4px;
+}
+.ct-ai .ct-msg-label { color: var(--teal-400); }
+.ct-user .ct-msg-label { color: #818cf8; text-align: right; }
+.ct-msg-text {
+  padding: 10px 14px; border-radius: 14px;
+  font-size: 0.85rem; line-height: 1.55;
+}
+.ct-ai .ct-msg-text {
+  background: rgba(13,148,136,0.18); color: rgba(255,255,255,0.9);
+  border-bottom-left-radius: 3px;
+}
+.ct-user .ct-msg-text {
+  background: rgba(129,140,248,0.15); color: rgba(255,255,255,0.85);
+  border-bottom-right-radius: 3px; text-align: right;
+}
+
+/* Error / unsupported */
+.ct-error-box {
+  display: none; margin: 8px 24px 0; padding: 14px 16px;
+  background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25);
+  border-radius: var(--radius); text-align: center;
+}
+.ct-error-box.show { display: block; }
+.ct-error-box p { font-size: 0.82rem; color: #fca5a5; line-height: 1.55; }
+
+/* Footer controls */
+.ct-footer {
+  padding: 20px 24px 24px;
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  flex-direction: column;
+}
+.ct-end-btn {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #ef4444; color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; border: none; cursor: pointer;
+  transition: transform 0.15s, background 0.2s;
+  box-shadow: 0 4px 16px rgba(239,68,68,0.4);
+}
+.ct-end-btn:hover { transform: scale(1.08); background: #dc2626; }
+.ct-end-label { font-size: 0.75rem; color: var(--slate-500); }
+.ct-start-btn {
+  padding: 13px 32px; border-radius: 10px;
   background: linear-gradient(135deg, var(--teal-600), var(--teal-500));
-  color: var(--white); padding: 10px 20px; border-radius: 8px;
-  cursor: pointer; border: none; font-family: var(--font);
+  color: var(--white); font-size: 0.95rem; font-weight: 700;
+  border: none; cursor: pointer; font-family: var(--font);
+  box-shadow: 0 4px 16px rgba(13,148,136,0.35);
   transition: transform 0.15s, box-shadow 0.15s;
-  box-shadow: 0 3px 12px rgba(13,148,136,0.35);
+  display: flex; align-items: center; gap: 8px;
 }
-.demo-footer-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(13,148,136,0.45); }
-.demo-replay {
-  font-size: 0.82rem; font-weight: 600; color: var(--slate-400);
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-  padding: 9px 16px; border-radius: 8px; cursor: pointer;
-  font-family: var(--font); transition: all 0.2s;
-  display: none;
+.ct-start-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(13,148,136,0.45); }
+.ct-booking-cta {
+  padding: 10px 24px; border-radius: 8px; font-family: var(--font);
+  background: linear-gradient(135deg, var(--teal-600), var(--teal-500));
+  color: var(--white); font-size: 0.88rem; font-weight: 700;
+  border: none; cursor: pointer; transition: transform 0.15s;
 }
-.demo-replay.visible { display: block; }
-.demo-replay:hover { background: rgba(255,255,255,0.1); color: var(--white); }
-.demo-success-card {
-  display: none; text-align: center; padding: 24px;
-  background: rgba(13,148,136,0.1); border-radius: var(--radius);
-  border: 1px solid rgba(13,148,136,0.3); margin: 0 28px 20px;
-}
-.demo-success-card.visible { display: block; }
-.demo-success-card h4 { font-size: 1rem; font-weight: 700; color: var(--teal-400); margin-bottom: 8px; }
-.demo-success-card p { font-size: 0.85rem; color: var(--slate-400); line-height: 1.6; }
+.ct-booking-cta:hover { transform: translateY(-1px); }
 
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 1024px) {
@@ -1086,9 +1142,9 @@ html.js-animate .reveal.visible { opacity: 1; transform: translateY(0); }
     </p>
     <div class="hero-actions">
       <button class="btn-hero" onclick="openBookingModal()">Book a Free Demo</button>
-      <button class="btn-hero-outline" onclick="openDemoModal()">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 5.5l4 2.5-4 2.5V5.5z" fill="currentColor"/></svg>
-        Hear the AI
+      <button class="btn-hero-outline" onclick="openCallTest()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.07 2.18 2 2 0 012.06 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        Call Test
       </button>
     </div>
     <div class="hero-trust">
@@ -1270,33 +1326,33 @@ html.js-animate .reveal.visible { opacity: 1; transform: translateY(0); }
 <section class="try-section" id="try">
   <div class="try-inner">
     <div class="reveal">
-      <div class="section-label" style="justify-content:center;">Live Demo</div>
-      <h2 class="section-title">Hear Callora in Action</h2>
-      <p class="section-sub center">Experience exactly what your clients will hear when they call. The AI is natural, fast, and always on-brand.</p>
+      <div class="section-label" style="justify-content:center;">Live Test</div>
+      <h2 class="section-title">Call the AI Right Now</h2>
+      <p class="section-sub center">Allow mic access and have a real conversation with Callora. Ask about treatments, pricing, or book an appointment.</p>
     </div>
     <div class="try-demo-card reveal reveal-delay-1">
       <div class="try-demo-header">
         <div class="try-demo-header-left">
           <div class="try-demo-dot"></div>
           <div>
-            <div class="try-demo-header-title">Callora Live Demo</div>
-            <div class="try-demo-header-sub">Simulated call · Glow Studio Med Spa</div>
+            <div class="try-demo-header-title">Callora AI Receptionist</div>
+            <div class="try-demo-header-sub">Live mic test · Glow Med Spa demo</div>
           </div>
         </div>
-        <div style="color:#64748b;font-size:0.78rem;font-weight:500;">3 min demo</div>
+        <div style="color:#64748b;font-size:0.78rem;font-weight:500;">Real conversation</div>
       </div>
       <div class="try-demo-body">
-        <div class="try-demo-icon">&#127775;</div>
-        <h3>See Your AI Receptionist at Work</h3>
-        <p>Watch a full simulated call: greeting, qualification, live booking, and confirmation — all handled by Callora with zero human involvement.</p>
-        <button class="btn-demo-play" onclick="openDemoModal()">
-          <span class="play-icon">&#9654;</span>
-          Play Demo Conversation
+        <div class="try-demo-icon">&#127908;</div>
+        <h3>Speak Directly to the AI</h3>
+        <p>Your microphone connects you to Callora's voice AI. Ask anything — treatments, availability, pricing — and hear it respond in real time.</p>
+        <button class="btn-demo-play" onclick="openCallTest()">
+          <span class="play-icon">&#128222;</span>
+          Start Call Test
         </button>
         <div class="try-features">
-          <div class="try-feature"><span class="try-feature-dot"></span> Natural voice</div>
-          <div class="try-feature"><span class="try-feature-dot"></span> Real booking flow</div>
-          <div class="try-feature"><span class="try-feature-dot"></span> No script</div>
+          <div class="try-feature"><span class="try-feature-dot"></span> Real mic input</div>
+          <div class="try-feature"><span class="try-feature-dot"></span> Live AI voice</div>
+          <div class="try-feature"><span class="try-feature-dot"></span> No app needed</div>
         </div>
       </div>
     </div>
@@ -1590,7 +1646,7 @@ html.js-animate .reveal.visible { opacity: 1; transform: translateY(0); }
     <p class="section-sub">Join 120+ med spas using Callora to book more clients, reduce no-shows, and grow revenue — without hiring anyone.</p>
     <div class="cta-actions">
       <button class="btn-cta" onclick="openBookingModal()">Book Your Free Demo</button>
-      <button class="btn-cta-ghost" onclick="openDemoModal()">&#9654; Hear the AI First</button>
+      <button class="btn-cta-ghost" onclick="openBookingModal()">&#8594; See a Live Dashboard</button>
     </div>
     <div class="cta-note">No contracts. Setup in 48 hours. Cancel anytime.</div>
   </div>
@@ -1708,32 +1764,70 @@ html.js-animate .reveal.visible { opacity: 1; transform: translateY(0); }
   </div>
 </div>
 
-<!-- ===================== AI DEMO MODAL ===================== -->
-<div class="modal-overlay" id="demoModal" onclick="handleOverlayClick(event, 'demoModal')">
-  <div class="modal-box demo-modal-box">
-    <div class="demo-modal-header">
-      <div>
-        <div class="demo-modal-title">Live Demo — Callora AI Receptionist</div>
-        <div class="demo-modal-subtitle">Simulated call · Glow Studio Med Spa · Watch the full booking flow</div>
-      </div>
-      <button class="demo-modal-close" onclick="closeDemoModal()">&#10005;</button>
-    </div>
-    <div class="demo-chat-area" id="demoChatArea">
-      <!-- Typing indicator -->
-      <div class="typing-indicator" id="typingIndicator">
-        <div class="typing-dots">
-          <span></span><span></span><span></span>
+<!-- ===================== CALL TEST MODAL ===================== -->
+<div class="modal-overlay" id="callTestModal" onclick="handleOverlayClick(event,'callTestModal')">
+  <div class="modal-box call-test-box">
+    <div class="ct-header">
+      <div class="ct-header-left">
+        <div class="ct-live-dot inactive" id="ctLiveDot"></div>
+        <div>
+          <div class="ct-title">Callora AI Receptionist</div>
+          <div class="ct-subtitle">Live mic test · Glow Med Spa</div>
         </div>
       </div>
-      <!-- Chat bubbles injected by JS -->
+      <button class="ct-close" onclick="closeCallTest()">&#10005;</button>
     </div>
-    <div class="demo-success-card" id="demoSuccessCard">
-      <h4>&#127775; Appointment Booked Successfully</h4>
-      <p>Callora just booked Sarah for a lip filler consultation — Thursday at 2pm. Confirmation SMS sent automatically.</p>
+
+    <!-- State: idle / start screen -->
+    <div id="ctIdle">
+      <div class="ct-avatar-area">
+        <div class="ct-avatar" style="font-size:2rem;">&#128222;</div>
+        <div class="ct-status">Ready to connect</div>
+        <div style="font-size:0.82rem;color:var(--slate-500);margin-top:8px;padding:0 24px;">
+          Allow microphone access and speak naturally — Callora will answer just like your clients would experience.
+        </div>
+      </div>
+      <div class="ct-footer">
+        <button class="ct-start-btn" onclick="startCallTest()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.07 2.18 2 2 0 012.06 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+          Start Call
+        </button>
+        <div class="ct-end-label">Microphone permission required</div>
+      </div>
     </div>
-    <div class="demo-footer">
-      <button class="demo-replay" id="demoReplay" onclick="replayDemo()">&#8635; Replay Demo</button>
-      <button class="demo-footer-cta" onclick="closeDemoModal(); openBookingModal();">Get Callora for My Spa &rarr;</button>
+
+    <!-- State: active call -->
+    <div id="ctActive" style="display:none;">
+      <div class="ct-avatar-area" style="padding-bottom:16px;">
+        <div class="ct-avatar" id="ctAvatar">&#127908;</div>
+        <div class="ct-status" id="ctStatus">Connecting...</div>
+        <div class="ct-waveform" id="ctWaveform">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+      <div class="ct-transcript" id="ctTranscript"></div>
+      <div class="ct-error-box" id="ctErrorBox">
+        <p id="ctErrorMsg">Microphone access was denied. Please allow mic access in your browser settings and try again.</p>
+      </div>
+      <div class="ct-footer" style="padding-top:16px;">
+        <button class="ct-end-btn" onclick="endCallTest()" title="End call">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 7.73C18.27 6.38 16.29 5.5 14 5.5H10C7.71 5.5 5.73 6.38 4.41 7.73L2.5 9.5 1 8l2-2C4.67 4.23 7.18 3 10 3h4c2.82 0 5.33 1.23 7 3l2 2-1.5 1.5-1.91-1.77z"/><path d="M16 15l-1.41-1.41A2 2 0 0013 13h-2a2 2 0 00-1.59.59L8 15 6.59 13.59A8.93 8.93 0 016 10H4a10.92 10.92 0 001.17 4.83L3 17l1.5 1.5 2-2A9 9 0 0010 18v2h4v-2a9 9 0 003.5-1.5l2 2L21 17l-2.17-2.17A10.92 10.92 0 0020 10h-2c0 1.15-.22 2.24-.61 3.24L16 15z"/></svg>
+        </button>
+        <div class="ct-end-label">Tap to end call</div>
+      </div>
+    </div>
+
+    <!-- State: ended -->
+    <div id="ctEnded" style="display:none;">
+      <div class="ct-avatar-area">
+        <div class="ct-avatar">&#128075;</div>
+        <div class="ct-status" style="color:var(--slate-400);">Call ended</div>
+        <div style="font-size:0.85rem;color:var(--slate-500);margin-top:8px;">That's what your clients experience — 24/7, hands-free.</div>
+      </div>
+      <div class="ct-footer">
+        <button class="ct-booking-cta" onclick="closeCallTest(); openBookingModal();">Get Callora for My Clinic &rarr;</button>
+        <button onclick="resetCallTest()" style="background:none;border:none;color:var(--slate-500);font-size:0.8rem;cursor:pointer;font-family:var(--font);">&#8635; Call Again</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1812,7 +1906,7 @@ function toggleFaq(btn) {
 function handleOverlayClick(e, modalId) {
   if (e.target.id === modalId) {
     if (modalId === 'bookingModal') closeBookingModal();
-    else if (modalId === 'demoModal') closeDemoModal();
+    else if (modalId === 'callTestModal') closeCallTest();
   }
 }
 function lockScroll() { document.body.style.overflow = 'hidden'; }
@@ -1881,102 +1975,252 @@ function showBookingSuccess() {
   document.getElementById('bookingSuccess').style.display = 'block';
 }
 
-// ============ AI DEMO MODAL ============
-const demoConversation = [
-  { side: 'ai', label: 'Callora AI', text: "Hi, thank you for calling Glow Studio! This is Callora, your virtual receptionist. How can I help you today?" },
-  { side: 'user', label: 'Caller', text: "Hi, I'm interested in getting lip fillers. Can I book a consultation?" },
-  { side: 'ai', label: 'Callora AI', text: "Absolutely! We'd love to have you in. Our lip filler consultations are 30 minutes and completely complimentary. Can I get your first name?" },
-  { side: 'user', label: 'Caller', text: "It's Sarah." },
-  { side: 'ai', label: 'Callora AI', text: "Lovely, Sarah! We have a few openings coming up. Are you available this Thursday at 2pm, or would Friday at 11am work better for you?" },
-  { side: 'user', label: 'Caller', text: "Thursday at 2pm works perfectly!" },
-  { side: 'ai', label: 'Callora AI', text: "Perfect! I've got you booked for Thursday at 2pm for a complimentary lip filler consultation. You'll receive a confirmation text in just a moment. Is there anything else I can help with?" },
-  { side: 'user', label: 'Caller', text: "No, that's everything. Thank you so much!" },
-  { side: 'ai', label: 'Callora AI', text: "Wonderful — see you Thursday, Sarah! We're so excited to meet you. Have a beautiful day!" }
+// ============ CALL TEST ============
+let ctRecognition = null;
+let ctSynth = window.speechSynthesis;
+let ctActive = false;
+let ctMicStream = null;
+let ctExchanges = 0;
+
+const ctAIResponses = [
+  {
+    match: /botox|filler|lip|face|injection|anti.?aging|wrinkle|skin|treatment|aesthetic|beauty|laser/i,
+    text: "We offer a full range of aesthetic treatments including Botox, dermal fillers, laser skin rejuvenation, and more. Would you like me to book you in for a complimentary consultation this week?"
+  },
+  {
+    match: /book|appointment|schedule|slot|consultation|visit|come in|see/i,
+    text: "Absolutely! We have availability this Thursday at 2pm or Friday at 11am. Which works better for you?"
+  },
+  {
+    match: /thursday|friday|monday|tuesday|wednesday|morning|afternoon|today|tomorrow|2pm|11am|works|perfect|yes|yeah|sure|ok|great|sounds/i,
+    text: "Perfect, I've got you noted! You'll receive a confirmation text with all the details shortly. Is there anything else I can help with?"
+  },
+  {
+    match: /price|cost|how much|pricing|charge|fee|expensive|affordable/i,
+    text: "Our treatments start from £150 and we always offer a complimentary initial consultation so you can meet our specialists first. Shall I book you in?"
+  },
+  {
+    match: /hour|open|time|close|when|available|weekend|sunday|saturday/i,
+    text: "We're open Monday to Saturday from 9am to 7pm. And with Callora, I'm here 24 hours a day to take your calls. Can I book you in for a time that suits you?"
+  },
+  {
+    match: /no|nothing|that.?s all|bye|goodbye|thank you|thanks|done|finished|end/i,
+    text: "It was a pleasure speaking with you! We really look forward to welcoming you to Glow Med Spa. Have a wonderful day!"
+  }
 ];
 
-let demoTimeout = null;
-let demoRunning = false;
+const ctGreeting = "Hi there, thank you for calling Glow Med Spa. I'm Callora, your AI receptionist. How can I help you today?";
+const ctFallback = "I'd love to help with that! We offer a wide range of treatments at Glow Med Spa. Could you tell me a little more about what you're looking for, or would you like me to check appointment availability?";
 
-function openDemoModal() {
-  document.getElementById('demoModal').classList.add('open');
+function openCallTest() {
+  document.getElementById('callTestModal').classList.add('open');
   lockScroll();
-  resetDemoState();
-  setTimeout(() => startDemo(), 400);
 }
-function closeDemoModal() {
-  document.getElementById('demoModal').classList.remove('open');
+function closeCallTest() {
+  ctStop();
+  document.getElementById('callTestModal').classList.remove('open');
   unlockScroll();
-  clearTimeout(demoTimeout);
-  demoRunning = false;
+  setTimeout(resetCallTest, 400);
 }
-function resetDemoState() {
-  const area = document.getElementById('demoChatArea');
-  // Remove all bubbles
-  area.querySelectorAll('.demo-bubble').forEach(b => b.remove());
-  document.getElementById('typingIndicator').classList.remove('visible');
-  document.getElementById('demoSuccessCard').classList.remove('visible');
-  document.getElementById('demoReplay').classList.remove('visible');
-  demoRunning = false;
-  clearTimeout(demoTimeout);
+function resetCallTest() {
+  ctActive = false;
+  ctExchanges = 0;
+  document.getElementById('ctIdle').style.display = '';
+  document.getElementById('ctActive').style.display = 'none';
+  document.getElementById('ctEnded').style.display = 'none';
+  document.getElementById('ctLiveDot').classList.add('inactive');
+  document.getElementById('ctTranscript').innerHTML = '';
+  document.getElementById('ctErrorBox').classList.remove('show');
+  ctSetStatus('Ready to connect');
+  ctSetAvatarState('idle');
 }
-function replayDemo() {
-  resetDemoState();
-  document.getElementById('demoReplay').classList.remove('visible');
-  document.getElementById('demoSuccessCard').classList.remove('visible');
-  setTimeout(() => startDemo(), 300);
+function ctStop() {
+  ctActive = false;
+  if (ctRecognition) { try { ctRecognition.stop(); } catch(e){} ctRecognition = null; }
+  if (ctSynth) ctSynth.cancel();
+  if (ctMicStream) { ctMicStream.getTracks().forEach(t => t.stop()); ctMicStream = null; }
+  ctWaveOff();
 }
-function startDemo() {
-  demoRunning = true;
-  let delay = 0;
-  const area = document.getElementById('demoChatArea');
-  const typing = document.getElementById('typingIndicator');
+function ctSetStatus(txt, cls) {
+  const el = document.getElementById('ctStatus');
+  if (!el) return;
+  el.textContent = txt;
+  el.className = 'ct-status' + (cls ? ' ' + cls : '');
+}
+function ctSetAvatarState(state) {
+  const av = document.getElementById('ctAvatar');
+  if (!av) return;
+  av.className = 'ct-avatar';
+  if (state === 'speaking') av.classList.add('speaking');
+  if (state === 'listening') av.classList.add('listening');
+}
+function ctWaveOn(type) {
+  const wf = document.getElementById('ctWaveform');
+  if (!wf) return;
+  wf.className = 'ct-waveform active' + (type === 'listen' ? ' listen-wave' : '');
+}
+function ctWaveOff() {
+  const wf = document.getElementById('ctWaveform');
+  if (wf) wf.className = 'ct-waveform';
+}
+function ctAddMsg(role, text) {
+  const t = document.getElementById('ctTranscript');
+  if (!t) return;
+  const div = document.createElement('div');
+  div.className = 'ct-msg ' + (role === 'ai' ? 'ct-ai' : 'ct-user');
+  div.innerHTML = '<div class="ct-msg-label">' + (role === 'ai' ? 'Callora AI' : 'You') + '</div>'
+    + '<div class="ct-msg-text">' + text + '</div>';
+  t.appendChild(div);
+  t.scrollTop = t.scrollHeight;
+}
+function ctGetResponse(text) {
+  for (const r of ctAIResponses) {
+    if (r.match.test(text)) return r.text;
+  }
+  return ctFallback;
+}
 
-  demoConversation.forEach((msg, i) => {
-    const typingDuration = msg.side === 'ai' ? 1200 : 800;
-    const readDelay = msg.side === 'ai' ? 600 : 400;
+async function startCallTest() {
+  // Switch UI to active
+  document.getElementById('ctIdle').style.display = 'none';
+  document.getElementById('ctActive').style.display = '';
+  ctSetStatus('Requesting microphone...');
 
-    // Show typing
-    demoTimeout = setTimeout(() => {
-      if (!demoRunning) return;
-      typing.classList.add('visible');
-      area.appendChild(typing); // move to bottom
-      area.scrollTop = area.scrollHeight;
-    }, delay);
-    delay += typingDuration;
+  // Check speech recognition support
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    // Hide typing and show bubble
-    demoTimeout = setTimeout(() => {
-      if (!demoRunning) return;
-      typing.classList.remove('visible');
+  // Request mic
+  try {
+    ctMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch(err) {
+    document.getElementById('ctErrorBox').classList.add('show');
+    document.getElementById('ctErrorMsg').textContent =
+      err.name === 'NotAllowedError'
+        ? 'Microphone access was denied. Please allow mic permission in your browser and try again.'
+        : 'Microphone not available on this device or browser.';
+    ctSetStatus('Mic access required', 'err');
+    return;
+  }
 
-      const bubble = document.createElement('div');
-      bubble.className = 'demo-bubble ' + (msg.side === 'ai' ? 'ai-side' : 'user-side');
-      bubble.innerHTML = '<div class="demo-bubble-label">' + msg.label + '</div><div class="demo-bubble-text">' + msg.text + '</div>';
-      area.insertBefore(bubble, typing);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => bubble.classList.add('visible'));
-      });
-      area.scrollTop = area.scrollHeight;
+  if (!SpeechRec) {
+    document.getElementById('ctErrorBox').classList.add('show');
+    document.getElementById('ctErrorMsg').textContent =
+      'Live speech recognition is not supported in this browser. Please use Chrome or Edge for the full call test experience.';
+    ctSetStatus('Browser not supported', 'err');
+    return;
+  }
 
-      // Last message
-      if (i === demoConversation.length - 1) {
-        setTimeout(() => {
-          if (!demoRunning) return;
-          document.getElementById('demoSuccessCard').classList.add('visible');
-          document.getElementById('demoReplay').classList.add('visible');
-          area.scrollTop = area.scrollHeight;
-        }, 600);
-      }
-    }, delay);
-    delay += readDelay + 400;
-  });
+  ctActive = true;
+  document.getElementById('ctLiveDot').classList.remove('inactive');
+
+  // Connecting delay then greet
+  ctSetStatus('Connecting...');
+  ctSetAvatarState('idle');
+  await new Promise(r => setTimeout(r, 1200));
+  if (!ctActive) return;
+
+  ctSpeak(ctGreeting, () => { if (ctActive) ctListen(); });
+}
+
+function ctSpeak(text, onDone) {
+  if (!ctActive) return;
+  ctSynth.cancel();
+  ctAddMsg('ai', text);
+  ctSetStatus('AI is speaking...', '');
+  ctSetAvatarState('speaking');
+  ctWaveOn('speak');
+
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.rate = 1.05;
+  utt.pitch = 1.0;
+  // Prefer a natural-sounding female voice
+  const voices = ctSynth.getVoices();
+  const preferred = voices.find(v => /samantha|google uk|female|karen|victoria|moira/i.test(v.name))
+    || voices.find(v => v.lang === 'en-GB' || v.lang === 'en-US') || null;
+  if (preferred) utt.voice = preferred;
+
+  utt.onend = () => {
+    ctWaveOff();
+    ctSetAvatarState('idle');
+    if (onDone) onDone();
+  };
+  utt.onerror = () => { ctWaveOff(); if (onDone) onDone(); };
+  ctSynth.speak(utt);
+}
+
+function ctListen() {
+  if (!ctActive) return;
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  ctRecognition = new SpeechRec();
+  ctRecognition.lang = 'en-GB';
+  ctRecognition.interimResults = false;
+  ctRecognition.maxAlternatives = 1;
+
+  ctSetStatus('Listening...', 'listening-st');
+  ctSetAvatarState('listening');
+  ctWaveOn('listen');
+
+  ctRecognition.onresult = (e) => {
+    const said = e.results[0][0].transcript.trim();
+    ctWaveOff();
+    ctSetAvatarState('idle');
+    ctAddMsg('user', said);
+    ctSetStatus('Processing...');
+
+    ctExchanges++;
+    // After 4+ exchanges or goodbye detected, wrap up
+    const isGoodbye = /bye|goodbye|thank you|thanks|that.?s all|nothing/i.test(said);
+    if (ctExchanges >= 5 || isGoodbye) {
+      const closing = "It was so lovely speaking with you! We hope to see you at Glow Med Spa very soon. Have a beautiful day!";
+      setTimeout(() => {
+        if (!ctActive) return;
+        ctSpeak(closing, () => { setTimeout(endCallTest, 800); });
+      }, 600);
+    } else {
+      const reply = ctGetResponse(said);
+      setTimeout(() => {
+        if (!ctActive) return;
+        ctSpeak(reply, () => { if (ctActive) ctListen(); });
+      }, 600);
+    }
+  };
+
+  ctRecognition.onerror = (e) => {
+    ctWaveOff();
+    if (!ctActive) return;
+    if (e.error === 'no-speech') {
+      // Re-listen silently
+      ctSetStatus('Listening...', 'listening-st');
+      ctSetAvatarState('listening');
+      ctWaveOn('listen');
+      try { ctRecognition.start(); } catch(err){}
+    } else if (e.error === 'aborted') {
+      // Intentionally stopped, ignore
+    } else {
+      ctSetStatus('Could not hear — try again', 'err');
+      setTimeout(() => { if (ctActive) ctListen(); }, 1500);
+    }
+  };
+
+  ctRecognition.onend = () => {
+    // Only auto-restart if still active and not already handling a result
+  };
+
+  try { ctRecognition.start(); } catch(err){}
+}
+
+function endCallTest() {
+  ctStop();
+  document.getElementById('ctActive').style.display = 'none';
+  document.getElementById('ctEnded').style.display = '';
+  document.getElementById('ctLiveDot').classList.add('inactive');
 }
 
 // ============ KEYBOARD ESC ============
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeBookingModal();
-    closeDemoModal();
+    closeCallTest();
   }
 });
 </script>
