@@ -41,12 +41,12 @@ export const PLANS = {
     name: 'Professional',
     monthly: {
       priceId: process.env.STRIPE_PRICE_PROFESSIONAL_MONTHLY,
-      amount: 19900,    // $199.00/month in cents
+      amount: 29900,    // $299.00/month in cents
     },
     annual: {
       priceId: process.env.STRIPE_PRICE_PROFESSIONAL_ANNUAL,
-      amount: 199000,   // $1,990.00/year in cents (2 months free)
-      monthlyEquivalent: 16583, // $165.83/month
+      amount: 299000,   // $2,990.00/year in cents (2 months free)
+      monthlyEquivalent: 24917, // $249.17/month
     },
     // Unlimited AI calls + full clinic access — staff, locations, voice agent, phone numbers included
     features: { maxStaff: -1, maxLocations: -1, voiceAgent: true, phoneNumbers: 1, integrations: true, maxCalls: -1 },
