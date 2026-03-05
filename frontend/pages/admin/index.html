@@ -8,6 +8,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: #1e293b; color: #fff;
+      padding: 12px 18px; border-radius: 8px; font-size: 13px;
+      max-width: 380px; opacity: 0; transform: translateY(8px);
+      transition: opacity .25s, transform .25s;
+      z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,.25);
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.toast-error { background: #ef4444; }
+    .toast-url { font-family: monospace; font-size: 11px; word-break: break-all;
+      display: block; margin-top: 6px; opacity: .8; }
     :root {
       --brand: #0d9488;
       --brand-light: #ccfbf1;
@@ -952,7 +965,7 @@
       <div class="two-col">
         <div class="form-group">
           <label class="form-label">Clinic Name *</label>
-          <input class="form-input" type="text" placeholder="e.g. Harley Street Clinic" />
+          <input id="clinic-name" class="form-input" type="text" placeholder="e.g. Harley Street Clinic" />
         </div>
         <div class="form-group">
           <label class="form-label">Business Type</label>
@@ -970,21 +983,20 @@
       <div class="two-col">
         <div class="form-group">
           <label class="form-label">Contact Email *</label>
-          <input class="form-input" type="email" placeholder="owner@clinic.co.uk" />
+          <input id="clinic-email" class="form-input" type="email" placeholder="owner@clinic.co.uk" />
         </div>
         <div class="form-group">
-          <label class="form-label">Phone Number</label>
-          <input class="form-input" type="tel" placeholder="+44 7700 000000" />
+          <label class="form-label">Owner Name *</label>
+          <input id="clinic-owner-name" class="form-input" type="text" placeholder="e.g. Dr. Jane Smith" />
         </div>
       </div>
       <div class="two-col">
         <div class="form-group">
           <label class="form-label">Plan</label>
-          <select class="form-input">
-            <option>Trial (14 days free)</option>
-            <option>Starter — £49/mo</option>
-            <option>Growth — £129/mo</option>
-            <option>Enterprise — £349/mo</option>
+          <select id="clinic-plan" class="form-input">
+            <option value="starter">Starter — £49/mo (30-day trial)</option>
+            <option value="pro">Pro — £129/mo (30-day trial)</option>
+            <option value="enterprise">Enterprise — custom pricing</option>
           </select>
         </div>
         <div class="form-group">
@@ -1046,16 +1058,56 @@
   function closeModal(id) { document.getElementById(id).classList.remove('open'); }
   function refreshData() { loadOverview(); loadClinics(); document.getElementById('topbar-meta').textContent = 'Last updated: just now'; }
 
-  // ── API helper ───────────────────────────────────────────────
+  // ── API helpers ──────────────────────────────────────────────
   async function adminFetch(path) {
     const res = await fetch(API + path, { headers: { Authorization: `Bearer ${TOKEN}` } });
-    if (res.status === 401 || res.status === 403) {
-      localStorage.clear();
-      location.href = '/pages/login.html';
-      return null;
-    }
+    if (res.status === 401 || res.status === 403) { localStorage.clear(); location.href = '/pages/login.html'; return null; }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
+  }
+
+  async function adminPost(path, body = {}) {
+    const res = await fetch(API + path, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (res.status === 401 || res.status === 403) { localStorage.clear(); location.href = '/pages/login.html'; return null; }
+    const json = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+    if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+    return json;
+  }
+
+  // ── Toast ────────────────────────────────────────────────────
+  function showToast(msg, type = 'success', url = null) {
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.textContent = msg;
+    if (url) {
+      const u = document.createElement('span');
+      u.className = 'toast-url';
+      u.textContent = url;
+      t.appendChild(u);
+    }
+    document.body.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, url ? 8000 : 4000);
+  }
+
+  // ── Onboarding link ──────────────────────────────────────────
+  async function copyOnboardingLink(tenantId) {
+    try {
+      const data = await adminPost(`/api/admin/clinics/${tenantId}/resend-onboarding`);
+      if (!data) return;
+      try {
+        await navigator.clipboard.writeText(data.onboardingUrl);
+        showToast('Onboarding link copied to clipboard!', 'success', data.onboardingUrl);
+      } catch {
+        showToast('Onboarding link (copy manually):', 'success', data.onboardingUrl);
+      }
+    } catch (e) {
+      showToast('Failed: ' + e.message, 'error');
+    }
   }
 
   // ── Overview stats ───────────────────────────────────────────
@@ -1119,7 +1171,9 @@
           <td>—</td>
           <td>${isLive ? '<span class="badge badge-green">⬤ Live</span>' : '<span class="badge badge-yellow">Paused</span>'}</td>
           <td>${statusBadge}</td>
-          <td><button class="btn btn-outline btn-sm">View</button></td>
+          <td style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-outline btn-sm" onclick="copyOnboardingLink('${c.id}')">Onboarding Link</button>
+          </td>
         </tr>`;
       }).join('');
     }
@@ -1178,9 +1232,38 @@
     }));
   }
 
-  function createClinic() {
-    closeModal('addClinicModal');
-    alert('Clinic created! Onboarding email sent.');
+  async function createClinic() {
+    const businessName = document.getElementById('clinic-name')?.value?.trim();
+    const email        = document.getElementById('clinic-email')?.value?.trim();
+    const fullName     = document.getElementById('clinic-owner-name')?.value?.trim();
+    const planKey      = document.getElementById('clinic-plan')?.value || 'starter';
+
+    if (!businessName || !email) {
+      showToast('Clinic name and email are required.', 'error');
+      return;
+    }
+
+    const btn = document.querySelector('#addClinicModal .btn-primary');
+    btn.disabled = true;
+    btn.textContent = 'Creating…';
+
+    try {
+      const data = await adminPost('/api/admin/clinics/initiate', {
+        planKey, businessName, email,
+        fullName: fullName || businessName,
+      });
+      if (!data) return;
+
+      closeModal('addClinicModal');
+      window.open(data.checkoutUrl, '_blank');
+      showToast('Stripe checkout opened in a new tab. Clinic receives onboarding email after payment.');
+      loadClinics();
+    } catch (e) {
+      showToast('Error: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Create Clinic';
+    }
   }
 
   window.addEventListener('DOMContentLoaded', () => {
