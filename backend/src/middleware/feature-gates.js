@@ -16,7 +16,7 @@ import { PLANS } from './billing.js';
 
 
 
-const PLAN_HIERARCHY = { STARTER: 0, PRO: 1, ENTERPRISE: 2 };
+const PLAN_HIERARCHY = { STARTER: 0, PRO: 1 };
 
 // ─── Get tenant's current plan ────────────────────────────────────────────────
 async function getTenantPlan(tenantId) {

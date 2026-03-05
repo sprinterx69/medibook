@@ -55,7 +55,7 @@ export default async function adminRoutes(fastify) {
     }, {});
 
     // Rough MRR: count active/trialing subscriptions
-    const planMrr = { STARTER: 4900, PRO: 12900, ENTERPRISE: 39900 };
+    const planMrr = { STARTER: 4900, PRO: 12900 };
     const mrr = tenants.reduce((sum, t) => {
       const hasPaid = t.subscriptions.some(s => ['ACTIVE', 'TRIALING'].includes(s.status));
       return sum + (hasPaid ? (planMrr[t.plan] ?? 0) : 0);

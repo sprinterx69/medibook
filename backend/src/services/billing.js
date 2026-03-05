@@ -69,19 +69,6 @@ export const PLANS = {
     features: { maxStaff: -1, maxLocations: -1, voiceAgent: true, phoneNumbers: 3, integrations: true, maxCalls: -1 },
     dbPlan: 'PRO',
   },
-  enterprise: {
-    name: 'Enterprise',
-    monthly: {
-      priceId: process.env.STRIPE_PRICE_ENTERPRISE,
-      amount: null,     // Custom pricing
-    },
-    annual: {
-      priceId: process.env.STRIPE_PRICE_ENTERPRISE_ANNUAL,
-      amount: null,     // Custom pricing
-    },
-    features: { maxStaff: -1, maxLocations: -1, voiceAgent: true, phoneNumbers: -1, integrations: true, maxCalls: -1 },
-    dbPlan: 'ENTERPRISE',
-  },
 };
 
 // Helper — get priceId for a plan + billing cycle combo
