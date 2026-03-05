@@ -167,7 +167,7 @@ export async function createAdminCheckoutSession({ planKey, billingCycle = 'mont
     success_url: successUrl + '?session_id={CHECKOUT_SESSION_ID}',
     cancel_url: cancelUrl,
     metadata: { businessName, fullName, email, planKey, billingCycle },
-    customer_email: email,
+    // Note: customer_email must NOT be set when customer is already specified
   });
 
   return { sessionId: session.id, url: session.url };
@@ -373,10 +373,9 @@ export async function handleStripeWebhook(rawBody, signature) {
 
       if (tenantId) {
         // Existing tenant (tenant created before checkout)
-        const existingTenant = await prisma.tenant.findFirst({
-          where: { OR: [{ stripeCustomerId: String(session.customer) }, { stripeSubscriptionId: stripeSub.id }] },
-        });
-        if (existingTenant) { console.log('[Stripe] Duplicate checkout.session.completed, skipping'); break; }
+        // Use subscription table to detect duplicates — tenant always has stripeCustomerId set already
+        const existingSub = await prisma.subscription.findUnique({ where: { stripeSubscriptionId: stripeSub.id } });
+        if (existingSub) { console.log('[Stripe] Duplicate checkout.session.completed, skipping'); break; }
         await upsertSubscription(tenantId, stripeSub, planKey);
         await prisma.tenant.update({ where: { id: tenantId }, data: { stripeCustomerId: String(session.customer), stripeSubscriptionId: stripeSub.id, clinicStatus: 'live' } });
       } else if (email) {

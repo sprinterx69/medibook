@@ -1141,7 +1141,10 @@
       document.getElementById('stat-bookings-sub').textContent = 'today';
       document.getElementById('stat-total').textContent     = data.totalClinics ?? '—';
       document.getElementById('stat-total-sub').textContent = 'all time';
-      const onboarding = data.statusCounts?.ONBOARDING ?? data.statusCounts?.Trial ?? 0;
+      // Sum all non-live, non-paused statuses (pending_payment, onboarding_required, onboarding_submitted, setup_in_progress, testing)
+      const sc = data.statusCounts ?? {};
+      const onboarding = (sc.pending_payment ?? 0) + (sc.onboarding_required ?? 0)
+                       + (sc.onboarding_submitted ?? 0) + (sc.setup_in_progress ?? 0) + (sc.testing ?? 0);
       document.getElementById('stat-onboarding').textContent = onboarding;
 
       // Revenue view
@@ -1162,8 +1165,21 @@
   let CLINICS = [];
 
   function planBadge(plan) {
-    const map = { Professional: 'badge-teal', Trial: 'badge-yellow' };
+    // DB plan values are uppercase enums: STARTER, PRO, ENTERPRISE etc.
+    const map = { STARTER: 'badge-teal', PRO: 'badge-teal', ENTERPRISE: 'badge-blue', TRIAL: 'badge-yellow' };
     return map[plan] || 'badge-gray';
+  }
+
+  function planLabel(plan) {
+    const map = { STARTER: 'Professional', PRO: 'Pro', ENTERPRISE: 'Enterprise', TRIAL: 'Trial' };
+    return map[plan] || (plan ?? '—');
+  }
+
+  function statusBadgeHtml(c) {
+    if (c.clinicStatus === 'paused' || !c.isActive) return '<span class="badge badge-red">Paused</span>';
+    if (c.clinicStatus === 'live') return '<span class="badge badge-green">Active</span>';
+    if (c.clinicStatus === 'testing') return '<span class="badge badge-blue">Testing</span>';
+    return '<span class="badge badge-yellow">' + (c.clinicStatus ?? 'Unknown').replace(/_/g, ' ') + '</span>';
   }
 
   function renderClinics(data) {
@@ -1174,18 +1190,15 @@
     } else {
       tbody.innerHTML = data.map(c => {
         const since = c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : '—';
-        const isLive = c.isActive && c.clinicStatus !== 'PAUSED';
-        const statusBadge = c.clinicStatus === 'TRIAL' ? '<span class="badge badge-yellow">Trial</span>'
-                          : (!c.isActive || c.clinicStatus === 'PAUSED') ? '<span class="badge badge-red">Paused</span>'
-                          : '<span class="badge badge-green">Active</span>';
+        const isLive = c.isActive && c.clinicStatus === 'live';
         return `<tr>
           <td><strong>${c.name}</strong><br><span style="color:var(--muted);font-size:11px">${c.slug ?? ''}</span></td>
-          <td><span class="badge ${planBadge(c.plan)}">${c.plan ?? '—'}</span></td>
+          <td><span class="badge ${planBadge(c.plan)}">${planLabel(c.plan)}</span></td>
           <td>${since}</td>
           <td>—</td>
           <td>—</td>
-          <td>${isLive ? '<span class="badge badge-green">⬤ Live</span>' : '<span class="badge badge-yellow">Paused</span>'}</td>
-          <td>${statusBadge}</td>
+          <td>${isLive ? '<span class="badge badge-green">⬤ Live</span>' : '<span class="badge badge-yellow">Offline</span>'}</td>
+          <td>${statusBadgeHtml(c)}</td>
           <td style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="btn btn-outline btn-sm" onclick="copyOnboardingLink('${c.id}')">Onboarding Link</button>
             <button class="btn btn-outline btn-sm" onclick="createStripeLink('${c.id}','monthly')">Stripe Monthly</button>
@@ -1205,15 +1218,12 @@
         ovTbody.innerHTML = top.map(c => {
           const since = c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : '—';
           const contact = c.users?.[0]?.email ?? '—';
-          const statusBadge = c.clinicStatus === 'TRIAL' ? '<span class="badge badge-yellow">Trial</span>'
-                            : (!c.isActive || c.clinicStatus === 'PAUSED') ? '<span class="badge badge-red">Paused</span>'
-                            : '<span class="badge badge-green">Active</span>';
           return `<tr>
             <td><strong>${c.name}</strong></td>
-            <td><span class="badge ${planBadge(c.plan)}">${c.plan ?? '—'}</span></td>
+            <td><span class="badge ${planBadge(c.plan)}">${planLabel(c.plan)}</span></td>
             <td>${contact}</td>
             <td>${since}</td>
-            <td>${statusBadge}</td>
+            <td>${statusBadgeHtml(c)}</td>
             <td><button class="btn btn-outline btn-sm" onclick="switchView('clinics',document.querySelector('[data-view=clinics]'))">View</button></td>
           </tr>`;
         }).join('');
@@ -1242,9 +1252,14 @@
     const status = document.getElementById('clinic-status-filter').value;
     renderClinics(CLINICS.filter(c => {
       const matchQ      = !q || (c.name ?? '').toLowerCase().includes(q) || (c.slug ?? '').toLowerCase().includes(q);
-      const matchPlan   = !plan || c.plan === plan;
-      const matchStatus = !status || c.clinicStatus === status.toUpperCase()
-                        || (status === 'Live' && c.isActive && c.clinicStatus !== 'PAUSED');
+      // plan filter: DB stores 'STARTER', dropdown shows 'Professional' → map back
+      const planFilterMap = { 'Professional': 'STARTER' };
+      const matchPlan = !plan || c.plan === (planFilterMap[plan] ?? plan);
+      // status filter: DB stores lowercase ('live', 'paused')
+      const matchStatus = !status
+        || (status === 'Live'   && c.isActive && c.clinicStatus === 'live')
+        || (status === 'Trial'  && c.clinicStatus === 'testing')
+        || (status === 'Paused' && (!c.isActive || c.clinicStatus === 'paused'));
       return matchQ && matchPlan && matchStatus;
     }));
   }
